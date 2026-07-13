@@ -62,11 +62,18 @@ def normalize_group_names(raw_groups: list[dict]) -> list[str]:
     return sorted({group.get("name") for group in raw_groups if group.get("name")})
 
 
+def normalize_inventory(raw_inventory) -> dict:
+    if isinstance(raw_inventory, dict):
+        return {key: value for key, value in raw_inventory.items() if value}
+    return {}
+
+
 def upsert_host(db, zabbix_host: dict, client: ZabbixClient) -> tuple[Host, bool]:
     hostid = str(zabbix_host["hostid"])
     inventory_hostname = zabbix_host.get("host") or zabbix_host.get("name") or f"zabbix-{hostid}"
     display_name = zabbix_host.get("name") or inventory_hostname
     group_names = normalize_group_names(zabbix_host.get("groups") or [])
+    inventory = normalize_inventory(zabbix_host.get("inventory"))
     db_type = db_type_from_groups(group_names)
     state = client.host_state_from_host(zabbix_host)
 
@@ -91,8 +98,14 @@ def upsert_host(db, zabbix_host: dict, client: ZabbixClient) -> tuple[Host, bool
     host.environment = environment_from_name(f"{inventory_hostname} {display_name}")
     host.role = role_from_groups(group_names)
     host.db_type = db_type
+    host.os_name = inventory.get("os_full") or inventory.get("os") or host.os_name
+    host.location = inventory.get("location") or host.location
     host.owner_team = owner_team_from_db_type(db_type)
-    host.notes = f"Imported from Zabbix groups: {', '.join(group_names)}"
+    inventory_text = ", ".join(f"{key}: {value}" for key, value in sorted(inventory.items()))
+    notes = [f"Imported from Zabbix groups: {', '.join(group_names)}"]
+    if inventory_text:
+        notes.append(f"Zabbix inventory: {inventory_text}")
+    host.notes = "; ".join(notes)
     host.zabbix_hostid = hostid
     host.zabbix_host_name = display_name
     host.zabbix_url = state.url

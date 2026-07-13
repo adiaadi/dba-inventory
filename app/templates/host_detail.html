@@ -6,11 +6,6 @@
   <aside class="server-tree">
     <div class="tree-toolbar">
       <a class="btn btn-sm btn-outline-primary" href="/?view=hosts"><i class="bi bi-arrow-left"></i> Hosts</a>
-      {% if host.zabbix_url %}
-        <a class="btn btn-sm btn-primary" href="{{ host.zabbix_url }}" target="_blank" rel="noreferrer">
-          <i class="bi bi-box-arrow-up-right"></i> Zabbix
-        </a>
-      {% endif %}
     </div>
 
     <div class="tree-root">
@@ -55,8 +50,8 @@
     </header>
 
     <nav class="server-tabs">
-      {% for label, url in zabbix_tabs %}
-        <a class="{% if loop.first %}active{% endif %}" href="{{ url }}" target="_blank" rel="noreferrer">{{ label }}</a>
+      {% for slug, label in host_tabs %}
+        <a class="{% if active_tab == slug %}active{% endif %}" href="/hosts/{{ host.id }}?tab={{ slug }}">{{ label }}</a>
       {% endfor %}
     </nav>
 

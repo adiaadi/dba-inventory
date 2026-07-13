@@ -31,18 +31,18 @@ body {
   border: 1px solid #e2e8f0;
   border-radius: 6px;
   display: inline-flex;
-  height: 34px;
+  height: 42px;
   justify-content: center;
   padding: 3px 6px;
-  width: 132px;
+  width: 168px;
 }
 
 .brand-logo {
   display: block;
-  height: 28px;
-  max-width: 118px;
+  height: 34px;
+  max-width: 154px;
   object-fit: contain;
-  width: 118px;
+  width: 154px;
 }
 
 .brand-mark {
@@ -418,15 +418,26 @@ body {
   min-width: 0;
 }
 
+.overview-heading > p {
+  color: #5b6778;
+  margin: 0;
+}
+
 .db-heading-logo {
   background: #fff;
   border: 1px solid #d8e1ec;
   border-radius: 8px;
   display: block;
-  height: 54px;
+  height: 82px;
   object-fit: contain;
-  padding: 8px 12px;
-  width: 178px;
+  padding: 10px 14px;
+  width: 220px;
+}
+
+.db-logo-only {
+  align-items: center;
+  display: flex;
+  min-height: 86px;
 }
 
 .overview-header h1 {
@@ -489,7 +500,7 @@ body {
   border-radius: 8px;
   display: grid;
   gap: 12px;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   margin-bottom: 14px;
   padding: 10px;
 }
@@ -649,7 +660,7 @@ body {
   background: #e7e9ef;
   border: 1px solid #aeb7c5;
   display: grid;
-  grid-template-columns: 272px minmax(0, 1fr);
+  grid-template-columns: 320px minmax(0, 1fr);
   margin: -24px -24px 0;
   min-height: calc(100vh - 57px);
 }
@@ -666,6 +677,7 @@ body {
   align-items: center;
   border-bottom: 1px solid #c7ceda;
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 8px;
 }
@@ -717,6 +729,7 @@ body {
 
 .tree-host-list-single {
   flex: 0;
+  overflow: visible;
   padding: 6px 10px 12px;
 }
 
@@ -729,6 +742,8 @@ body {
   display: flex;
   gap: 10px;
   padding: 10px;
+  width: 100%;
+  word-break: break-word;
 }
 
 .tree-host-card > i {

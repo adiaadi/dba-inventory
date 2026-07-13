@@ -59,11 +59,6 @@
                 <span class="badge text-bg-{{ host.zabbix_agent_availability|status_class }}">
                   agent {{ host.zabbix_agent_availability }}
                 </span>
-                {% if host.zabbix_url %}
-                  <a class="btn btn-sm btn-outline-primary mt-2" href="{{ host.zabbix_url }}" target="_blank" rel="noreferrer">
-                    <i class="bi bi-box-arrow-up-right"></i> Open in Zabbix
-                  </a>
-                {% endif %}
               </div>
             </td>
             <td><span class="badge text-bg-{{ host.monitoring_status|status_class }}">{{ host.monitoring_status }}</span></td>

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}BNKC Database Inventory{% endblock %}
+{% block title %}Database Inventory{% endblock %}
 
 {% block content %}
 <div class="overview-shell">
@@ -66,13 +66,17 @@
   <section class="overview-main">
     <header class="overview-header">
       <div class="overview-heading">
-        {% if section_logo %}
-          <img class="db-heading-logo" src="{{ section_logo }}" alt="{{ section_title }}">
-        {% endif %}
-        <div>
-          <h1>{{ section_title }}</h1>
+        {% if db_type_view %}
+          <div class="db-logo-only">
+            <img class="db-heading-logo" src="{{ section_logo }}" alt="{{ db_type_view.label }}">
+          </div>
           <p>{{ section_subtitle }}</p>
-        </div>
+        {% else %}
+          <div>
+            <h1>{{ section_title }}</h1>
+            <p>{{ section_subtitle }}</p>
+          </div>
+        {% endif %}
       </div>
       <div class="overview-actions">
         {% if current_view == "hosts" or db_type_view %}
@@ -86,36 +90,42 @@
     </header>
 
     <section class="overview-kpis">
+      <a class="overview-kpi {% if current_view == 'oracle' %}active{% endif %}" href="/?view=oracle">
+        <span class="kpi-title">Oracle</span>
+        <span class="kpi-value">{{ db_family_counts.Oracle }}</span>
+        <span class="kpi-delta text-success">Zabbix DB assets</span>
+        <i class="bi bi-database-check"></i>
+      </a>
+      <a class="overview-kpi {% if current_view == 'postgresql' %}active{% endif %}" href="/?view=postgresql">
+        <span class="kpi-title">PostgreSQL</span>
+        <span class="kpi-value">{{ db_family_counts.PostgreSQL }}</span>
+        <span class="kpi-delta text-success">Zabbix DB assets</span>
+        <i class="bi bi-database-fill"></i>
+      </a>
+      <a class="overview-kpi {% if current_view == 'sqlserver' %}active{% endif %}" href="/?view=sqlserver">
+        <span class="kpi-title">SQLServer</span>
+        <span class="kpi-value">{{ db_family_counts.SQLServer }}</span>
+        <span class="kpi-delta text-success">Zabbix DB assets</span>
+        <i class="bi bi-server"></i>
+      </a>
       <a class="overview-kpi {% if current_view == 'hosts' %}active{% endif %}" href="/?view=hosts">
-        <span class="kpi-title">Total Hosts</span>
+        <span class="kpi-title">Servers</span>
         <span class="kpi-value">{{ counts.hosts }}</span>
         <span class="kpi-delta text-success">{{ chart_data.environmentLabels|length }} environments</span>
         <i class="bi bi-hdd-network"></i>
       </a>
-      <a class="overview-kpi {% if current_view == 'databases' %}active{% endif %}" href="/?view=databases">
-        <span class="kpi-title">DB Assets</span>
-        <span class="kpi-value">{{ counts.databases }}</span>
-        <span class="kpi-delta text-success">{{ chart_data.dbTypeLabels|length }} DB types</span>
-        <i class="bi bi-database-check"></i>
+      <a class="overview-kpi" href="/?view=hosts">
+        <span class="kpi-title">Virtual</span>
+        <span class="kpi-value">{{ platform_counts.Virtual }}</span>
+        <span class="kpi-delta text-muted">Unknown {{ platform_counts.Unknown }}</span>
+        <i class="bi bi-cloud"></i>
       </a>
-      <a class="overview-kpi" href="/?view=hosts&monitoring_status=problem">
-        <span class="kpi-title">Zabbix Problems</span>
-        <span class="kpi-value">{{ problem_total }}</span>
-        <span class="kpi-delta text-danger">current open count</span>
-        <i class="bi bi-exclamation-octagon"></i>
+      <a class="overview-kpi" href="/?view=hosts">
+        <span class="kpi-title">Physical</span>
+        <span class="kpi-value">{{ platform_counts.Physical }}</span>
+        <span class="kpi-delta text-muted">from Zabbix groups</span>
+        <i class="bi bi-pc-display"></i>
       </a>
-      <a class="overview-kpi {% if current_view == 'clusters' %}active{% endif %}" href="/?view=clusters">
-        <span class="kpi-title">HA/DR Clusters</span>
-        <span class="kpi-value">{{ counts.clusters }}</span>
-        <span class="kpi-delta text-muted">Patroni / Standby / LS</span>
-        <i class="bi bi-diagram-3"></i>
-      </a>
-      <div class="overview-kpi">
-        <span class="kpi-title">Last Zabbix Sync</span>
-        <span class="kpi-value kpi-date">{{ last_sync_at|date_time }}</span>
-        <span class="kpi-delta text-muted">sync_zabbix</span>
-        <i class="bi bi-arrow-repeat"></i>
-      </div>
     </section>
 
     {% if current_view == "overview" %}
@@ -140,13 +150,13 @@
         </section>
 
         <section class="overview-panel">
-          <h2>Agent Availability</h2>
+          <h2>Server Platform</h2>
           <div class="chart-box">
-            <canvas id="availabilityChart"></canvas>
+            <canvas id="platformChart"></canvas>
           </div>
           <div class="chart-legend-list">
-            {% for availability, count in availability_counts %}
-              <span><i class="legend-dot"></i>{{ availability or "unknown" }} <strong>{{ count }}</strong></span>
+            {% for label, count in platform_counts.items() %}
+              <span><i class="legend-dot"></i>{{ label }} <strong>{{ count }}</strong></span>
             {% endfor %}
           </div>
         </section>
@@ -159,7 +169,7 @@
         </section>
 
         <section class="overview-panel overview-table-panel">
-          <h2>Top Hosts by Zabbix Problems</h2>
+          <h2>Top Hosts by Problems</h2>
           <div class="table-responsive">
             <table class="table table-sm align-middle overview-table">
               <thead>
@@ -168,7 +178,6 @@
                   <th>DB Type</th>
                   <th>Monitoring</th>
                   <th>Problems</th>
-                  <th>Zabbix</th>
                 </tr>
               </thead>
               <tbody>
@@ -179,25 +188,16 @@
                       <a class="table-link" href="/hosts/{{ host.id }}">{{ host.hostname }}</a>
                       <div class="text-muted small">{{ host.ip_address or host.fqdn or "-" }}</div>
                     </td>
-                    <td>{{ host.db_type or (instance_db_types|join(", ")) or "-" }}</td>
+                    <td>{{ host_db_labels.get(host.id) or host.db_type or (instance_db_types|join(", ")) or "-" }}</td>
                     <td><span class="badge text-bg-{{ host.monitoring_status|status_class }}">{{ host.monitoring_status }}</span></td>
                     <td>
                       <span class="problem-count {% if host.problem_count > 0 %}has-problems{% endif %}">
                         {{ host.problem_count }}
                       </span>
                     </td>
-                    <td>
-                      {% if host.zabbix_url %}
-                        <a class="btn btn-sm btn-outline-primary" href="{{ host.zabbix_url }}" target="_blank" rel="noreferrer">
-                          <i class="bi bi-box-arrow-up-right"></i>
-                        </a>
-                      {% else %}
-                        -
-                      {% endif %}
-                    </td>
                   </tr>
                 {% else %}
-                  <tr><td colspan="5" class="empty-state">No hosts found.</td></tr>
+                  <tr><td colspan="4" class="empty-state">No hosts found.</td></tr>
                 {% endfor %}
               </tbody>
             </table>
@@ -219,9 +219,9 @@
                 <th>Environment</th>
                 <th>Role</th>
                 <th>DB Type</th>
+                <th>Platform</th>
                 <th>Monitoring</th>
                 <th>Problems</th>
-                <th>Zabbix</th>
               </tr>
             </thead>
             <tbody>
@@ -235,21 +235,13 @@
                   <td>{{ host.ip_address or "-" }}</td>
                   <td><span class="pill">{{ host.environment }}</span></td>
                   <td>{{ host.role }}</td>
-                  <td>{{ host.db_type or (instance_db_types|join(", ")) or "-" }}</td>
+                  <td>{{ host_db_labels.get(host.id) or host.db_type or (instance_db_types|join(", ")) or "-" }}</td>
+                  <td>{{ host_platform_labels.get(host.id) or "Unknown" }}</td>
                   <td><span class="badge text-bg-{{ host.monitoring_status|status_class }}">{{ host.monitoring_status }}</span></td>
                   <td>
                     <span class="problem-count {% if host.problem_count > 0 %}has-problems{% endif %}">
                       {{ host.problem_count }}
                     </span>
-                  </td>
-                  <td>
-                    {% if host.zabbix_url %}
-                      <a class="btn btn-sm btn-outline-primary" href="{{ host.zabbix_url }}" target="_blank" rel="noreferrer">
-                        <i class="bi bi-box-arrow-up-right"></i>
-                      </a>
-                    {% else %}
-                      -
-                    {% endif %}
                   </td>
                 </tr>
               {% else %}
@@ -282,14 +274,13 @@
                   <th>Role</th>
                   <th>Monitoring</th>
                   <th>Problems</th>
-                  <th>Zabbix</th>
                 </tr>
               </thead>
               <tbody>
                 {% for host in database_assets %}
                   <tr>
                     <td>
-                      <span class="badge text-bg-light border">{{ host.db_type }}</span>
+                      <span class="badge text-bg-light border">{{ host_db_labels.get(host.id) or host.db_type or "-" }}</span>
                       <div class="text-muted small">{{ host.zabbix_host_name or host.hostname }}</div>
                     </td>
                     <td>
@@ -304,18 +295,9 @@
                         {{ host.problem_count }}
                       </span>
                     </td>
-                    <td>
-                      {% if host.zabbix_url %}
-                        <a class="btn btn-sm btn-outline-primary" href="{{ host.zabbix_url }}" target="_blank" rel="noreferrer">
-                          <i class="bi bi-box-arrow-up-right"></i>
-                        </a>
-                      {% else %}
-                        -
-                      {% endif %}
-                    </td>
                   </tr>
                 {% else %}
-                  <tr><td colspan="7" class="empty-state">No DB assets found.</td></tr>
+                  <tr><td colspan="6" class="empty-state">No DB assets found.</td></tr>
                 {% endfor %}
               </tbody>
             </table>
@@ -462,7 +444,7 @@
 
   makeChart("environmentChart", "line", dashboardData.environmentLabels, dashboardData.environmentValues);
   makeChart("monitoringChart", "doughnut", dashboardData.monitoringLabels, dashboardData.monitoringValues, { cutout: "68%" });
-  makeChart("availabilityChart", "doughnut", dashboardData.availabilityLabels, dashboardData.availabilityValues, { cutout: "68%" });
+  makeChart("platformChart", "doughnut", dashboardData.platformLabels, dashboardData.platformValues, { cutout: "68%" });
   makeChart("dbTypeChart", "bar", dashboardData.dbTypeLabels, dashboardData.dbTypeValues);
 </script>
 {% endblock %}

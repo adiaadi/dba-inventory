@@ -109,6 +109,7 @@ class ZabbixClient:
                     "output": ["hostid", "host", "name", "status"],
                     "filter": {field: [hostname]},
                     "selectInterfaces": ["interfaceid", "type", "main", "available", "error"],
+                    "selectInventory": ["type", "type_full", "os", "os_full", "hardware", "chassis", "vendor", "model", "location"],
                     "limit": 1,
                 },
             )
@@ -137,6 +138,7 @@ class ZabbixClient:
                 "groupids": groupids,
                 "selectGroups": ["groupid", "name"],
                 "selectInterfaces": ["interfaceid", "type", "main", "available", "ip", "dns", "useip", "error"],
+                "selectInventory": ["type", "type_full", "os", "os_full", "hardware", "chassis", "vendor", "model", "location"],
                 "sortfield": ["name", "host"],
             },
         )
