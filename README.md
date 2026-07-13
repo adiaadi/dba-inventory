@@ -82,6 +82,14 @@ sudo systemctl enable --now docker
 sudo docker compose up -d --build
 ```
 
+Если сервер не может скачать базовый образ `python:3.12-slim` с Docker Hub во время build, используйте готовый app image из GitHub Container Registry:
+
+```bash
+git pull
+sudo docker compose -f docker-compose.ghcr.yml up -d
+sudo docker compose -f docker-compose.ghcr.yml ps
+```
+
 3. Проверьте состояние контейнеров.
 
 ```bash
