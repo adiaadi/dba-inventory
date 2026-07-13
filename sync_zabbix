@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+set -e
+
+python -m app.commands.sync_zabbix "$@"

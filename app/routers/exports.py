@@ -62,6 +62,9 @@ def export_hosts(
         "zabbix_hostid",
         "zabbix_host_name",
         "zabbix_url",
+        "zabbix_agent_availability",
+        "problem_count",
+        "zabbix_last_sync_at",
         "monitoring_status",
     ]
     workbook = Workbook()
@@ -83,6 +86,9 @@ def export_hosts(
                 host.zabbix_hostid,
                 host.zabbix_host_name,
                 host.zabbix_url,
+                host.zabbix_agent_availability,
+                host.problem_count,
+                host.zabbix_last_sync_at,
                 host.monitoring_status,
             ]
         )

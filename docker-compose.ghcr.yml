@@ -21,6 +21,8 @@ services:
       DATABASE_URL: postgresql+psycopg://dba_inventory:dba_inventory@db:5432/dba_inventory
       APP_NAME: DBA Inventory
       APP_ENV: docker
+      ZABBIX_URL: ${ZABBIX_URL:-}
+      ZABBIX_API_TOKEN: ${ZABBIX_API_TOKEN:-}
     ports:
       - "8000:8000"
     depends_on:

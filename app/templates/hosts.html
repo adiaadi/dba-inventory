@@ -26,6 +26,7 @@
           <th>DB Types</th>
           <th>Zabbix</th>
           <th>Monitoring</th>
+          <th>Problems</th>
           <th>Owner</th>
         </tr>
       </thead>
@@ -48,17 +49,29 @@
               {% endfor %}
             </td>
             <td>
-              {% if host.zabbix_url %}
-                <a href="{{ host.zabbix_url }}" target="_blank" rel="noreferrer">{{ host.zabbix_host_name or host.zabbix_hostid }}</a>
-              {% else %}
-                {{ host.zabbix_host_name or host.zabbix_hostid or "-" }}
-              {% endif %}
+              <div class="zabbix-cell">
+                <div class="fw-semibold">{{ host.zabbix_host_name or host.zabbix_hostid or "-" }}</div>
+                <div class="text-muted small">hostid: {{ host.zabbix_hostid or "-" }}</div>
+                <span class="badge text-bg-{{ host.zabbix_agent_availability|status_class }}">
+                  agent {{ host.zabbix_agent_availability }}
+                </span>
+                {% if host.zabbix_url %}
+                  <a class="btn btn-sm btn-outline-primary mt-2" href="{{ host.zabbix_url }}" target="_blank" rel="noreferrer">
+                    <i class="bi bi-box-arrow-up-right"></i> Open in Zabbix
+                  </a>
+                {% endif %}
+              </div>
             </td>
             <td><span class="badge text-bg-{{ host.monitoring_status|status_class }}">{{ host.monitoring_status }}</span></td>
+            <td>
+              <span class="problem-count {% if host.problem_count > 0 %}has-problems{% endif %}">
+                {{ host.problem_count }}
+              </span>
+            </td>
             <td>{{ host.owner_team or "-" }}</td>
           </tr>
         {% else %}
-          <tr><td colspan="8" class="empty-state">No hosts found.</td></tr>
+          <tr><td colspan="9" class="empty-state">No hosts found.</td></tr>
         {% endfor %}
       </tbody>
     </table>

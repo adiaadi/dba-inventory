@@ -105,6 +105,29 @@ python -m app.seed
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
+## Интеграция с Zabbix
+
+Заполните `.env`:
+
+```bash
+ZABBIX_URL=https://zabbix.example.local
+ZABBIX_API_TOKEN=your-zabbix-api-token
+```
+
+Синхронизация обновляет `zabbix_hostid`, `zabbix_host_name`, `zabbix_url`, `zabbix_agent_availability`, `monitoring_status`, `problem_count` и время последней синхронизации.
+
+Для Docker Compose:
+
+```bash
+sudo docker compose -f docker-compose.ghcr.yml exec app ./sync_zabbix
+```
+
+Для локального запуска:
+
+```bash
+python -m app.commands.sync_zabbix
+```
+
 ## Локальный запуск без Docker
 
 1. Создайте и активируйте виртуальное окружение.
@@ -162,7 +185,7 @@ uvicorn app.main:app --reload
 
 ## Модель данных
 
-- `hosts`: серверы и поля интеграции с Zabbix (`zabbix_hostid`, `zabbix_host_name`, `zabbix_url`, `monitoring_status`)
+- `hosts`: серверы и поля интеграции с Zabbix (`zabbix_hostid`, `zabbix_host_name`, `zabbix_url`, `zabbix_agent_availability`, `monitoring_status`, `problem_count`, `zabbix_last_sync_at`)
 - `database_instances`: СУБД/инстансы и поля интеграции с PoWA (`powa_repository`, `powa_server_name`, `powa_database_name`, `last_snapshot`, `status`)
 - `clusters`: HA-кластеры и их состояние
 - `cluster_members`: связь кластера с инстансами БД и ролью узла

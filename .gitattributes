@@ -6,3 +6,4 @@
 *.yml text eol=lf
 *.yaml text eol=lf
 Dockerfile text eol=lf
+sync_zabbix text eol=lf

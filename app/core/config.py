@@ -15,6 +15,8 @@ class Settings:
     )
     static_dir: str = getenv("STATIC_DIR", "app/static")
     templates_dir: str = getenv("TEMPLATES_DIR", "app/templates")
+    zabbix_url: str | None = getenv("ZABBIX_URL")
+    zabbix_api_token: str | None = getenv("ZABBIX_API_TOKEN")
 
 
 @lru_cache

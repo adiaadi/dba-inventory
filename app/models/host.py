@@ -1,4 +1,6 @@
-from sqlalchemy import String, Text
+from datetime import datetime
+
+from sqlalchemy import DateTime, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -22,6 +24,9 @@ class Host(TimestampMixin, Base):
     zabbix_hostid: Mapped[str | None] = mapped_column(String(80), index=True)
     zabbix_host_name: Mapped[str | None] = mapped_column(String(255))
     zabbix_url: Mapped[str | None] = mapped_column(String(500))
+    zabbix_agent_availability: Mapped[str] = mapped_column(String(40), index=True, default="unknown")
+    problem_count: Mapped[int] = mapped_column(Integer, default=0)
+    zabbix_last_sync_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     monitoring_status: Mapped[str] = mapped_column(String(40), index=True, default="unknown")
 
     databases: Mapped[list["DatabaseInstance"]] = relationship(

@@ -25,6 +25,8 @@ def seed() -> None:
             zabbix_hostid="10451",
             zabbix_host_name="pg-prod-01",
             zabbix_url="https://zabbix.example.local/hosts.php?hostid=10451",
+            zabbix_agent_availability="available",
+            problem_count=0,
             monitoring_status="ok",
         )
         pg_replica = Host(
@@ -39,6 +41,8 @@ def seed() -> None:
             zabbix_hostid="10452",
             zabbix_host_name="pg-prod-02",
             zabbix_url="https://zabbix.example.local/hosts.php?hostid=10452",
+            zabbix_agent_availability="available",
+            problem_count=1,
             monitoring_status="warning",
         )
         oracle_host = Host(
@@ -53,6 +57,8 @@ def seed() -> None:
             zabbix_hostid="10610",
             zabbix_host_name="ora-standby-01",
             zabbix_url="https://zabbix.example.local/hosts.php?hostid=10610",
+            zabbix_agent_availability="available",
+            problem_count=0,
             monitoring_status="ok",
         )
         sql_host = Host(
@@ -67,6 +73,8 @@ def seed() -> None:
             zabbix_hostid="10820",
             zabbix_host_name="mssql-stage-01",
             zabbix_url="https://zabbix.example.local/hosts.php?hostid=10820",
+            zabbix_agent_availability="unknown",
+            problem_count=0,
             monitoring_status="maintenance",
         )
 
