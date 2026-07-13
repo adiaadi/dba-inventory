@@ -112,6 +112,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```bash
 ZABBIX_URL=https://zabbix.example.local
 ZABBIX_API_TOKEN=your-zabbix-api-token
+ZABBIX_VERIFY_SSL=true
 ```
 
 Синхронизация обновляет `zabbix_hostid`, `zabbix_host_name`, `zabbix_url`, `zabbix_agent_availability`, `monitoring_status`, `problem_count` и время последней синхронизации.
@@ -141,6 +142,27 @@ ZABBIX_IP=10.0.0.10
 ```bash
 sudo docker compose -f docker-compose.ghcr.yml -f docker-compose.zabbix-host.yml up -d
 sudo docker compose -f docker-compose.ghcr.yml -f docker-compose.zabbix-host.yml exec app ./sync_zabbix
+```
+
+Если Zabbix использует self-signed или корпоративный CA, быстрый временный вариант:
+
+```bash
+ZABBIX_VERIFY_SSL=false
+```
+
+Более правильный вариант: положите CA-сертификат на сервер и смонтируйте его в контейнер. В `.env`:
+
+```bash
+ZABBIX_VERIFY_SSL=true
+ZABBIX_CA_FILE=/etc/ssl/certs/zabbix-ca.crt
+ZABBIX_CA_FILE_HOST=/var/lib/postgresql/dba-inventory/certs/zabbix-ca.crt
+```
+
+Запуск с CA override:
+
+```bash
+sudo docker compose -f docker-compose.ghcr.yml -f docker-compose.zabbix-ca.yml up -d
+sudo docker compose -f docker-compose.ghcr.yml -f docker-compose.zabbix-ca.yml exec app ./sync_zabbix
 ```
 
 Для локального запуска:

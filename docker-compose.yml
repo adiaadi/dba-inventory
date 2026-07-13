@@ -23,6 +23,8 @@ services:
       APP_ENV: docker
       ZABBIX_URL: ${ZABBIX_URL:-}
       ZABBIX_API_TOKEN: ${ZABBIX_API_TOKEN:-}
+      ZABBIX_VERIFY_SSL: ${ZABBIX_VERIFY_SSL:-true}
+      ZABBIX_CA_FILE: ${ZABBIX_CA_FILE:-}
     ports:
       - "8000:8000"
     depends_on:

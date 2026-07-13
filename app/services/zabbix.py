@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import ssl
 from dataclasses import dataclass
 from typing import Any
 from urllib.error import HTTPError, URLError
@@ -23,7 +24,14 @@ class ZabbixHostState:
 
 
 class ZabbixClient:
-    def __init__(self, base_url: str, api_token: str, timeout: int = 20) -> None:
+    def __init__(
+        self,
+        base_url: str,
+        api_token: str,
+        timeout: int = 20,
+        verify_ssl: bool = True,
+        ca_file: str | None = None,
+    ) -> None:
         if not base_url:
             raise ValueError("ZABBIX_URL is required")
         if not api_token:
@@ -37,12 +45,22 @@ class ZabbixClient:
             self.api_url = self._api_url(self.base_url)
         self.api_token = api_token
         self.timeout = timeout
+        self.ssl_context = self._ssl_context(verify_ssl, ca_file)
         self._request_id = 0
 
     def _api_url(self, base_url: str) -> str:
         if base_url.endswith("/api_jsonrpc.php"):
             return base_url
         return urljoin(f"{base_url}/", "api_jsonrpc.php")
+
+    def _ssl_context(self, verify_ssl: bool, ca_file: str | None) -> ssl.SSLContext | None:
+        if not self.api_url.startswith("https://"):
+            return None
+        if not verify_ssl:
+            return ssl._create_unverified_context()
+        if ca_file:
+            return ssl.create_default_context(cafile=ca_file)
+        return ssl.create_default_context()
 
     def _call(self, method: str, params: dict[str, Any]) -> Any:
         self._request_id += 1
@@ -62,8 +80,10 @@ class ZabbixClient:
             method="POST",
         )
         try:
-            with urlopen(request, timeout=self.timeout) as response:
+            with urlopen(request, timeout=self.timeout, context=self.ssl_context) as response:
                 data = json.loads(response.read().decode("utf-8"))
+        except ssl.SSLError as exc:
+            raise ZabbixApiError(f"Zabbix API SSL error: {exc}") from exc
         except HTTPError as exc:
             body = exc.read().decode("utf-8", errors="replace")
             raise ZabbixApiError(f"Zabbix API HTTP {exc.code}: {body}") from exc

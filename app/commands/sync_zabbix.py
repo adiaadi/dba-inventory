@@ -15,7 +15,12 @@ def sync_zabbix() -> int:
     if not settings.zabbix_url or not settings.zabbix_api_token:
         raise RuntimeError("ZABBIX_URL and ZABBIX_API_TOKEN must be set")
 
-    client = ZabbixClient(settings.zabbix_url, settings.zabbix_api_token)
+    client = ZabbixClient(
+        settings.zabbix_url,
+        settings.zabbix_api_token,
+        verify_ssl=settings.zabbix_verify_ssl,
+        ca_file=settings.zabbix_ca_file,
+    )
     db = SessionLocal()
     updated = 0
     try:
