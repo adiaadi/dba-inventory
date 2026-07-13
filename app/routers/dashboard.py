@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
-from sqlalchemy import desc, func, select
+from sqlalchemy import desc, func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.db.session import get_db
@@ -15,6 +15,27 @@ from app.web import templates
 
 router = APIRouter()
 
+DB_TYPE_VIEWS = {
+    "oracle": {
+        "label": "Oracle",
+        "title": "ORACLE DATABASE INVENTORY",
+        "db_types": ["Oracle"],
+        "logo": "/static/img/oracle_logo.svg",
+    },
+    "postgresql": {
+        "label": "PostgreSQL",
+        "title": "POSTGRESQL DATABASE INVENTORY",
+        "db_types": ["PostgreSQL"],
+        "logo": "/static/img/postgresql_logo.svg",
+    },
+    "sqlserver": {
+        "label": "SQLServer",
+        "title": "SQLSERVER DATABASE INVENTORY",
+        "db_types": ["SQL Server", "SQLServer"],
+        "logo": "/static/img/sqlserver_logo.svg",
+    },
+}
+
 
 @router.get("/", response_class=HTMLResponse)
 def dashboard(
@@ -26,7 +47,7 @@ def dashboard(
     monitoring_status: str | None = None,
     db: Session = Depends(get_db),
 ):
-    allowed_views = {"overview", "hosts", "databases", "clusters"}
+    allowed_views = {"overview", "hosts", "databases", "clusters", *DB_TYPE_VIEWS.keys()}
     current_view = view if view in allowed_views else "overview"
     filters = active_filters(db_type, environment, role, monitoring_status)
     counts = {
@@ -77,6 +98,25 @@ def dashboard(
     hosts_stmt = apply_host_filters(hosts_stmt, db_type, environment, role, monitoring_status)
     hosts_list = db.scalars(hosts_stmt).all()
 
+    db_type_view = DB_TYPE_VIEWS.get(current_view)
+    display_hosts = hosts_list
+    if db_type_view:
+        typed_hosts_stmt = (
+            select(Host)
+            .options(selectinload(Host.databases))
+            .outerjoin(Host.databases)
+            .where(
+                or_(
+                    Host.db_type.in_(db_type_view["db_types"]),
+                    DatabaseInstance.db_type.in_(db_type_view["db_types"]),
+                )
+            )
+            .distinct()
+            .order_by(Host.hostname)
+        )
+        typed_hosts_stmt = apply_host_filters(typed_hosts_stmt, None, environment, role, monitoring_status)
+        display_hosts = db.scalars(typed_hosts_stmt).all()
+
     database_assets_stmt = (
         select(Host)
         .options(selectinload(Host.databases))
@@ -115,23 +155,31 @@ def dashboard(
         "availabilityValues": [count for _, count in availability_counts],
     }
     section_tabs = [
-        {"key": "overview", "label": "Inventory Overview", "icon": "bi-grid-1x2"},
+        {"key": "overview", "label": "Overview", "icon": "bi-grid-1x2"},
         {"key": "hosts", "label": "Hosts", "icon": "bi-hdd-network"},
-        {"key": "databases", "label": "DB Assets", "icon": "bi-database-check"},
-        {"key": "clusters", "label": "HA/DR Clusters", "icon": "bi-diagram-3"},
+        {"key": "oracle", "label": "Oracle", "icon": "bi-database"},
+        {"key": "postgresql", "label": "PostgreSQL", "icon": "bi-database-fill"},
+        {"key": "sqlserver", "label": "SQLServer", "icon": "bi-server"},
     ]
     section_titles = {
-        "overview": "DBA INVENTORY OVERVIEW - STATUS UPDATE",
+        "overview": "BNKC DATABASE INVENTORY OVERVIEW",
         "hosts": "HOST INVENTORY - STATUS UPDATE",
         "databases": "DB ASSETS - STATUS UPDATE",
         "clusters": "HA/DR CLUSTERS - STATUS UPDATE",
+        **{key: config["title"] for key, config in DB_TYPE_VIEWS.items()},
     }
     section_subtitles = {
         "overview": f"{counts['hosts']} hosts, {counts['databases']} DB assets, {counts['clusters']} HA/DR clusters",
         "hosts": f"{len(hosts_list)} hosts in current view",
         "databases": f"{len(database_assets)} DB assets in current view",
         "clusters": f"{len(clusters)} clusters in current view",
+        **{
+            key: f"{len(display_hosts) if key == current_view else 0} hosts in current view"
+            for key in DB_TYPE_VIEWS
+        },
     }
+    if db_type_view:
+        section_subtitles[current_view] = f"{len(display_hosts)} {db_type_view['label']} hosts in current view"
 
     return templates.TemplateResponse(
         request,
@@ -143,8 +191,11 @@ def dashboard(
             "section_tabs": section_tabs,
             "section_title": section_titles[current_view],
             "section_subtitle": section_subtitles[current_view],
+            "section_logo": db_type_view["logo"] if db_type_view else None,
             "counts": counts,
             "hosts": hosts_list,
+            "display_hosts": display_hosts,
+            "db_type_view": db_type_view,
             "database_assets": database_assets,
             "monitoring_counts": monitoring_counts,
             "db_type_counts": db_type_counts,

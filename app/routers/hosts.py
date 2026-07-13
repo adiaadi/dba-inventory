@@ -1,3 +1,5 @@
+from urllib.parse import urlencode
+
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from sqlalchemy import select
@@ -47,9 +49,32 @@ def host_detail(host_id: int, request: Request, db: Session = Depends(get_db)):
     if host is None:
         raise HTTPException(status_code=404, detail="Host not found")
 
-    related_hosts = db.scalars(select(Host).order_by(Host.hostname).limit(80)).all()
     problem_count = host.problem_count or 0
     db_label = host.db_type or ", ".join(sorted({database.db_type for database in host.databases})) or "-"
+
+    zabbix_base = ""
+    if host.zabbix_url and "zabbix.php" in host.zabbix_url:
+        zabbix_base = host.zabbix_url.split("zabbix.php", 1)[0]
+
+    def zabbix_url(action: str, **params) -> str:
+        if not zabbix_base or not host.zabbix_hostid:
+            return "#"
+        query = urlencode({"action": action, **params})
+        return f"{zabbix_base}zabbix.php?{query}"
+
+    zabbix_tabs = [
+        ("Performance Summary", zabbix_url("host.dashboard.view", hostid=host.zabbix_hostid)),
+        ("Performance", zabbix_url("charts.view", **{"filter_hostids[0]": host.zabbix_hostid, "filter_set": "1"})),
+        ("Metrics", zabbix_url("latest.view", **{"filter_hostids[0]": host.zabbix_hostid, "filter_set": "1"})),
+        ("Alerts", zabbix_url("problem.view", **{"filter_hostids[0]": host.zabbix_hostid, "filter_set": "1"})),
+        ("Object Execution", zabbix_url("latest.view", **{"filter_hostids[0]": host.zabbix_hostid, "filter_name": "execution", "filter_set": "1"})),
+        ("Slow Queries", zabbix_url("latest.view", **{"filter_hostids[0]": host.zabbix_hostid, "filter_name": "slow", "filter_set": "1"})),
+        ("Waits", zabbix_url("latest.view", **{"filter_hostids[0]": host.zabbix_hostid, "filter_name": "wait", "filter_set": "1"})),
+        ("Running Queries", zabbix_url("latest.view", **{"filter_hostids[0]": host.zabbix_hostid, "filter_name": "running", "filter_set": "1"})),
+        ("Memory", zabbix_url("latest.view", **{"filter_hostids[0]": host.zabbix_hostid, "filter_name": "memory", "filter_set": "1"})),
+        ("Top Queries", zabbix_url("latest.view", **{"filter_hostids[0]": host.zabbix_hostid, "filter_name": "query", "filter_set": "1"})),
+        ("Forced Plans", zabbix_url("latest.view", **{"filter_hostids[0]": host.zabbix_hostid, "filter_name": "plan", "filter_set": "1"})),
+    ]
     metric_rows = [
         {
             "object": "Zabbix",
@@ -108,8 +133,8 @@ def host_detail(host_id: int, request: Request, db: Session = Depends(get_db)):
             "request": request,
             "active_page": "hosts",
             "host": host,
-            "related_hosts": related_hosts,
             "db_label": db_label,
             "metric_rows": metric_rows,
+            "zabbix_tabs": zabbix_tabs,
         },
     )

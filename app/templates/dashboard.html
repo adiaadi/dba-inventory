@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Dashboard | DBA Inventory{% endblock %}
+{% block title %}BNKC Database Inventory{% endblock %}
 
 {% block content %}
 <div class="overview-shell">
@@ -65,30 +65,25 @@
 
   <section class="overview-main">
     <header class="overview-header">
-      <div>
-        <h1>{{ section_title }}</h1>
-        <p>{{ section_subtitle }}</p>
+      <div class="overview-heading">
+        {% if section_logo %}
+          <img class="db-heading-logo" src="{{ section_logo }}" alt="{{ section_title }}">
+        {% endif %}
+        <div>
+          <h1>{{ section_title }}</h1>
+          <p>{{ section_subtitle }}</p>
+        </div>
       </div>
       <div class="overview-actions">
-        {% if current_view == "hosts" %}
+        {% if current_view == "hosts" or db_type_view %}
           <a class="btn btn-success btn-sm" href="/exports/hosts.xlsx"><i class="bi bi-file-earmark-excel"></i> Export Hosts</a>
         {% elif current_view == "databases" %}
           <a class="btn btn-success btn-sm" href="/exports/databases.xlsx"><i class="bi bi-file-earmark-excel"></i> Export DBs</a>
         {% else %}
           <a class="btn btn-outline-secondary btn-sm" href="/?view=hosts">Explore Hosts</a>
-          <a class="btn btn-outline-secondary btn-sm" href="/?view=clusters">View HA/DR</a>
         {% endif %}
       </div>
     </header>
-
-    <nav class="overview-tabbar">
-      {% for tab in section_tabs %}
-        <a class="overview-tab {% if current_view == tab.key %}active{% endif %}" href="/?view={{ tab.key }}">
-          <i class="bi {{ tab.icon }}"></i>
-          <span>{{ tab.label }}</span>
-        </a>
-      {% endfor %}
-    </nav>
 
     <section class="overview-kpis">
       <a class="overview-kpi {% if current_view == 'hosts' %}active{% endif %}" href="/?view=hosts">
@@ -209,11 +204,11 @@
           </div>
         </section>
       </div>
-    {% elif current_view == "hosts" %}
+    {% elif current_view == "hosts" or db_type_view %}
       <section class="overview-panel">
         <div class="overview-section-heading">
-          <h2>Host Summary</h2>
-          <span>{{ hosts|length }} records</span>
+          <h2>{% if db_type_view %}{{ db_type_view.label }} Hosts{% else %}Host Summary{% endif %}</h2>
+          <span>{{ display_hosts|length }} records</span>
         </div>
         <div class="table-responsive">
           <table class="table table-sm align-middle table-hover overview-table">
@@ -230,7 +225,7 @@
               </tr>
             </thead>
             <tbody>
-              {% for host in hosts %}
+              {% for host in display_hosts %}
                 {% set instance_db_types = host.databases | map(attribute='db_type') | unique | list %}
                 <tr>
                   <td>
