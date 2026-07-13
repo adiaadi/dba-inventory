@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Hosts | DBA Inventory{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Hosts</h1>
+    <p class="text-muted mb-0">{{ hosts|length }} records</p>
+  </div>
+  <a class="btn btn-success" href="/exports/hosts.xlsx{% if request.url.query %}?{{ request.url.query }}{% endif %}">
+    <i class="bi bi-file-earmark-excel"></i> Export
+  </a>
+</div>
+
+{% include "partials/filter_form.html" %}
+
+<section class="content-panel mt-3">
+  <div class="table-responsive">
+    <table class="table align-middle table-hover inventory-table">
+      <thead>
+        <tr>
+          <th>Host</th>
+          <th>IP</th>
+          <th>Environment</th>
+          <th>Role</th>
+          <th>DB Types</th>
+          <th>Zabbix</th>
+          <th>Monitoring</th>
+          <th>Owner</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for host in hosts %}
+          <tr>
+            <td>
+              <div class="fw-semibold">{{ host.hostname }}</div>
+              <div class="text-muted small">{{ host.fqdn or "-" }}</div>
+            </td>
+            <td>{{ host.ip_address or "-" }}</td>
+            <td><span class="pill">{{ host.environment }}</span></td>
+            <td>{{ host.role }}</td>
+            <td>
+              {% set db_types = host.databases | map(attribute='db_type') | unique | list %}
+              {% for db_type in db_types %}
+                <span class="badge text-bg-light border">{{ db_type }}</span>
+              {% else %}
+                -
+              {% endfor %}
+            </td>
+            <td>
+              {% if host.zabbix_url %}
+                <a href="{{ host.zabbix_url }}" target="_blank" rel="noreferrer">{{ host.zabbix_host_name or host.zabbix_hostid }}</a>
+              {% else %}
+                {{ host.zabbix_host_name or host.zabbix_hostid or "-" }}
+              {% endif %}
+            </td>
+            <td><span class="badge text-bg-{{ host.monitoring_status|status_class }}">{{ host.monitoring_status }}</span></td>
+            <td>{{ host.owner_team or "-" }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="8" class="empty-state">No hosts found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Databases | DBA Inventory{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Databases</h1>
+    <p class="text-muted mb-0">{{ databases|length }} records</p>
+  </div>
+  <a class="btn btn-success" href="/exports/databases.xlsx{% if request.url.query %}?{{ request.url.query }}{% endif %}">
+    <i class="bi bi-file-earmark-excel"></i> Export
+  </a>
+</div>
+
+{% include "partials/filter_form.html" %}
+
+<section class="content-panel mt-3">
+  <div class="table-responsive">
+    <table class="table align-middle table-hover inventory-table">
+      <thead>
+        <tr>
+          <th>Database</th>
+          <th>Host</th>
+          <th>Environment</th>
+          <th>Role</th>
+          <th>Version</th>
+          <th>PoWA</th>
+          <th>Snapshot</th>
+          <th>Status</th>
+          <th>Monitoring</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for database in databases %}
+          <tr>
+            <td>
+              <div class="fw-semibold">{{ database.name }}</div>
+              <div class="text-muted small">{{ database.db_type }}{% if database.port %}:{{ database.port }}{% endif %}</div>
+            </td>
+            <td>{{ database.host.hostname }}</td>
+            <td><span class="pill">{{ database.environment }}</span></td>
+            <td>{{ database.role }}</td>
+            <td>{{ database.version or "-" }}</td>
+            <td>
+              <div>{{ database.powa_repository or "-" }}</div>
+              <div class="text-muted small">{{ database.powa_server_name or "-" }} / {{ database.powa_database_name or "-" }}</div>
+            </td>
+            <td>{{ database.last_snapshot|date_time }}</td>
+            <td><span class="badge text-bg-{{ database.status|status_class }}">{{ database.status }}</span></td>
+            <td><span class="badge text-bg-{{ database.host.monitoring_status|status_class }}">{{ database.host.monitoring_status }}</span></td>
+          </tr>
+        {% else %}
+          <tr><td colspan="9" class="empty-state">No databases found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

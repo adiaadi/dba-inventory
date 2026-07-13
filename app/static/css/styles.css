@@ -1,0 +1,272 @@
+:root {
+  --app-bg: #f5f7fa;
+  --panel-bg: #ffffff;
+  --border: #dfe5ec;
+  --text: #182230;
+  --muted: #667085;
+  --nav: #ffffff;
+  --brand: #2563eb;
+  --green: #12805c;
+  --amber: #b76e00;
+  --violet: #6d5bd0;
+}
+
+body {
+  background: var(--app-bg);
+  color: var(--text);
+  font-size: 15px;
+}
+
+.app-nav {
+  background: var(--nav);
+}
+
+.navbar-brand {
+  font-weight: 700;
+}
+
+.brand-mark {
+  align-items: center;
+  background: var(--brand);
+  border-radius: 8px;
+  color: #fff;
+  display: inline-flex;
+  height: 32px;
+  justify-content: center;
+  width: 32px;
+}
+
+.nav-link {
+  align-items: center;
+  display: inline-flex;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.nav-link.active {
+  color: var(--brand) !important;
+}
+
+.page-header {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.page-header h1 {
+  font-size: 1.65rem;
+  margin: 0;
+}
+
+.metric-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.metric-card,
+.content-panel,
+.filter-bar {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+}
+
+.metric-card {
+  color: inherit;
+  display: grid;
+  gap: 6px;
+  min-height: 132px;
+  padding: 20px;
+  text-decoration: none;
+}
+
+.metric-card:hover {
+  border-color: #b8c7db;
+}
+
+.metric-icon {
+  align-items: center;
+  border-radius: 8px;
+  color: #fff;
+  display: inline-flex;
+  height: 36px;
+  justify-content: center;
+  width: 36px;
+}
+
+.metric-icon.host {
+  background: var(--brand);
+}
+
+.metric-icon.database {
+  background: var(--green);
+}
+
+.metric-icon.cluster {
+  background: var(--violet);
+}
+
+.metric-value {
+  font-size: 2rem;
+  font-weight: 750;
+  line-height: 1;
+}
+
+.metric-label {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.content-panel {
+  padding: 18px;
+}
+
+.panel-title {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.panel-title h2 {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.filter-bar {
+  align-items: end;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 14px;
+}
+
+.filter-grid {
+  display: grid;
+  flex: 1;
+  gap: 12px;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+}
+
+.filter-bar .form-label {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.filter-bar .form-select {
+  margin-top: 4px;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.stack-list {
+  display: grid;
+  gap: 10px;
+}
+
+.stack-row {
+  align-items: center;
+  border-bottom: 1px solid #eef2f6;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  min-height: 34px;
+  padding-bottom: 10px;
+}
+
+.stack-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.inventory-table {
+  margin: 0;
+}
+
+.inventory-table thead th {
+  color: var(--muted);
+  font-size: 0.78rem;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.inventory-table td {
+  min-width: 110px;
+}
+
+.pill {
+  background: #eef5ff;
+  border: 1px solid #d7e6fb;
+  border-radius: 999px;
+  color: #184b8f;
+  display: inline-flex;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 3px 9px;
+}
+
+.member-list {
+  display: grid;
+  gap: 6px;
+  min-width: 360px;
+}
+
+.member-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.empty-state {
+  color: var(--muted);
+  padding: 18px 0;
+  text-align: center;
+}
+
+.truncate {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 992px) {
+  .metric-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 576px) {
+  .page-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-actions .btn {
+    flex: 1;
+  }
+}

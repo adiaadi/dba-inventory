@@ -1,0 +1,48 @@
+<form class="filter-bar" method="get">
+  <div class="filter-grid">
+    <label class="form-label">
+      <span>DB type</span>
+      <select class="form-select" name="db_type">
+        <option value="">All</option>
+        {% for value in filter_options.db_types %}
+          <option value="{{ value }}" {% if filters.db_type == value %}selected{% endif %}>{{ value }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="form-label">
+      <span>Environment</span>
+      <select class="form-select" name="environment">
+        <option value="">All</option>
+        {% for value in filter_options.environments %}
+          <option value="{{ value }}" {% if filters.environment == value %}selected{% endif %}>{{ value }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="form-label">
+      <span>Role</span>
+      <select class="form-select" name="role">
+        <option value="">All</option>
+        {% for value in filter_options.roles %}
+          <option value="{{ value }}" {% if filters.role == value %}selected{% endif %}>{{ value }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="form-label">
+      <span>Monitoring</span>
+      <select class="form-select" name="monitoring_status">
+        <option value="">All</option>
+        {% for value in filter_options.monitoring_statuses %}
+          <option value="{{ value }}" {% if filters.monitoring_status == value %}selected{% endif %}>{{ value }}</option>
+        {% endfor %}
+      </select>
+    </label>
+  </div>
+  <div class="filter-actions">
+    <button class="btn btn-primary" type="submit">
+      <i class="bi bi-funnel"></i> Apply
+    </button>
+    <a class="btn btn-outline-secondary" href="{{ request.url.path }}">
+      <i class="bi bi-x-circle"></i> Reset
+    </a>
+  </div>
+</form>

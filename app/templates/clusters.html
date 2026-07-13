@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Clusters | DBA Inventory{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Clusters</h1>
+    <p class="text-muted mb-0">{{ clusters|length }} records</p>
+  </div>
+</div>
+
+{% include "partials/filter_form.html" %}
+
+<section class="content-panel mt-3">
+  <div class="table-responsive">
+    <table class="table align-middle table-hover inventory-table">
+      <thead>
+        <tr>
+          <th>Cluster</th>
+          <th>Type</th>
+          <th>Environment</th>
+          <th>Primary</th>
+          <th>Status</th>
+          <th>Members</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cluster in clusters %}
+          <tr>
+            <td>
+              <div class="fw-semibold">{{ cluster.name }}</div>
+              <div class="text-muted small">{{ cluster.description or "-" }}</div>
+            </td>
+            <td>{{ cluster.cluster_type }}</td>
+            <td><span class="pill">{{ cluster.environment }}</span></td>
+            <td>{{ cluster.primary_node or "-" }}</td>
+            <td><span class="badge text-bg-{{ cluster.status|status_class }}">{{ cluster.status }}</span></td>
+            <td>
+              <div class="member-list">
+                {% for member in cluster.members %}
+                  <div class="member-row">
+                    <span class="fw-semibold">{{ member.database_instance.name }}</span>
+                    <span class="text-muted">{{ member.database_instance.host.hostname }}</span>
+                    <span class="badge text-bg-light border">{{ member.role }}</span>
+                    {% if member.sync_state %}
+                      <span class="badge text-bg-{{ member.sync_state|status_class }}">{{ member.sync_state }}</span>
+                    {% endif %}
+                  </div>
+                {% else %}
+                  -
+                {% endfor %}
+              </div>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="6" class="empty-state">No clusters found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}
