@@ -20,19 +20,19 @@ router = APIRouter()
 DB_TYPE_VIEWS = {
     "oracle": {
         "label": "Oracle",
-        "title": "ORACLE INVENTORY OVERVIEW",
+        "title": "ORACLE",
         "db_types": ["Oracle"],
         "logo": "/static/img/oracle.png",
     },
     "postgresql": {
         "label": "PostgreSQL",
-        "title": "POSTGRESQL INVENTORY OVERVIEW",
+        "title": "POSTGRESQL",
         "db_types": ["PostgreSQL"],
         "logo": "/static/img/postgresql.png",
     },
     "sqlserver": {
         "label": "SQLServer",
-        "title": "SQLSERVER INVENTORY OVERVIEW",
+        "title": "SQL SERVER",
         "db_types": ["SQL Server", "SQLServer"],
         "logo": "/static/img/sqlserver.png",
     },
@@ -253,8 +253,8 @@ def dashboard(
         {"key": "sqlserver", "label": "SQLServer", "icon": "bi-server"},
     ]
     section_titles = {
-        "overview": "DATABASE INVENTORY OVERVIEW",
-        "hosts": "SERVERS INVENTORY OVERVIEW",
+        "overview": "SUMMARY OVERVIEW",
+        "hosts": "SERVERS OVERVIEW",
         "databases": "DATABASE ASSETS INVENTORY",
         "clusters": "HA/DR CLUSTERS INVENTORY",
         **{key: config["title"] for key, config in DB_TYPE_VIEWS.items()},
