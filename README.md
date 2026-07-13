@@ -122,6 +122,27 @@ ZABBIX_API_TOKEN=your-zabbix-api-token
 sudo docker compose -f docker-compose.ghcr.yml exec app ./sync_zabbix
 ```
 
+Если контейнер не может разрешить имя Zabbix (`Temporary failure in name resolution`), проверьте DNS с хоста и из контейнера:
+
+```bash
+getent hosts zabbix.example.local
+sudo docker compose -f docker-compose.ghcr.yml exec app getent hosts zabbix.example.local
+```
+
+Если хост разрешает имя, а контейнер нет, можно задать статический mapping через `.env`:
+
+```bash
+ZABBIX_HOSTNAME=zabbix.example.local
+ZABBIX_IP=10.0.0.10
+```
+
+и запускать compose с override:
+
+```bash
+sudo docker compose -f docker-compose.ghcr.yml -f docker-compose.zabbix-host.yml up -d
+sudo docker compose -f docker-compose.ghcr.yml -f docker-compose.zabbix-host.yml exec app ./sync_zabbix
+```
+
 Для локального запуска:
 
 ```bash

@@ -1,0 +1,4 @@
+services:
+  app:
+    extra_hosts:
+      - "${ZABBIX_HOSTNAME}:${ZABBIX_IP}"
