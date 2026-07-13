@@ -116,6 +116,31 @@ class ZabbixClient:
                 return result[0]
         return None
 
+    def get_host_groups_by_names(self, group_names: list[str]) -> list[dict[str, Any]]:
+        if not group_names:
+            return []
+        return self._call(
+            "hostgroup.get",
+            {
+                "output": ["groupid", "name"],
+                "filter": {"name": group_names},
+            },
+        )
+
+    def get_hosts_by_groupids(self, groupids: list[str]) -> list[dict[str, Any]]:
+        if not groupids:
+            return []
+        return self._call(
+            "host.get",
+            {
+                "output": ["hostid", "host", "name", "status"],
+                "groupids": groupids,
+                "selectGroups": ["groupid", "name"],
+                "selectInterfaces": ["interfaceid", "type", "main", "available", "ip", "dns", "useip", "error"],
+                "sortfield": ["name", "host"],
+            },
+        )
+
     def get_hostid_by_hostname(self, hostname: str) -> str | None:
         host = self.get_host_by_hostname(hostname)
         if not host:
@@ -151,7 +176,9 @@ class ZabbixClient:
         host = self.get_host_by_hostname(hostname)
         if not host:
             return None
+        return self.host_state_from_host(host)
 
+    def host_state_from_host(self, host: dict[str, Any]) -> ZabbixHostState:
         hostid = str(host["hostid"])
         problems = self.get_current_problems(hostid)
         problem_count = len(problems)
@@ -160,12 +187,24 @@ class ZabbixClient:
 
         return ZabbixHostState(
             hostid=hostid,
-            host_name=host.get("name") or host.get("host") or hostname,
+            host_name=host.get("name") or host.get("host") or hostid,
             agent_availability=availability,
             problem_count=problem_count,
             monitoring_status=status,
             url=self.build_host_url(hostid),
         )
+
+    def primary_interface_address(self, host: dict[str, Any]) -> str | None:
+        interfaces = host.get("interfaces") or []
+        if not interfaces:
+            return None
+        primary = next((interface for interface in interfaces if str(interface.get("main")) == "1"), None)
+        selected = primary or interfaces[0]
+        if str(selected.get("useip")) == "1" and selected.get("ip"):
+            return selected["ip"]
+        if selected.get("dns"):
+            return selected["dns"]
+        return selected.get("ip")
 
     def build_host_url(self, hostid: str) -> str:
         return f"{self.base_url}/hosts.php?form=update&hostid={quote(str(hostid))}"

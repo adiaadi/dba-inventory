@@ -123,6 +123,22 @@ ZABBIX_VERIFY_SSL=true
 sudo docker compose -f docker-compose.ghcr.yml exec app ./sync_zabbix
 ```
 
+Импорт реальных хостов из групп Zabbix `Oracle Database`, `Oracle Server`, `PostgreSQL Database`, `PostgreSQL Server`, `SQLServer Database`:
+
+```bash
+sudo docker compose -f docker-compose.ghcr.yml exec app ./import_zabbix_hosts
+```
+
+Если используются DNS/CA override-файлы:
+
+```bash
+sudo docker compose \
+  -f docker-compose.ghcr.yml \
+  -f docker-compose.zabbix-host.yml \
+  -f docker-compose.zabbix-ca.yml \
+  exec app ./import_zabbix_hosts
+```
+
 Если контейнер не может разрешить имя Zabbix (`Temporary failure in name resolution`), проверьте DNS с хоста и из контейнера:
 
 ```bash

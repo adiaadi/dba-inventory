@@ -26,7 +26,12 @@ def sync_zabbix() -> int:
     try:
         hosts = db.scalars(select(Host).order_by(Host.hostname)).all()
         for host in hosts:
-            state = client.get_host_state(host.hostname)
+            lookup_names = [host.hostname, host.zabbix_host_name, host.fqdn]
+            state = None
+            for lookup_name in dict.fromkeys(name for name in lookup_names if name):
+                state = client.get_host_state(lookup_name)
+                if state is not None:
+                    break
             now = datetime.now(UTC)
             if state is None:
                 host.monitoring_status = "not_found"
