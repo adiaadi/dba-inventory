@@ -4,14 +4,31 @@ from sqlalchemy import desc, func, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.db.session import get_db
-from app.models import Cluster, DatabaseInstance, Host
+from app.models import Cluster, ClusterMember, DatabaseInstance, Host
+from app.routers.common import (
+    active_filters,
+    apply_cluster_filters,
+    apply_host_filters,
+    get_filter_options,
+)
 from app.web import templates
 
 router = APIRouter()
 
 
 @router.get("/", response_class=HTMLResponse)
-def dashboard(request: Request, db: Session = Depends(get_db)):
+def dashboard(
+    request: Request,
+    view: str = "overview",
+    db_type: str | None = None,
+    environment: str | None = None,
+    role: str | None = None,
+    monitoring_status: str | None = None,
+    db: Session = Depends(get_db),
+):
+    allowed_views = {"overview", "hosts", "databases", "clusters"}
+    current_view = view if view in allowed_views else "overview"
+    filters = active_filters(db_type, environment, role, monitoring_status)
     counts = {
         "hosts": db.scalar(select(func.count(Host.id))) or 0,
         "databases": db.scalar(select(func.count(DatabaseInstance.id))) or 0,
@@ -56,7 +73,30 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
         .order_by(desc(Host.problem_count), Host.monitoring_status, Host.hostname)
         .limit(10)
     ).all()
-    clusters = db.scalars(select(Cluster).order_by(Cluster.name)).all()
+    hosts_stmt = select(Host).options(selectinload(Host.databases)).order_by(Host.hostname)
+    hosts_stmt = apply_host_filters(hosts_stmt, db_type, environment, role, monitoring_status)
+    hosts_list = db.scalars(hosts_stmt).all()
+
+    database_assets_stmt = (
+        select(Host)
+        .options(selectinload(Host.databases))
+        .where(Host.db_type.is_not(None), Host.db_type != "")
+        .order_by(Host.db_type, Host.hostname)
+    )
+    database_assets_stmt = apply_host_filters(database_assets_stmt, db_type, environment, role, monitoring_status)
+    database_assets = db.scalars(database_assets_stmt).all()
+
+    clusters_stmt = (
+        select(Cluster)
+        .options(
+            selectinload(Cluster.members)
+            .selectinload(ClusterMember.database_instance)
+            .selectinload(DatabaseInstance.host)
+        )
+        .order_by(Cluster.cluster_type, Cluster.name)
+    )
+    clusters_stmt = apply_cluster_filters(clusters_stmt, db_type, environment, role, monitoring_status)
+    clusters = db.scalars(clusters_stmt).all()
     recent_snapshots = db.scalars(
         select(DatabaseInstance)
         .options(selectinload(DatabaseInstance.host))
@@ -74,14 +114,38 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
         "availabilityLabels": [availability or "unknown" for availability, _ in availability_counts],
         "availabilityValues": [count for _, count in availability_counts],
     }
+    section_tabs = [
+        {"key": "overview", "label": "Inventory Overview", "icon": "bi-grid-1x2"},
+        {"key": "hosts", "label": "Hosts", "icon": "bi-hdd-network"},
+        {"key": "databases", "label": "DB Assets", "icon": "bi-database-check"},
+        {"key": "clusters", "label": "HA/DR Clusters", "icon": "bi-diagram-3"},
+    ]
+    section_titles = {
+        "overview": "DBA INVENTORY OVERVIEW - STATUS UPDATE",
+        "hosts": "HOST INVENTORY - STATUS UPDATE",
+        "databases": "DB ASSETS - STATUS UPDATE",
+        "clusters": "HA/DR CLUSTERS - STATUS UPDATE",
+    }
+    section_subtitles = {
+        "overview": f"{counts['hosts']} hosts, {counts['databases']} DB assets, {counts['clusters']} HA/DR clusters",
+        "hosts": f"{len(hosts_list)} hosts in current view",
+        "databases": f"{len(database_assets)} DB assets in current view",
+        "clusters": f"{len(clusters)} clusters in current view",
+    }
 
     return templates.TemplateResponse(
         request,
         "dashboard.html",
         {
             "request": request,
-            "active_page": "dashboard",
+            "active_page": "dashboard" if current_view == "overview" else current_view,
+            "current_view": current_view,
+            "section_tabs": section_tabs,
+            "section_title": section_titles[current_view],
+            "section_subtitle": section_subtitles[current_view],
             "counts": counts,
+            "hosts": hosts_list,
+            "database_assets": database_assets,
             "monitoring_counts": monitoring_counts,
             "db_type_counts": db_type_counts,
             "environment_counts": environment_counts,
@@ -93,5 +157,7 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
             "chart_data": chart_data,
             "clusters": clusters,
             "recent_snapshots": recent_snapshots,
+            "filters": filters,
+            "filter_options": get_filter_options(db),
         },
     )

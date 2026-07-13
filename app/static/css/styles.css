@@ -282,14 +282,15 @@ body {
 }
 
 .overview-shell {
-  background: #e9f0ff;
-  border: 6px solid #1775d6;
-  border-radius: 8px;
+  background: #eef2f7;
+  border: 1px solid #d8e1ec;
+  border-radius: 12px;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
   display: grid;
   gap: 14px;
   grid-template-columns: 126px minmax(0, 1fr);
   min-height: calc(100vh - 114px);
-  padding: 12px;
+  padding: 14px;
 }
 
 .overview-sidebar {
@@ -365,6 +366,11 @@ body {
   gap: 4px;
 }
 
+.overview-filter-actions {
+  display: grid;
+  gap: 8px;
+}
+
 .overview-main {
   min-width: 0;
 }
@@ -399,8 +405,40 @@ body {
   min-width: 132px;
 }
 
+.overview-tabbar {
+  background: #fff;
+  border: 1px solid #d8e1ec;
+  border-radius: 8px;
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+  overflow-x: auto;
+  padding: 6px;
+}
+
+.overview-tab {
+  align-items: center;
+  border-radius: 6px;
+  color: #475467;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 0.86rem;
+  font-weight: 750;
+  gap: 7px;
+  min-height: 34px;
+  padding: 0 12px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.overview-tab.active,
+.overview-tab:hover {
+  background: #eaf3ff;
+  color: #0f5ea8;
+}
+
 .overview-kpis {
-  background: #eef5ff;
+  background: #f8fafc;
   border: 1px solid #cbdcf0;
   border-radius: 8px;
   display: grid;
@@ -424,6 +462,7 @@ body {
 
 .overview-kpi.active {
   border: 2px solid #1578e8;
+  box-shadow: inset 0 0 0 1px rgba(21, 120, 232, 0.12);
 }
 
 .overview-kpi i {
@@ -484,6 +523,36 @@ body {
 
 .overview-table-panel {
   grid-column: span 2;
+}
+
+.overview-grid-assets {
+  grid-template-columns: minmax(280px, 0.55fr) minmax(0, 1.45fr);
+}
+
+.overview-grid-assets .overview-table-panel {
+  grid-column: span 1;
+}
+
+.overview-section-heading {
+  align-items: center;
+  border-bottom: 1px solid #edf1f6;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin: -2px 0 10px;
+  padding-bottom: 8px;
+}
+
+.overview-section-heading h2 {
+  font-size: 0.95rem;
+  margin: 0;
+  text-align: left;
+}
+
+.overview-section-heading span {
+  color: #667085;
+  font-size: 0.8rem;
+  font-weight: 700;
 }
 
 .chart-box {
