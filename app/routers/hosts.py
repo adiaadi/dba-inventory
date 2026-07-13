@@ -25,6 +25,7 @@ def hosts(
     hosts_list = db.scalars(stmt).all()
 
     return templates.TemplateResponse(
+        request,
         "hosts.html",
         {
             "request": request,

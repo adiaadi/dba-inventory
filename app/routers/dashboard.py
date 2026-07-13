@@ -37,6 +37,7 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
     ).all()
 
     return templates.TemplateResponse(
+        request,
         "dashboard.html",
         {
             "request": request,

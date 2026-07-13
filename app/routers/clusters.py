@@ -33,6 +33,7 @@ def clusters(
     cluster_list = db.scalars(stmt).all()
 
     return templates.TemplateResponse(
+        request,
         "clusters.html",
         {
             "request": request,

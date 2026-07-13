@@ -29,6 +29,7 @@ def databases(
     database_list = db.scalars(stmt).all()
 
     return templates.TemplateResponse(
+        request,
         "databases.html",
         {
             "request": request,
