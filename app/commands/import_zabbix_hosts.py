@@ -37,6 +37,44 @@ def db_type_from_groups(group_names: list[str]) -> str | None:
     return None
 
 
+def db_type_from_tag_value(value: str | None) -> str | None:
+    normalized = (value or "").lower().replace("_", " ").replace("-", " ")
+    if "postgresql" in normalized or "postgres" in normalized:
+        return "PostgreSQL"
+    if "oracle" in normalized:
+        return "Oracle"
+    if "sqlserver" in normalized or "sql server" in normalized or "mssql" in normalized:
+        return "SQLServer"
+    return None
+
+
+def normalize_tags(raw_tags: list[dict]) -> dict[str, list[str]]:
+    tags: dict[str, set[str]] = {}
+    for raw_tag in raw_tags or []:
+        tag_name = (raw_tag.get("tag") or raw_tag.get("name") or "").strip().lower()
+        tag_value = (raw_tag.get("value") or "").strip()
+        if tag_name and tag_value:
+            tags.setdefault(tag_name, set()).add(tag_value)
+    return {tag_name: sorted(values) for tag_name, values in sorted(tags.items())}
+
+
+def db_type_from_tags(tags: dict[str, list[str]]) -> str | None:
+    for tag_name in ("database", "server"):
+        for tag_value in tags.get(tag_name, []):
+            db_type = db_type_from_tag_value(tag_value)
+            if db_type:
+                return db_type
+    return None
+
+
+def role_from_tags(tags: dict[str, list[str]]) -> str | None:
+    if tags.get("database"):
+        return "database"
+    if tags.get("server"):
+        return "database server"
+    return None
+
+
 def is_database_group_name(group_name: str) -> bool:
     normalized = group_name.strip().lower()
     return normalized.endswith(" database") or normalized.endswith(" databases")
@@ -89,8 +127,10 @@ def upsert_host(db, zabbix_host: dict, client: ZabbixClient) -> tuple[Host, bool
     inventory_hostname = zabbix_host.get("host") or zabbix_host.get("name") or f"zabbix-{hostid}"
     display_name = zabbix_host.get("name") or inventory_hostname
     group_names = normalize_group_names(zabbix_host.get("groups") or [])
+    tags = normalize_tags(zabbix_host.get("tags") or [])
     inventory = normalize_inventory(zabbix_host.get("inventory"))
-    db_type = db_type_from_groups(group_names)
+    db_type = db_type_from_tags(tags) or db_type_from_groups(group_names)
+    role = role_from_tags(tags) or role_from_groups(group_names)
     state = client.host_state_from_host(zabbix_host)
 
     host = db.scalar(select(Host).where(Host.zabbix_hostid == hostid))
@@ -102,7 +142,7 @@ def upsert_host(db, zabbix_host: dict, client: ZabbixClient) -> tuple[Host, bool
         host = Host(
             hostname=inventory_hostname,
             environment=environment_from_name(inventory_hostname),
-            role=role_from_groups(group_names),
+            role=role,
             owner_team=owner_team_from_db_type(db_type),
             monitoring_status="unknown",
         )
@@ -112,13 +152,20 @@ def upsert_host(db, zabbix_host: dict, client: ZabbixClient) -> tuple[Host, bool
     host.fqdn = zabbix_host.get("host")
     host.ip_address = client.primary_interface_address(zabbix_host)
     host.environment = environment_from_name(f"{inventory_hostname} {display_name}")
-    host.role = role_from_groups(group_names)
+    host.role = role
     host.db_type = db_type
     host.os_name = inventory.get("os_full") or inventory.get("os") or host.os_name
     host.location = inventory.get("location") or host.location
     host.owner_team = owner_team_from_db_type(db_type)
     inventory_text = ", ".join(f"{key}: {value}" for key, value in sorted(inventory.items()))
+    tags_text = ", ".join(
+        f"{tag_name}={tag_value}"
+        for tag_name, values in sorted(tags.items())
+        for tag_value in values
+    )
     notes = [f"Imported from Zabbix groups: {', '.join(group_names)}"]
+    if tags_text:
+        notes.append(f"Zabbix tags: {tags_text}")
     if inventory_text:
         notes.append(f"Zabbix inventory: {inventory_text}")
     host.notes = "; ".join(notes)

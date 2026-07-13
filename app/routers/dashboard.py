@@ -66,7 +66,32 @@ def normalized_db_type(value: str | None) -> str | None:
     return None
 
 
+def imported_zabbix_tags(host: Host) -> dict[str, list[str]]:
+    notes = host.notes or ""
+    marker = "Zabbix tags:"
+    if marker not in notes:
+        return {}
+    tag_text = notes.split(marker, 1)[1].split(";", 1)[0]
+    tags: dict[str, list[str]] = {}
+    for item in tag_text.split(","):
+        if "=" not in item:
+            continue
+        tag_name, tag_value = item.split("=", 1)
+        tag_name = tag_name.strip().lower()
+        tag_value = tag_value.strip()
+        if tag_name and tag_value:
+            tags.setdefault(tag_name, []).append(tag_value)
+    return tags
+
+
 def detected_db_type(host: Host) -> str | None:
+    tags = imported_zabbix_tags(host)
+    for tag_name in ("database", "server"):
+        for tag_value in tags.get(tag_name, []):
+            detected = normalized_db_type(tag_value)
+            if detected:
+                return detected
+
     for value in (
         host.db_type,
         host.notes,
@@ -117,6 +142,12 @@ def is_server_group_name(group_name: str) -> bool:
 
 
 def detected_zabbix_asset_kind(host: Host) -> str:
+    tags = imported_zabbix_tags(host)
+    if tags.get("database"):
+        return "database"
+    if tags.get("server"):
+        return "server"
+
     group_names = imported_zabbix_group_names(host)
     if any(is_database_group_name(group_name) for group_name in group_names):
         return "database"
