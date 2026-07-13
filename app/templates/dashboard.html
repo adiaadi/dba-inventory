@@ -406,7 +406,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script>
   const dashboardData = {{ chart_data|tojson }};
-  const palette = ["#1d7fe5", "#69c27d", "#f08a7e", "#93c5fd", "#f7c948", "#6d5bd0", "#64748b"];
+  const palette = ["#e30613", "#111827", "#9ca3af", "#0f8b5f", "#f59e0b", "#64748b"];
 
   function makeChart(id, type, labels, values, options = {}) {
     const element = document.getElementById(id);
@@ -420,8 +420,8 @@
         labels,
         datasets: [{
           data: values,
-          borderColor: "#1d7fe5",
-          backgroundColor: type === "line" ? "rgba(29, 127, 229, 0.16)" : palette,
+          borderColor: "#e30613",
+          backgroundColor: type === "line" ? "rgba(227, 6, 19, 0.14)" : palette,
           borderWidth: 2,
           fill: type === "line",
           tension: 0.35,
