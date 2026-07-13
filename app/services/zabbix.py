@@ -207,7 +207,7 @@ class ZabbixClient:
         return selected.get("ip")
 
     def build_host_url(self, hostid: str) -> str:
-        return f"{self.base_url}/zabbix.php?action=popup&popup=host.edit&hostid={quote(str(hostid))}"
+        return f"{self.base_url}/zabbix.php?action=host.dashboard.view&hostid={quote(str(hostid))}"
 
     def _agent_availability_from_host(self, host: dict[str, Any]) -> str:
         interfaces = host.get("interfaces") or []
