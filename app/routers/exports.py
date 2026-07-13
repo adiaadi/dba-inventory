@@ -70,7 +70,7 @@ def export_hosts(
     ]
     workbook = Workbook()
     ws = workbook.active
-    ws.title = "Hosts"
+    ws.title = "Servers"
     ws.append(headers)
     for host in hosts:
         ws.append(

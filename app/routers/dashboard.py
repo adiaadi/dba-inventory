@@ -1,6 +1,8 @@
+from collections import Counter
+
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
-from sqlalchemy import desc, func, select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.db.session import get_db
@@ -132,6 +134,7 @@ def dashboard(
     host_db_labels = {host.id: detected_db_type(host) for host in all_hosts}
     host_platform_labels = {host.id: detected_server_platform(host) for host in all_hosts}
     host_asset_kinds = {host.id: detected_zabbix_asset_kind(host) for host in all_hosts}
+    server_hosts = [host for host in all_hosts if host_asset_kinds.get(host.id) == "server"]
     db_family_counts = {
         family: sum(
             1
@@ -143,43 +146,32 @@ def dashboard(
     db_family_server_counts = {
         family: sum(
             1
-            for host in all_hosts
-            if host_db_labels.get(host.id) == family and host_asset_kinds.get(host.id) == "server"
+            for host in server_hosts
+            if host_db_labels.get(host.id) == family
         )
         for family in ("Oracle", "PostgreSQL", "SQLServer")
     }
     platform_counts = {
-        "Virtual": sum(1 for label in host_platform_labels.values() if label == "Virtual"),
-        "Physical": sum(1 for label in host_platform_labels.values() if label == "Physical"),
-        "Unknown": sum(1 for label in host_platform_labels.values() if label == "Unknown"),
+        "Virtual": sum(1 for host in server_hosts if host_platform_labels.get(host.id) == "Virtual"),
+        "Physical": sum(1 for host in server_hosts if host_platform_labels.get(host.id) == "Physical"),
+        "Unknown": sum(1 for host in server_hosts if host_platform_labels.get(host.id) == "Unknown"),
     }
     counts["databases"] = sum(db_family_counts.values())
     counts["servers"] = sum(db_family_server_counts.values())
-    monitoring_counts = db.execute(
-        select(Host.monitoring_status, func.count(Host.id))
-        .group_by(Host.monitoring_status)
-        .order_by(Host.monitoring_status)
-    ).all()
-    db_type_counts = [(label, count) for label, count in db_family_counts.items()]
-    environment_counts = db.execute(
-        select(Host.environment, func.count(Host.id))
-        .group_by(Host.environment)
-        .order_by(Host.environment)
-    ).all()
-    availability_counts = db.execute(
-        select(Host.zabbix_agent_availability, func.count(Host.id))
-        .group_by(Host.zabbix_agent_availability)
-        .order_by(Host.zabbix_agent_availability)
-    ).all()
-    problem_total = db.scalar(select(func.coalesce(func.sum(Host.problem_count), 0))) or 0
-    problem_average = round(problem_total / counts["hosts"], 2) if counts["hosts"] else 0
+    monitoring_counter = Counter(host.monitoring_status or "unknown" for host in server_hosts)
+    monitoring_counts = sorted(monitoring_counter.items())
+    db_type_counts = [(label, count) for label, count in db_family_server_counts.items()]
+    environment_counter = Counter(host.environment or "unknown" for host in server_hosts)
+    environment_counts = sorted(environment_counter.items())
+    availability_counter = Counter(host.zabbix_agent_availability or "unknown" for host in server_hosts)
+    availability_counts = sorted(availability_counter.items())
+    problem_total = sum(host.problem_count or 0 for host in server_hosts)
+    problem_average = round(problem_total / counts["servers"], 2) if counts["servers"] else 0
     last_sync_at = db.scalar(select(func.max(Host.zabbix_last_sync_at)))
-    top_hosts = db.scalars(
-        select(Host)
-        .options(selectinload(Host.databases))
-        .order_by(desc(Host.problem_count), Host.monitoring_status, Host.hostname)
-        .limit(10)
-    ).all()
+    top_hosts = sorted(
+        server_hosts,
+        key=lambda host: (-(host.problem_count or 0), host.monitoring_status or "", host.hostname),
+    )[:10]
     hosts_stmt = select(Host).options(selectinload(Host.databases)).order_by(Host.hostname)
     hosts_stmt = apply_host_filters(hosts_stmt, db_type, environment, role, monitoring_status)
     hosts_list = db.scalars(hosts_stmt).all()
@@ -215,6 +207,9 @@ def dashboard(
         if host_db_labels.get(host.id) in {"Oracle", "PostgreSQL", "SQLServer"}
         and host_asset_kinds.get(host.id) == "server"
     ]
+    filtered_server_hosts = [host for host in hosts_list if host_asset_kinds.get(host.id) == "server"]
+    if current_view == "hosts":
+        display_hosts = filtered_server_hosts
 
     clusters_stmt = (
         select(Cluster)
@@ -248,24 +243,24 @@ def dashboard(
     }
     section_tabs = [
         {"key": "overview", "label": "Overview", "icon": "bi-grid-1x2"},
-        {"key": "hosts", "label": "Hosts", "icon": "bi-hdd-network"},
+        {"key": "hosts", "label": "Servers", "icon": "bi-hdd-network"},
         {"key": "oracle", "label": "Oracle", "icon": "bi-database"},
         {"key": "postgresql", "label": "PostgreSQL", "icon": "bi-database-fill"},
         {"key": "sqlserver", "label": "SQLServer", "icon": "bi-server"},
     ]
     section_titles = {
         "overview": "DATABASE INVENTORY OVERVIEW",
-        "hosts": "HOST INVENTORY - STATUS UPDATE",
-        "databases": "DB ASSETS - STATUS UPDATE",
-        "clusters": "HA/DR CLUSTERS - STATUS UPDATE",
+        "hosts": "SERVERS INVENTORY OVERVIEW",
+        "databases": "DATABASE ASSETS INVENTORY",
+        "clusters": "HA/DR CLUSTERS INVENTORY",
         **{key: config["title"] for key, config in DB_TYPE_VIEWS.items()},
     }
     section_subtitles = {
         "overview": (
-            f"{counts['hosts']} servers, Oracle {db_family_counts['Oracle']}, "
-            f"PostgreSQL {db_family_counts['PostgreSQL']}, SQLServer {db_family_counts['SQLServer']}"
+            f"{counts['servers']} servers, Oracle {db_family_server_counts['Oracle']}, "
+            f"PostgreSQL {db_family_server_counts['PostgreSQL']}, SQLServer {db_family_server_counts['SQLServer']}"
         ),
-        "hosts": f"{len(hosts_list)} hosts in current view",
+        "hosts": f"{len(filtered_server_hosts)} servers in current view",
         "databases": f"{len(database_assets)} DB assets in current view",
         "clusters": f"{len(clusters)} clusters in current view",
         **{
