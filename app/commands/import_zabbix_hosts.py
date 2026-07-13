@@ -10,12 +10,19 @@ from app.db.session import SessionLocal
 from app.models import Host
 from app.services.zabbix import ZabbixApiError, ZabbixClient
 
+DEFAULT_GROUP_SETS = {
+    "Oracle Databases": ["Oracle Database", "Oracle Databases"],
+    "Oracle Servers": ["Oracle Server", "Oracle Servers"],
+    "PostgreSQL Databases": ["PostgreSQL Database", "PostgreSQL Databases"],
+    "PostgreSQL Servers": ["PostgreSQL Server", "PostgreSQL Servers"],
+    "SQLServer Databases": ["SQLServer Database", "SQLServer Databases", "SQL Server Database", "SQL Server Databases"],
+    "SQLServer Servers": ["SQLServer Server", "SQLServer Servers", "SQL Server Server", "SQL Server Servers"],
+}
+
 DEFAULT_GROUPS = [
-    "Oracle Database",
-    "Oracle Server",
-    "PostgreSQL Database",
-    "PostgreSQL Server",
-    "SQLServer Database",
+    group_name
+    for group_names in DEFAULT_GROUP_SETS.values()
+    for group_name in group_names
 ]
 
 
@@ -30,11 +37,20 @@ def db_type_from_groups(group_names: list[str]) -> str | None:
     return None
 
 
+def is_database_group_name(group_name: str) -> bool:
+    normalized = group_name.strip().lower()
+    return normalized.endswith(" database") or normalized.endswith(" databases")
+
+
+def is_server_group_name(group_name: str) -> bool:
+    normalized = group_name.strip().lower()
+    return normalized.endswith(" server") or normalized.endswith(" servers")
+
+
 def role_from_groups(group_names: list[str]) -> str:
-    joined = " ".join(group_names).lower()
-    if "database" in joined and "server" not in joined:
+    if any(is_database_group_name(group_name) for group_name in group_names):
         return "database"
-    if "server" in joined:
+    if any(is_server_group_name(group_name) for group_name in group_names):
         return "database server"
     return "database"
 
@@ -130,7 +146,14 @@ def import_zabbix_hosts(group_names: list[str] | None = None) -> tuple[int, int]
     )
     zabbix_groups = client.get_host_groups_by_names(requested_groups)
     found_group_names = {group["name"] for group in zabbix_groups}
-    missing_group_names = sorted(set(requested_groups) - found_group_names)
+    if group_names:
+        missing_group_names = sorted(set(requested_groups) - found_group_names)
+    else:
+        missing_group_names = [
+            group_label
+            for group_label, candidate_names in DEFAULT_GROUP_SETS.items()
+            if not any(candidate_name in found_group_names for candidate_name in candidate_names)
+        ]
     if missing_group_names:
         print(f"Zabbix groups not found: {', '.join(missing_group_names)}")
 

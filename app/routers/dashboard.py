@@ -76,10 +76,43 @@ def detected_server_platform(host: Host) -> str:
     return "Unknown"
 
 
+def imported_zabbix_group_names(host: Host) -> list[str]:
+    notes = host.notes or ""
+    marker = "Imported from Zabbix groups:"
+    if marker not in notes:
+        return []
+    group_text = notes.split(marker, 1)[1].split(";", 1)[0]
+    return [group_name.strip() for group_name in group_text.split(",") if group_name.strip()]
+
+
+def is_database_group_name(group_name: str) -> bool:
+    normalized = group_name.strip().lower()
+    return normalized.endswith(" database") or normalized.endswith(" databases")
+
+
+def is_server_group_name(group_name: str) -> bool:
+    normalized = group_name.strip().lower()
+    return normalized.endswith(" server") or normalized.endswith(" servers")
+
+
+def detected_zabbix_asset_kind(host: Host) -> str:
+    group_names = imported_zabbix_group_names(host)
+    if any(is_database_group_name(group_name) for group_name in group_names):
+        return "database"
+    if any(is_server_group_name(group_name) for group_name in group_names):
+        return "server"
+
+    role = (host.role or "").lower()
+    if "server" in role:
+        return "server"
+    return "database"
+
+
 @router.get("/", response_class=HTMLResponse)
 def dashboard(
     request: Request,
     view: str = "overview",
+    asset_view: str = "databases",
     db_type: str | None = None,
     environment: str | None = None,
     role: str | None = None,
@@ -88,6 +121,7 @@ def dashboard(
 ):
     allowed_views = {"overview", "hosts", "databases", "clusters", *DB_TYPE_VIEWS.keys()}
     current_view = view if view in allowed_views else "overview"
+    current_asset_view = asset_view if asset_view in {"databases", "servers"} else "databases"
     filters = active_filters(db_type, environment, role, monitoring_status)
     counts = {
         "hosts": db.scalar(select(func.count(Host.id))) or 0,
@@ -97,10 +131,22 @@ def dashboard(
     all_hosts = db.scalars(select(Host).options(selectinload(Host.databases)).order_by(Host.hostname)).all()
     host_db_labels = {host.id: detected_db_type(host) for host in all_hosts}
     host_platform_labels = {host.id: detected_server_platform(host) for host in all_hosts}
+    host_asset_kinds = {host.id: detected_zabbix_asset_kind(host) for host in all_hosts}
     db_family_counts = {
-        "Oracle": sum(1 for label in host_db_labels.values() if label == "Oracle"),
-        "PostgreSQL": sum(1 for label in host_db_labels.values() if label == "PostgreSQL"),
-        "SQLServer": sum(1 for label in host_db_labels.values() if label == "SQLServer"),
+        family: sum(
+            1
+            for host in all_hosts
+            if host_db_labels.get(host.id) == family and host_asset_kinds.get(host.id) == "database"
+        )
+        for family in ("Oracle", "PostgreSQL", "SQLServer")
+    }
+    db_family_server_counts = {
+        family: sum(
+            1
+            for host in all_hosts
+            if host_db_labels.get(host.id) == family and host_asset_kinds.get(host.id) == "server"
+        )
+        for family in ("Oracle", "PostgreSQL", "SQLServer")
     }
     platform_counts = {
         "Virtual": sum(1 for label in host_platform_labels.values() if label == "Virtual"),
@@ -108,6 +154,7 @@ def dashboard(
         "Unknown": sum(1 for label in host_platform_labels.values() if label == "Unknown"),
     }
     counts["databases"] = sum(db_family_counts.values())
+    counts["servers"] = sum(db_family_server_counts.values())
     monitoring_counts = db.execute(
         select(Host.monitoring_status, func.count(Host.id))
         .group_by(Host.monitoring_status)
@@ -142,13 +189,31 @@ def dashboard(
 
     db_type_view = DB_TYPE_VIEWS.get(current_view)
     display_hosts = hosts_list
+    type_database_assets: list[Host] = []
+    type_server_assets: list[Host] = []
     if db_type_view:
-        display_hosts = [
+        type_hosts = [
             host for host in type_base_hosts if host_db_labels.get(host.id) == db_type_view["label"]
         ]
+        type_database_assets = [
+            host for host in type_hosts if host_asset_kinds.get(host.id) == "database"
+        ]
+        type_server_assets = [
+            host for host in type_hosts if host_asset_kinds.get(host.id) == "server"
+        ]
+        display_hosts = type_database_assets if current_asset_view == "databases" else type_server_assets
 
     database_assets = [
-        host for host in type_base_hosts if host_db_labels.get(host.id) in {"Oracle", "PostgreSQL", "SQLServer"}
+        host
+        for host in type_base_hosts
+        if host_db_labels.get(host.id) in {"Oracle", "PostgreSQL", "SQLServer"}
+        and host_asset_kinds.get(host.id) == "database"
+    ]
+    server_assets = [
+        host
+        for host in type_base_hosts
+        if host_db_labels.get(host.id) in {"Oracle", "PostgreSQL", "SQLServer"}
+        and host_asset_kinds.get(host.id) == "server"
     ]
 
     clusters_stmt = (
@@ -204,12 +269,14 @@ def dashboard(
         "databases": f"{len(database_assets)} DB assets in current view",
         "clusters": f"{len(clusters)} clusters in current view",
         **{
-            key: f"{len(display_hosts) if key == current_view else 0} hosts in current view"
+            key: f"{len(display_hosts) if key == current_view else 0} records in current view"
             for key in DB_TYPE_VIEWS
         },
     }
     if db_type_view:
-        section_subtitles[current_view] = f"{len(display_hosts)} {db_type_view['label']} hosts in current view"
+        section_subtitles[current_view] = (
+            f"{len(type_database_assets)} databases, {len(type_server_assets)} servers from Zabbix"
+        )
 
     return templates.TemplateResponse(
         request,
@@ -226,11 +293,17 @@ def dashboard(
             "hosts": hosts_list,
             "display_hosts": display_hosts,
             "db_type_view": db_type_view,
+            "current_asset_view": current_asset_view,
             "db_family_counts": db_family_counts,
+            "db_family_server_counts": db_family_server_counts,
             "platform_counts": platform_counts,
             "host_db_labels": host_db_labels,
             "host_platform_labels": host_platform_labels,
+            "host_asset_kinds": host_asset_kinds,
             "database_assets": database_assets,
+            "server_assets": server_assets,
+            "type_database_assets": type_database_assets,
+            "type_server_assets": type_server_assets,
             "monitoring_counts": monitoring_counts,
             "db_type_counts": db_type_counts,
             "environment_counts": environment_counts,

@@ -19,6 +19,7 @@
 
     <form class="overview-filters" action="/" method="get">
       <input type="hidden" name="view" value="{{ current_view }}">
+      <input type="hidden" name="asset_view" value="{{ current_asset_view }}">
       <div class="sidebar-caption">Filters</div>
       <label>
         Environment
@@ -67,8 +68,8 @@
     <header class="overview-header">
       <div class="overview-heading">
         {% if db_type_view %}
-          <div class="db-logo-only">
-            <img class="db-heading-logo" src="{{ section_logo }}" alt="{{ db_type_view.label }}">
+          <div class="db-logo-only active">
+            <img class="db-heading-logo db-heading-logo-active" src="{{ section_logo }}" alt="{{ db_type_view.label }}">
           </div>
           <p>{{ section_subtitle }}</p>
         {% else %}
@@ -89,44 +90,61 @@
       </div>
     </header>
 
-    <section class="overview-kpis">
-      <a class="overview-kpi {% if current_view == 'oracle' %}active{% endif %}" href="/?view=oracle">
-        <span class="kpi-title">Oracle</span>
-        <span class="kpi-value">{{ db_family_counts.Oracle }}</span>
-        <span class="kpi-delta text-success">Zabbix DB assets</span>
-        <i class="bi bi-database-check"></i>
-      </a>
-      <a class="overview-kpi {% if current_view == 'postgresql' %}active{% endif %}" href="/?view=postgresql">
-        <span class="kpi-title">PostgreSQL</span>
-        <span class="kpi-value">{{ db_family_counts.PostgreSQL }}</span>
-        <span class="kpi-delta text-success">Zabbix DB assets</span>
-        <i class="bi bi-database-fill"></i>
-      </a>
-      <a class="overview-kpi {% if current_view == 'sqlserver' %}active{% endif %}" href="/?view=sqlserver">
-        <span class="kpi-title">SQLServer</span>
-        <span class="kpi-value">{{ db_family_counts.SQLServer }}</span>
-        <span class="kpi-delta text-success">Zabbix DB assets</span>
-        <i class="bi bi-server"></i>
-      </a>
-      <a class="overview-kpi {% if current_view == 'hosts' %}active{% endif %}" href="/?view=hosts">
-        <span class="kpi-title">Servers</span>
-        <span class="kpi-value">{{ counts.hosts }}</span>
-        <span class="kpi-delta text-success">{{ chart_data.environmentLabels|length }} environments</span>
-        <i class="bi bi-hdd-network"></i>
-      </a>
-      <a class="overview-kpi" href="/?view=hosts">
-        <span class="kpi-title">Virtual</span>
-        <span class="kpi-value">{{ platform_counts.Virtual }}</span>
-        <span class="kpi-delta text-muted">Unknown {{ platform_counts.Unknown }}</span>
-        <i class="bi bi-cloud"></i>
-      </a>
-      <a class="overview-kpi" href="/?view=hosts">
-        <span class="kpi-title">Physical</span>
-        <span class="kpi-value">{{ platform_counts.Physical }}</span>
-        <span class="kpi-delta text-muted">from Zabbix groups</span>
-        <i class="bi bi-pc-display"></i>
-      </a>
-    </section>
+    {% if db_type_view %}
+      <section class="overview-kpis overview-kpis-dbms">
+        <a class="overview-kpi {% if current_asset_view == 'databases' %}active{% endif %}" href="/?view={{ current_view }}&asset_view=databases">
+          <span class="kpi-title">Databases</span>
+          <span class="kpi-value">{{ type_database_assets|length }}</span>
+          <span class="kpi-delta text-success">{{ db_type_view.label }} Zabbix Database group</span>
+          <i class="bi bi-database-check"></i>
+        </a>
+        <a class="overview-kpi {% if current_asset_view == 'servers' %}active{% endif %}" href="/?view={{ current_view }}&asset_view=servers">
+          <span class="kpi-title">Servers</span>
+          <span class="kpi-value">{{ type_server_assets|length }}</span>
+          <span class="kpi-delta text-success">{{ db_type_view.label }} Zabbix Server group</span>
+          <i class="bi bi-hdd-network"></i>
+        </a>
+      </section>
+    {% else %}
+      <section class="overview-kpis">
+        <a class="overview-kpi {% if current_view == 'oracle' %}active{% endif %}" href="/?view=oracle">
+          <span class="kpi-title">Oracle</span>
+          <span class="kpi-value">{{ db_family_counts.Oracle }}</span>
+          <span class="kpi-delta text-success">Zabbix databases</span>
+          <i class="bi bi-database-check"></i>
+        </a>
+        <a class="overview-kpi {% if current_view == 'postgresql' %}active{% endif %}" href="/?view=postgresql">
+          <span class="kpi-title">PostgreSQL</span>
+          <span class="kpi-value">{{ db_family_counts.PostgreSQL }}</span>
+          <span class="kpi-delta text-success">Zabbix databases</span>
+          <i class="bi bi-database-fill"></i>
+        </a>
+        <a class="overview-kpi {% if current_view == 'sqlserver' %}active{% endif %}" href="/?view=sqlserver">
+          <span class="kpi-title">SQLServer</span>
+          <span class="kpi-value">{{ db_family_counts.SQLServer }}</span>
+          <span class="kpi-delta text-success">Zabbix databases</span>
+          <i class="bi bi-server"></i>
+        </a>
+        <a class="overview-kpi {% if current_view == 'hosts' %}active{% endif %}" href="/?view=hosts">
+          <span class="kpi-title">Servers</span>
+          <span class="kpi-value">{{ counts.servers }}</span>
+          <span class="kpi-delta text-success">{{ counts.hosts }} total Zabbix hosts</span>
+          <i class="bi bi-hdd-network"></i>
+        </a>
+        <a class="overview-kpi" href="/?view=hosts">
+          <span class="kpi-title">Virtual</span>
+          <span class="kpi-value">{{ platform_counts.Virtual }}</span>
+          <span class="kpi-delta text-muted">Unknown {{ platform_counts.Unknown }}</span>
+          <i class="bi bi-cloud"></i>
+        </a>
+        <a class="overview-kpi" href="/?view=hosts">
+          <span class="kpi-title">Physical</span>
+          <span class="kpi-value">{{ platform_counts.Physical }}</span>
+          <span class="kpi-delta text-muted">from Zabbix inventory</span>
+          <i class="bi bi-pc-display"></i>
+        </a>
+      </section>
+    {% endif %}
 
     {% if current_view == "overview" %}
       <div class="overview-grid">
@@ -207,14 +225,19 @@
     {% elif current_view == "hosts" or db_type_view %}
       <section class="overview-panel">
         <div class="overview-section-heading">
-          <h2>{% if db_type_view %}{{ db_type_view.label }} Hosts{% else %}Host Summary{% endif %}</h2>
-          <span>{{ display_hosts|length }} records</span>
+          {% if db_type_view %}
+            <h2>{{ db_type_view.label }} {% if current_asset_view == "databases" %}Databases{% else %}Servers{% endif %}</h2>
+            <span>{{ display_hosts|length }} records from Zabbix</span>
+          {% else %}
+            <h2>Host Summary</h2>
+            <span>{{ display_hosts|length }} records</span>
+          {% endif %}
         </div>
         <div class="table-responsive">
           <table class="table table-sm align-middle table-hover overview-table">
             <thead>
               <tr>
-                <th>Host</th>
+                <th>{% if db_type_view %}Zabbix Object{% else %}Host{% endif %}</th>
                 <th>IP</th>
                 <th>Environment</th>
                 <th>Role</th>
@@ -229,8 +252,8 @@
                 {% set instance_db_types = host.databases | map(attribute='db_type') | unique | list %}
                 <tr>
                   <td>
-                    <a class="table-link" href="/hosts/{{ host.id }}">{{ host.hostname }}</a>
-                    <div class="text-muted small">{{ host.fqdn or "-" }}</div>
+                    <a class="table-link" href="/hosts/{{ host.id }}">{{ host.zabbix_host_name or host.hostname }}</a>
+                    <div class="text-muted small">{{ host.hostname }}{% if host.fqdn and host.fqdn != host.hostname %} / {{ host.fqdn }}{% endif %}</div>
                   </td>
                   <td>{{ host.ip_address or "-" }}</td>
                   <td><span class="pill">{{ host.environment }}</span></td>
