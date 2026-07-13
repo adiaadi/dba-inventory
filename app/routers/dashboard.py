@@ -20,19 +20,19 @@ router = APIRouter()
 DB_TYPE_VIEWS = {
     "oracle": {
         "label": "Oracle",
-        "title": "ORACLE DATABASE INVENTORY",
+        "title": "ORACLE INVENTORY OVERVIEW",
         "db_types": ["Oracle"],
         "logo": "/static/img/oracle.png",
     },
     "postgresql": {
         "label": "PostgreSQL",
-        "title": "POSTGRESQL DATABASE INVENTORY",
+        "title": "POSTGRESQL INVENTORY OVERVIEW",
         "db_types": ["PostgreSQL"],
         "logo": "/static/img/postgresql.png",
     },
     "sqlserver": {
         "label": "SQLServer",
-        "title": "SQLSERVER DATABASE INVENTORY",
+        "title": "SQLSERVER INVENTORY OVERVIEW",
         "db_types": ["SQL Server", "SQLServer"],
         "logo": "/static/img/sqlserver.png",
     },
@@ -134,7 +134,7 @@ def dashboard(
     host_db_labels = {host.id: detected_db_type(host) for host in all_hosts}
     host_platform_labels = {host.id: detected_server_platform(host) for host in all_hosts}
     host_asset_kinds = {host.id: detected_zabbix_asset_kind(host) for host in all_hosts}
-    server_hosts = [host for host in all_hosts if host_asset_kinds.get(host.id) == "server"]
+    server_hosts = all_hosts
     db_family_counts = {
         family: sum(
             1
@@ -157,7 +157,7 @@ def dashboard(
         "Unknown": sum(1 for host in server_hosts if host_platform_labels.get(host.id) == "Unknown"),
     }
     counts["databases"] = sum(db_family_counts.values())
-    counts["servers"] = sum(db_family_server_counts.values())
+    counts["servers"] = len(server_hosts)
     monitoring_counter = Counter(host.monitoring_status or "unknown" for host in server_hosts)
     monitoring_counts = sorted(monitoring_counter.items())
     db_type_counts = [(label, count) for label, count in db_family_server_counts.items()]
@@ -193,6 +193,10 @@ def dashboard(
         type_server_assets = [
             host for host in type_hosts if host_asset_kinds.get(host.id) == "server"
         ]
+        if not type_database_assets:
+            type_database_assets = type_hosts
+        if not type_server_assets:
+            type_server_assets = type_hosts
         display_hosts = type_database_assets if current_asset_view == "databases" else type_server_assets
 
     database_assets = [
@@ -207,7 +211,7 @@ def dashboard(
         if host_db_labels.get(host.id) in {"Oracle", "PostgreSQL", "SQLServer"}
         and host_asset_kinds.get(host.id) == "server"
     ]
-    filtered_server_hosts = [host for host in hosts_list if host_asset_kinds.get(host.id) == "server"]
+    filtered_server_hosts = hosts_list
     if current_view == "hosts":
         display_hosts = filtered_server_hosts
 

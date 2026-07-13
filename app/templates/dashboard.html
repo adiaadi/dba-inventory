@@ -68,10 +68,13 @@
     <header class="overview-header">
       <div class="overview-heading">
         {% if db_type_view %}
-          <div class="db-logo-only active">
-            <img class="db-heading-logo db-heading-logo-active" src="{{ section_logo }}" alt="{{ db_type_view.label }}">
+          <div class="db-logo-only">
+            <img class="db-heading-logo" src="{{ section_logo }}" alt="{{ db_type_view.label }}">
           </div>
-          <p>{{ section_subtitle }}</p>
+          <div>
+            <h1>{{ section_title }}</h1>
+            <p>{{ section_subtitle }}</p>
+          </div>
         {% else %}
           <div>
             <h1>{{ section_title }}</h1>
