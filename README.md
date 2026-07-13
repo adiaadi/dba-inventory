@@ -43,6 +43,8 @@ docker compose up --build
 http://localhost:8000
 ```
 
+Контейнерный PostgreSQL не публикуется на порт `5432` хоста, чтобы не конфликтовать с существующим PostgreSQL на сервере. Приложение подключается к нему внутри Docker-сети по имени сервиса `db`.
+
 ## Запуск на Ubuntu из GitHub
 
 1. Установите Docker Engine и Compose plugin на Ubuntu.

@@ -6,8 +6,6 @@ services:
       POSTGRES_DB: dba_inventory
       POSTGRES_USER: dba_inventory
       POSTGRES_PASSWORD: dba_inventory
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
