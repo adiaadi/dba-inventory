@@ -75,6 +75,13 @@ docker compose up -d --build
 bash scripts/ubuntu-run.sh
 ```
 
+Если Docker установлен, но команда пишет `Cannot connect to the Docker daemon`, запустите службу и выполните compose через `sudo`:
+
+```bash
+sudo systemctl enable --now docker
+sudo docker compose up -d --build
+```
+
 3. Проверьте состояние контейнеров.
 
 ```bash
