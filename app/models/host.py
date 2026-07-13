@@ -16,6 +16,7 @@ class Host(TimestampMixin, Base):
     ip_address: Mapped[str | None] = mapped_column(String(64))
     environment: Mapped[str] = mapped_column(String(40), index=True)
     role: Mapped[str] = mapped_column(String(80), index=True)
+    db_type: Mapped[str | None] = mapped_column(String(60), index=True)
     os_name: Mapped[str | None] = mapped_column(String(120))
     location: Mapped[str | None] = mapped_column(String(120))
     owner_team: Mapped[str | None] = mapped_column(String(120))

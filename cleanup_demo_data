@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+set -e
+
+python -m app.commands.cleanup_demo_data "$@"

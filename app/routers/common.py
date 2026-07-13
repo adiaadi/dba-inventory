@@ -1,4 +1,4 @@
-from sqlalchemy import Select, select
+from sqlalchemy import Select, or_, select
 from sqlalchemy.orm import Session
 
 from app.models import Cluster, ClusterMember, DatabaseInstance, Host
@@ -35,7 +35,7 @@ def merged_distinct_values(db: Session, *columns) -> list[str]:
 
 def get_filter_options(db: Session) -> dict[str, list[str]]:
     return {
-        "db_types": distinct_values(db, DatabaseInstance.db_type),
+        "db_types": merged_distinct_values(db, Host.db_type, DatabaseInstance.db_type),
         "environments": merged_distinct_values(db, Host.environment, DatabaseInstance.environment, Cluster.environment),
         "roles": merged_distinct_values(db, Host.role, DatabaseInstance.role, ClusterMember.role),
         "monitoring_statuses": distinct_values(db, Host.monitoring_status),
@@ -50,7 +50,11 @@ def apply_host_filters(
     monitoring_status: str | None = None,
 ) -> Select:
     if db_type:
-        stmt = stmt.join(Host.databases).where(DatabaseInstance.db_type == db_type).distinct()
+        stmt = (
+            stmt.outerjoin(Host.databases)
+            .where(or_(Host.db_type == db_type, DatabaseInstance.db_type == db_type))
+            .distinct()
+        )
     if environment:
         stmt = stmt.where(Host.environment == environment)
     if role:

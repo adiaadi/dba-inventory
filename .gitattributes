@@ -8,3 +8,4 @@
 Dockerfile text eol=lf
 sync_zabbix text eol=lf
 import_zabbix_hosts text eol=lf
+cleanup_demo_data text eol=lf

@@ -129,6 +129,12 @@ sudo docker compose -f docker-compose.ghcr.yml exec app ./sync_zabbix
 sudo docker compose -f docker-compose.ghcr.yml exec app ./import_zabbix_hosts
 ```
 
+Очистка demo seed-данных (`payments-*`, `billing-*`, `crm-*`) после импорта реальных Zabbix hosts:
+
+```bash
+sudo docker compose -f docker-compose.ghcr.yml exec app ./cleanup_demo_data
+```
+
 Если используются DNS/CA override-файлы:
 
 ```bash
@@ -137,6 +143,14 @@ sudo docker compose \
   -f docker-compose.zabbix-host.yml \
   -f docker-compose.zabbix-ca.yml \
   exec app ./import_zabbix_hosts
+```
+
+```bash
+sudo docker compose \
+  -f docker-compose.ghcr.yml \
+  -f docker-compose.zabbix-host.yml \
+  -f docker-compose.zabbix-ca.yml \
+  exec app ./cleanup_demo_data
 ```
 
 Если контейнер не может разрешить имя Zabbix (`Temporary failure in name resolution`), проверьте DNS с хоста и из контейнера:

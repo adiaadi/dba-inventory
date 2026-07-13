@@ -90,6 +90,7 @@ def upsert_host(db, zabbix_host: dict, client: ZabbixClient) -> tuple[Host, bool
     host.ip_address = client.primary_interface_address(zabbix_host)
     host.environment = environment_from_name(f"{inventory_hostname} {display_name}")
     host.role = role_from_groups(group_names)
+    host.db_type = db_type
     host.owner_team = owner_team_from_db_type(db_type)
     host.notes = f"Imported from Zabbix groups: {', '.join(group_names)}"
     host.zabbix_hostid = hostid
