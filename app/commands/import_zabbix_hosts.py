@@ -16,9 +16,6 @@ DEFAULT_GROUPS = [
     "PostgreSQL Database",
     "PostgreSQL Server",
     "SQLServer Database",
-    "SQL Server Database",
-    "SQLServer Server",
-    "SQL Server",
 ]
 
 

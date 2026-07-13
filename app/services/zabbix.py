@@ -153,7 +153,7 @@ class ZabbixClient:
             {
                 "output": ["eventid", "name", "severity", "clock"],
                 "hostids": [hostid],
-                "sortfield": ["severity", "clock"],
+                "sortfield": "eventid",
                 "sortorder": "DESC",
             },
         )
