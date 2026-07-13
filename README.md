@@ -61,8 +61,8 @@ sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin d
 2. Склонируйте репозиторий и запустите портал.
 
 ```bash
-git clone https://github.com/adiaadi/mvp-dba-inventory-backend-python-fastapi.git
-cd mvp-dba-inventory-backend-python-fastapi
+git clone https://github.com/adiaadi/dba-inventory.git
+cd dba-inventory
 cp .env.example .env
 docker compose up -d --build
 ```
