@@ -34,7 +34,7 @@
         {% for host in hosts %}
           <tr>
             <td>
-              <div class="fw-semibold">{{ host.hostname }}</div>
+              <a class="fw-semibold table-link" href="/hosts/{{ host.id }}">{{ host.hostname }}</a>
               <div class="text-muted small">{{ host.fqdn or "-" }}</div>
             </td>
             <td>{{ host.ip_address or "-" }}</td>

@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% block title %}{{ host.hostname }} | DBA Inventory{% endblock %}
+
+{% block content %}
+<div class="server-workbench">
+  <aside class="server-tree">
+    <div class="tree-toolbar">
+      <a class="btn btn-sm btn-outline-primary" href="/hosts"><i class="bi bi-arrow-left"></i> Hosts</a>
+      {% if host.zabbix_url %}
+        <a class="btn btn-sm btn-primary" href="{{ host.zabbix_url }}" target="_blank" rel="noreferrer">
+          <i class="bi bi-box-arrow-up-right"></i> Zabbix
+        </a>
+      {% endif %}
+    </div>
+
+    <div class="tree-root">
+      <i class="bi bi-server"></i>
+      <span>{{ host.hostname }}</span>
+    </div>
+    <nav class="tree-sections">
+      <a href="#"><i class="bi bi-sliders"></i> Configuration</a>
+      <a href="#"><i class="bi bi-check2-square"></i> Checks</a>
+      <a href="#"><i class="bi bi-diagram-3"></i> HA/DR</a>
+      <a href="#"><i class="bi bi-device-hdd"></i> Storage</a>
+      <a href="#"><i class="bi bi-clock-history"></i> Jobs</a>
+      <a href="#"><i class="bi bi-file-earmark-bar-graph"></i> Reports</a>
+    </nav>
+
+    <div class="tree-list-title">Servers</div>
+    <div class="tree-host-list">
+      {% for item in related_hosts %}
+        <a class="tree-host {% if item.id == host.id %}active{% endif %}" href="/hosts/{{ item.id }}">
+          <i class="bi bi-hdd-network"></i>
+          <span>{{ item.hostname }}</span>
+        </a>
+      {% endfor %}
+    </div>
+  </aside>
+
+  <section class="server-main">
+    <header class="server-titlebar">
+      <div>
+        <h1>{{ host.hostname }}</h1>
+        <p>{{ db_label }} / {{ host.environment }} / {{ host.role }}</p>
+      </div>
+      <div class="server-status-pack">
+        <span class="badge text-bg-{{ host.monitoring_status|status_class }}">{{ host.monitoring_status }}</span>
+        <span class="badge text-bg-{{ host.zabbix_agent_availability|status_class }}">agent {{ host.zabbix_agent_availability }}</span>
+        <span class="problem-count {% if host.problem_count > 0 %}has-problems{% endif %}">{{ host.problem_count }}</span>
+      </div>
+    </header>
+
+    <nav class="server-tabs">
+      <a class="active" href="#">Performance Summary</a>
+      <a href="#">Performance</a>
+      <a href="#">Metrics</a>
+      <a href="#">Alerts</a>
+      <a href="#">Object Execution</a>
+      <a href="#">Slow Queries</a>
+      <a href="#">Waits</a>
+      <a href="#">Running Queries</a>
+      <a href="#">Memory</a>
+      <a href="#">Top Queries</a>
+      <a href="#">Forced Plans</a>
+    </nav>
+
+    <div class="server-commandbar">
+      <button class="btn btn-sm btn-outline-secondary" type="button"><i class="bi bi-arrow-clockwise"></i></button>
+      <button class="btn btn-sm btn-outline-secondary" type="button"><i class="bi bi-files"></i></button>
+      <div class="input-group input-group-sm server-search">
+        <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <input class="form-control" value="{{ host.hostname }}" aria-label="Search">
+      </div>
+      <span class="server-command-note">1 min</span>
+      <span class="server-command-note">Avg</span>
+      <span class="server-command-spacer"></span>
+      <span class="server-command-note">{{ host.zabbix_last_sync_at|date_time }}</span>
+    </div>
+
+    <div class="server-chart-stack">
+      <article class="server-chart-panel">
+        <div class="server-chart-header">
+          <span>SQL Statistics\Batch Requests/sec</span>
+          <button class="btn btn-sm btn-link" type="button"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="server-chart-canvas"><canvas id="batchChart"></canvas></div>
+      </article>
+
+      <article class="server-chart-panel">
+        <div class="server-chart-header">
+          <span>SQL Statistics\SQL Compilations/sec</span>
+          <button class="btn btn-sm btn-link" type="button"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="server-chart-canvas"><canvas id="compileChart"></canvas></div>
+      </article>
+
+      <article class="server-chart-panel">
+        <div class="server-chart-header">
+          <span>SQL Statistics\SQL Re-Compilations/sec</span>
+          <button class="btn btn-sm btn-link" type="button"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="server-chart-canvas"><canvas id="recompileChart"></canvas></div>
+      </article>
+    </div>
+
+    <div class="server-metrics-table table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Object</th>
+            <th>Counter</th>
+            <th>Instance</th>
+            <th>Max Value</th>
+            <th>Min Value</th>
+            <th>Avg Value</th>
+            <th>Total</th>
+            <th>Sample Count</th>
+            <th>Current Value</th>
+            <th>Thresholds</th>
+            <th>Chart</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in metric_rows %}
+            <tr>
+              <td><a href="#">{{ row.object }}</a></td>
+              <td><a href="#">{{ row.counter }}</a></td>
+              <td>{{ row.instance }}</td>
+              <td class="metric-cell metric-cell-{{ row.status|status_class }}">{{ row.max_value }}</td>
+              <td class="metric-cell metric-cell-success">{{ row.min_value }}</td>
+              <td class="metric-cell metric-cell-{{ row.status|status_class }}">{{ row.avg_value }}</td>
+              <td>{{ row.total }}</td>
+              <td>{{ row.sample_count }}</td>
+              <td class="metric-cell metric-cell-{{ row.status|status_class }}">{{ row.current_value }}</td>
+              <td><a href="#">Edit</a></td>
+              <td><a href="#">View</a></td>
+            </tr>
+          {% endfor %}
+          {% for database in host.databases %}
+            <tr>
+              <td><a href="#">Database</a></td>
+              <td><a href="#">{{ database.name }}</a></td>
+              <td>{{ database.service_name or database.port or "-" }}</td>
+              <td class="metric-cell metric-cell-{{ database.status|status_class }}">{{ database.status }}</td>
+              <td>-</td>
+              <td>-</td>
+              <td>{{ database.version or "-" }}</td>
+              <td>1</td>
+              <td class="metric-cell metric-cell-{{ database.status|status_class }}">{{ database.status }}</td>
+              <td><a href="#">Edit</a></td>
+              <td><a href="#">View</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script>
+  const hostProblemCount = {{ host.problem_count or 0 }};
+  const labels = ["16:05", "16:13", "16:21", "16:30", "16:38", "16:46", "16:55"];
+  const baseSeries = [
+    18 + hostProblemCount,
+    22 + Math.ceil(hostProblemCount / 2),
+    19,
+    21 + hostProblemCount,
+    20,
+    19 + Math.ceil(hostProblemCount / 3),
+    21,
+  ];
+
+  function serverLineChart(id, label, values) {
+    const element = document.getElementById(id);
+    if (!element || typeof Chart === "undefined") {
+      return;
+    }
+
+    new Chart(element, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [{
+          label,
+          data: values,
+          borderColor: "#1d8ff2",
+          backgroundColor: "rgba(29, 143, 242, 0.18)",
+          borderWidth: 2,
+          pointRadius: 2,
+          tension: 0.22,
+          fill: true,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: true, labels: { boxWidth: 10 } } },
+        scales: {
+          x: { grid: { color: "#edf1f6" } },
+          y: { beginAtZero: true, grid: { color: "#edf1f6" } },
+        },
+      },
+    });
+  }
+
+  serverLineChart("batchChart", "SQL Statistics\\Batch Requests/sec", baseSeries);
+  serverLineChart("compileChart", "SQL Statistics\\SQL Compilations/sec", baseSeries.map((value) => Math.max(0, Math.round(value * 0.62))));
+  serverLineChart("recompileChart", "SQL Statistics\\SQL Re-Compilations/sec", baseSeries.map((value) => Number((value / 35).toFixed(2))));
+</script>
+{% endblock %}
