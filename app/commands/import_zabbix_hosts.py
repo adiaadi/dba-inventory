@@ -33,7 +33,7 @@ def db_type_from_groups(group_names: list[str]) -> str | None:
     if "oracle" in joined:
         return "Oracle"
     if "sqlserver" in joined or "sql server" in joined:
-        return "SQL Server"
+        return "SQLServer"
     return None
 
 

@@ -55,15 +55,34 @@ def host_search_text(host: Host) -> str:
     ).lower()
 
 
-def detected_db_type(host: Host) -> str | None:
-    text = host_search_text(host)
-    hostname = (host.hostname or "").lower()
-    if "postgresql" in text or "postgres" in text or hostname.startswith(("pg_", "pg-")):
+def normalized_db_type(value: str | None) -> str | None:
+    text = (value or "").lower().replace("_", " ").replace("-", " ")
+    if "postgresql" in text or "postgres" in text:
         return "PostgreSQL"
-    if "oracle" in text or "ora-" in hostname or hostname.startswith(("ora_", "ora-")):
+    if "oracle" in text:
         return "Oracle"
     if "sqlserver" in text or "sql server" in text or "mssql" in text:
         return "SQLServer"
+    return None
+
+
+def detected_db_type(host: Host) -> str | None:
+    for value in (
+        host.db_type,
+        host.notes,
+        host.zabbix_host_name,
+        host.hostname,
+        host.fqdn,
+    ):
+        detected = normalized_db_type(value)
+        if detected:
+            return detected
+
+    hostname = (host.hostname or "").lower()
+    if hostname.startswith(("pg_", "pg-")):
+        return "PostgreSQL"
+    if "ora-" in hostname or hostname.startswith(("ora_", "ora-")):
+        return "Oracle"
     return None
 
 
