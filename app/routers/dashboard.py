@@ -147,6 +147,18 @@ def is_os_class_host(host: Host) -> bool:
     return has_tag_value(host, "class", "os")
 
 
+def unique_hosts(hosts: list[Host]) -> list[Host]:
+    seen: set[str] = set()
+    unique: list[Host] = []
+    for host in hosts:
+        key = str(host.zabbix_hostid or host.hostname or host.id).lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(host)
+    return unique
+
+
 def detected_server_platform(host: Host) -> str:
     text = host_search_text(host)
     virtual_markers = ("virtual", "vmware", "hyper-v", "hyperv", "kvm", "proxmox", "cloud", "-vm", "_vm")
@@ -273,8 +285,8 @@ def dashboard(
     host_model_labels = {host.id: server_model_label(host) for host in all_hosts}
     host_core_labels = {host.id: server_core_label(host) for host in all_hosts}
     host_ram_labels = {host.id: server_ram_label(host) for host in all_hosts}
-    os_class_hosts = [host for host in all_hosts if is_os_class_host(host)]
-    server_hosts = os_class_hosts or all_hosts
+    os_class_hosts = unique_hosts([host for host in all_hosts if is_os_class_host(host)])
+    server_hosts = os_class_hosts
     db_family_counts = {
         family: sum(
             1
@@ -354,7 +366,7 @@ def dashboard(
         if host_db_labels.get(host.id) in {"Oracle", "PostgreSQL", "SQLServer"}
         and host_asset_kinds.get(host.id) == "server"
     ]
-    filtered_server_hosts = [host for host in hosts_list if is_os_class_host(host)] if os_class_hosts else hosts_list
+    filtered_server_hosts = unique_hosts([host for host in hosts_list if is_os_class_host(host)])
     if current_view == "hosts":
         display_hosts = filtered_server_hosts
 
