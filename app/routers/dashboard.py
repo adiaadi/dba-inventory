@@ -47,7 +47,7 @@ DB_TYPE_VIEWS = {
         "db_types": ["SQL Server", "SQLServer"],
         "logo": "/static/img/sqlserver.png",
         "database_group": "SQLServer Database",
-        "server_group": "SQLServer Database",
+        "server_group": "SQLServer",
     },
 }
 
@@ -62,7 +62,18 @@ ZABBIX_DATABASE_GROUPS = {
 ZABBIX_SERVER_GROUPS = {
     "Oracle": ("Oracle Server", "Oracle Servers"),
     "PostgreSQL": ("PostgreSQL Server", "PostgreSQL Servers"),
-    "SQLServer": ("SQLServer Database", "SQLServer Databases", "SQL Server Database", "SQL Server Databases"),
+    "SQLServer": (
+        "SQLServer",
+        "SQL Server",
+        "SQLServer Server",
+        "SQLServer Servers",
+        "SQL Server Server",
+        "SQL Server Servers",
+        "SQLServer Database",
+        "SQLServer Databases",
+        "SQL Server Database",
+        "SQL Server Databases",
+    ),
 }
 
 ZABBIX_SERVER_SUMMARY_GROUPS = tuple(
@@ -419,7 +430,11 @@ def is_database_group_name(group_name: str) -> bool:
 
 def is_server_group_name(group_name: str) -> bool:
     normalized = group_name.strip().lower()
-    return normalized.endswith(" server") or normalized.endswith(" servers")
+    return (
+        normalized in {"sqlserver", "sql server"}
+        or normalized.endswith(" server")
+        or normalized.endswith(" servers")
+    )
 
 
 def detected_zabbix_asset_kind(host: Host) -> str:

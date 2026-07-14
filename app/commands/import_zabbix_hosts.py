@@ -21,6 +21,14 @@ DEFAULT_GROUP_SETS = {
     "PostgreSQL Databases": ["PostgreSQL Database", "PostgreSQL Databases"],
     "PostgreSQL Servers": ["PostgreSQL Server", "PostgreSQL Servers"],
     "SQLServer Databases": ["SQLServer Database", "SQLServer Databases", "SQL Server Database", "SQL Server Databases"],
+    "SQLServer Servers": [
+        "SQLServer",
+        "SQL Server",
+        "SQLServer Server",
+        "SQLServer Servers",
+        "SQL Server Server",
+        "SQL Server Servers",
+    ],
 }
 
 DEFAULT_GROUPS = [
@@ -91,7 +99,11 @@ def is_database_group_name(group_name: str) -> bool:
 
 def is_server_group_name(group_name: str) -> bool:
     normalized = group_name.strip().lower()
-    return normalized.endswith(" server") or normalized.endswith(" servers")
+    return (
+        normalized in {"sqlserver", "sql server"}
+        or normalized.endswith(" server")
+        or normalized.endswith(" servers")
+    )
 
 
 def role_from_groups(group_names: list[str]) -> str:

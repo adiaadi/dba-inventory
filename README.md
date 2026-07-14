@@ -123,7 +123,7 @@ ZABBIX_VERIFY_SSL=true
 sudo docker compose -f docker-compose.ghcr.yml exec app ./sync_zabbix
 ```
 
-Импорт реальных хостов из групп Zabbix `Oracle Database`, `Oracle Server`, `PostgreSQL Database`, `PostgreSQL Server`, `SQLServer Database`:
+Импорт реальных хостов из групп Zabbix `Oracle Database`, `Oracle Server`, `PostgreSQL Database`, `PostgreSQL Server`, `SQLServer Database`, `SQLServer`:
 
 ```bash
 sudo docker compose -f docker-compose.ghcr.yml exec app ./import_zabbix_hosts
