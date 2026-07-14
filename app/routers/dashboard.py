@@ -84,6 +84,38 @@ def imported_zabbix_tags(host: Host) -> dict[str, list[str]]:
     return tags
 
 
+def imported_zabbix_inventory(host: Host) -> dict[str, str]:
+    notes = host.notes or ""
+    marker = "Zabbix inventory:"
+    if marker not in notes:
+        return {}
+    inventory_text = notes.split(marker, 1)[1].split(";", 1)[0]
+    inventory: dict[str, str] = {}
+    for item in inventory_text.split(","):
+        if ":" not in item:
+            continue
+        key, value = item.split(":", 1)
+        key = key.strip().lower()
+        value = value.strip()
+        if key and value:
+            inventory[key] = value
+    return inventory
+
+
+def first_tag_value(host: Host, tag_names: tuple[str, ...]) -> str | None:
+    tags = imported_zabbix_tags(host)
+    for tag_name in tag_names:
+        values = tags.get(tag_name)
+        if values:
+            return values[0]
+    return None
+
+
+def has_tag_value(host: Host, tag_name: str, expected_value: str) -> bool:
+    tags = imported_zabbix_tags(host)
+    return any(value.lower() == expected_value.lower() for value in tags.get(tag_name, []))
+
+
 def detected_db_type(host: Host) -> str | None:
     tags = imported_zabbix_tags(host)
     for tag_name in ("database", "server"):
@@ -111,6 +143,10 @@ def detected_db_type(host: Host) -> str | None:
     return None
 
 
+def is_os_class_host(host: Host) -> bool:
+    return has_tag_value(host, "class", "os")
+
+
 def detected_server_platform(host: Host) -> str:
     text = host_search_text(host)
     virtual_markers = ("virtual", "vmware", "hyper-v", "hyperv", "kvm", "proxmox", "cloud", "-vm", "_vm")
@@ -120,6 +156,54 @@ def detected_server_platform(host: Host) -> str:
     if any(marker in text for marker in physical_markers):
         return "Physical"
     return "Unknown"
+
+
+def is_virtual_server(host: Host) -> bool:
+    explicit_value = first_tag_value(host, ("virtual", "is_virtual", "vm"))
+    if explicit_value:
+        return explicit_value.lower() in {"1", "true", "yes", "y", "virtual", "vm"}
+    type_value = first_tag_value(host, ("type", "server_type", "platform"))
+    if type_value and type_value.lower() in {"virtual", "vm", "vmware", "hyper-v", "hyperv", "kvm"}:
+        return True
+    return detected_server_platform(host) == "Virtual"
+
+
+def operating_system_label(host: Host) -> str:
+    inventory = imported_zabbix_inventory(host)
+    return (
+        host.os_name
+        or inventory.get("os_full")
+        or inventory.get("os")
+        or inventory.get("os_short")
+        or "-"
+    )
+
+
+def server_model_label(host: Host) -> str:
+    tag_value = first_tag_value(host, ("server_model", "model", "hardware_model"))
+    if tag_value:
+        return tag_value
+
+    inventory = imported_zabbix_inventory(host)
+    vendor = inventory.get("vendor")
+    model = inventory.get("model")
+    if vendor and model:
+        return f"{vendor} {model}"
+    return (
+        model
+        or inventory.get("hardware_full")
+        or inventory.get("hardware")
+        or inventory.get("chassis")
+        or "-"
+    )
+
+
+def server_core_label(host: Host) -> str:
+    return first_tag_value(host, ("core", "cores", "cpu_core", "cpu_cores", "vcpu", "vcpus", "cpu")) or "-"
+
+
+def server_ram_label(host: Host) -> str:
+    return first_tag_value(host, ("ram", "memory", "mem", "ram_gb", "memory_gb")) or "-"
 
 
 def imported_zabbix_group_names(host: Host) -> list[str]:
@@ -184,7 +268,13 @@ def dashboard(
     host_db_labels = {host.id: detected_db_type(host) for host in all_hosts}
     host_platform_labels = {host.id: detected_server_platform(host) for host in all_hosts}
     host_asset_kinds = {host.id: detected_zabbix_asset_kind(host) for host in all_hosts}
-    server_hosts = all_hosts
+    host_virtual_labels = {host.id: "YES" if is_virtual_server(host) else "NO" for host in all_hosts}
+    host_os_labels = {host.id: operating_system_label(host) for host in all_hosts}
+    host_model_labels = {host.id: server_model_label(host) for host in all_hosts}
+    host_core_labels = {host.id: server_core_label(host) for host in all_hosts}
+    host_ram_labels = {host.id: server_ram_label(host) for host in all_hosts}
+    os_class_hosts = [host for host in all_hosts if is_os_class_host(host)]
+    server_hosts = os_class_hosts or all_hosts
     db_family_counts = {
         family: sum(
             1
@@ -261,7 +351,7 @@ def dashboard(
         if host_db_labels.get(host.id) in {"Oracle", "PostgreSQL", "SQLServer"}
         and host_asset_kinds.get(host.id) == "server"
     ]
-    filtered_server_hosts = hosts_list
+    filtered_server_hosts = [host for host in hosts_list if is_os_class_host(host)] if os_class_hosts else hosts_list
     if current_view == "hosts":
         display_hosts = filtered_server_hosts
 
@@ -349,6 +439,11 @@ def dashboard(
             "host_db_labels": host_db_labels,
             "host_platform_labels": host_platform_labels,
             "host_asset_kinds": host_asset_kinds,
+            "host_virtual_labels": host_virtual_labels,
+            "host_os_labels": host_os_labels,
+            "host_model_labels": host_model_labels,
+            "host_core_labels": host_core_labels,
+            "host_ram_labels": host_ram_labels,
             "database_assets": database_assets,
             "server_assets": server_assets,
             "type_database_assets": type_database_assets,

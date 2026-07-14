@@ -154,7 +154,7 @@ def upsert_host(db, zabbix_host: dict, client: ZabbixClient) -> tuple[Host, bool
     host.environment = environment_from_name(f"{inventory_hostname} {display_name}")
     host.role = role
     host.db_type = db_type
-    host.os_name = inventory.get("os_full") or inventory.get("os") or host.os_name
+    host.os_name = inventory.get("os_full") or inventory.get("os") or inventory.get("os_short") or host.os_name
     host.location = inventory.get("location") or host.location
     host.owner_team = owner_team_from_db_type(db_type)
     inventory_text = ", ".join(f"{key}: {value}" for key, value in sorted(inventory.items()))

@@ -207,7 +207,6 @@
                   <tr>
                     <td>
                       <a class="table-link" href="/hosts/{{ host.id }}">{{ host.hostname }}</a>
-                      <div class="text-muted small">{{ host.ip_address or host.fqdn or "-" }}</div>
                     </td>
                     <td>{{ host_db_labels.get(host.id) or host.db_type or (instance_db_types|join(", ")) or "-" }}</td>
                     <td><span class="badge text-bg-{{ host.monitoring_status|status_class }}">{{ host.monitoring_status }}</span></td>
@@ -245,7 +244,11 @@
                 <th>Environment</th>
                 <th>Role</th>
                 <th>DB Type</th>
-                <th>Platform</th>
+                <th>Virtual</th>
+                <th>Server model</th>
+                <th>Core</th>
+                <th>RAM</th>
+                <th>Operating system</th>
                 <th>Monitoring</th>
                 <th>Problems</th>
               </tr>
@@ -256,13 +259,16 @@
                 <tr>
                   <td>
                     <a class="table-link" href="/hosts/{{ host.id }}">{{ host.zabbix_host_name or host.hostname }}</a>
-                    <div class="text-muted small">{{ host.hostname }}{% if host.fqdn and host.fqdn != host.hostname %} / {{ host.fqdn }}{% endif %}</div>
                   </td>
                   <td>{{ host.ip_address or "-" }}</td>
                   <td><span class="pill">{{ host.environment }}</span></td>
                   <td>{{ host.role }}</td>
                   <td>{{ host_db_labels.get(host.id) or host.db_type or (instance_db_types|join(", ")) or "-" }}</td>
-                  <td>{{ host_platform_labels.get(host.id) or "Unknown" }}</td>
+                  <td>{{ host_virtual_labels.get(host.id) or "NO" }}</td>
+                  <td>{{ host_model_labels.get(host.id) or "-" }}</td>
+                  <td>{{ host_core_labels.get(host.id) or "-" }}</td>
+                  <td>{{ host_ram_labels.get(host.id) or "-" }}</td>
+                  <td>{{ host_os_labels.get(host.id) or "-" }}</td>
                   <td><span class="badge text-bg-{{ host.monitoring_status|status_class }}">{{ host.monitoring_status }}</span></td>
                   <td>
                     <span class="problem-count {% if host.problem_count > 0 %}has-problems{% endif %}">
@@ -271,7 +277,7 @@
                   </td>
                 </tr>
               {% else %}
-                <tr><td colspan="8" class="empty-state">No servers found.</td></tr>
+                <tr><td colspan="12" class="empty-state">No servers found.</td></tr>
               {% endfor %}
             </tbody>
           </table>
