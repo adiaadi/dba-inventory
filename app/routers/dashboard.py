@@ -14,6 +14,7 @@ from app.routers.common import (
     get_filter_options,
 )
 from app.services.zabbix_items import parse_zabbix_item_values
+from app.services.zabbix_refresh import maybe_refresh_zabbix_cache
 from app.web import templates
 
 router = APIRouter()
@@ -383,6 +384,7 @@ def dashboard(
     current_view = view if view in allowed_views else "overview"
     current_asset_view = asset_view if asset_view in {"databases", "servers"} else "databases"
     filters = active_filters(db_type, environment, role, monitoring_status)
+    zabbix_refresh_error = maybe_refresh_zabbix_cache(db)
     counts = {
         "hosts": db.scalar(select(func.count(Host.id))) or 0,
         "databases": db.scalar(select(func.count(DatabaseInstance.id))) or 0,
@@ -569,6 +571,7 @@ def dashboard(
             "problem_total": problem_total,
             "problem_average": problem_average,
             "last_sync_at": last_sync_at,
+            "zabbix_refresh_error": zabbix_refresh_error,
             "top_hosts": top_hosts,
             "chart_data": chart_data,
             "clusters": clusters,

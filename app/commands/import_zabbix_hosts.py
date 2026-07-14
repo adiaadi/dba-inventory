@@ -193,7 +193,7 @@ def upsert_host(db, zabbix_host: dict, client: ZabbixClient) -> tuple[Host, bool
     return host, created
 
 
-def import_zabbix_hosts(group_names: list[str] | None = None) -> tuple[int, int]:
+def import_zabbix_hosts(group_names: list[str] | None = None, verbose: bool = True) -> tuple[int, int]:
     settings = get_settings()
     if not settings.zabbix_url or not settings.zabbix_api_token:
         raise RuntimeError("ZABBIX_URL and ZABBIX_API_TOKEN must be set")
@@ -216,12 +216,14 @@ def import_zabbix_hosts(group_names: list[str] | None = None) -> tuple[int, int]
             if not any(candidate_name in found_group_names for candidate_name in candidate_names)
         ]
     if missing_group_names:
-        print(f"Zabbix groups not found: {', '.join(missing_group_names)}")
+        if verbose:
+            print(f"Zabbix groups not found: {', '.join(missing_group_names)}")
 
     groupids = [str(group["groupid"]) for group in zabbix_groups]
     zabbix_hosts = client.get_hosts_by_groupids(groupids)
     if not zabbix_hosts:
-        print("No Zabbix hosts found for selected groups.")
+        if verbose:
+            print("No Zabbix hosts found for selected groups.")
         return 0, 0
 
     db = SessionLocal()
@@ -241,10 +243,11 @@ def import_zabbix_hosts(group_names: list[str] | None = None) -> tuple[int, int]
             else:
                 updated += 1
                 action = "updated"
-            print(
-                f"{action}: {host.hostname} hostid={host.zabbix_hostid} "
-                f"status={host.monitoring_status} problems={host.problem_count}"
-            )
+            if verbose:
+                print(
+                    f"{action}: {host.hostname} hostid={host.zabbix_hostid} "
+                    f"status={host.monitoring_status} problems={host.problem_count}"
+                )
         db.commit()
     except Exception:
         db.rollback()

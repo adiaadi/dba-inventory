@@ -13,6 +13,16 @@ def env_bool(name: str, default: bool = True) -> bool:
     return value.strip().lower() not in {"0", "false", "no", "off"}
 
 
+def env_int(name: str, default: int) -> int:
+    value = getenv(name)
+    if value is None:
+        return default
+    try:
+        return int(value.strip())
+    except ValueError:
+        return default
+
+
 class Settings:
     app_name: str = getenv("APP_NAME", "DBA Inventory")
     app_env: str = getenv("APP_ENV", "local")
@@ -26,6 +36,7 @@ class Settings:
     zabbix_api_token: str | None = getenv("ZABBIX_API_TOKEN")
     zabbix_verify_ssl: bool = env_bool("ZABBIX_VERIFY_SSL", True)
     zabbix_ca_file: str | None = getenv("ZABBIX_CA_FILE")
+    zabbix_auto_refresh_seconds: int = env_int("ZABBIX_AUTO_REFRESH_SECONDS", 300)
 
 
 @lru_cache

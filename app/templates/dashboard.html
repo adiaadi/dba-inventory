@@ -93,6 +93,12 @@
       </div>
     </header>
 
+    {% if zabbix_refresh_error %}
+      <div class="alert alert-warning py-2 mb-3" role="alert">
+        Live Zabbix refresh failed. Showing cached data. {{ zabbix_refresh_error }}
+      </div>
+    {% endif %}
+
     {% if db_type_view %}
       <section class="overview-kpis overview-kpis-dbms">
         <a class="overview-kpi {% if current_asset_view == 'databases' %}active{% endif %}" href="/?view={{ current_view }}&asset_view=databases">

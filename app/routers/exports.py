@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session, selectinload
 from app.db.session import get_db
 from app.models import DatabaseInstance, Host
 from app.routers.common import apply_database_filters, apply_host_filters
+from app.services.zabbix_refresh import maybe_refresh_zabbix_cache
 
 router = APIRouter(prefix="/exports", tags=["exports"])
 
@@ -45,6 +46,7 @@ def export_hosts(
     monitoring_status: str | None = None,
     db: Session = Depends(get_db),
 ):
+    maybe_refresh_zabbix_cache(db)
     stmt = select(Host).options(selectinload(Host.databases)).order_by(Host.hostname)
     stmt = apply_host_filters(stmt, db_type, environment, role, monitoring_status)
     hosts = db.scalars(stmt).all()
@@ -106,6 +108,7 @@ def export_databases(
     monitoring_status: str | None = None,
     db: Session = Depends(get_db),
 ):
+    maybe_refresh_zabbix_cache(db)
     stmt = (
         select(DatabaseInstance)
         .options(selectinload(DatabaseInstance.host))
