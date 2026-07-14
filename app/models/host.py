@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import date, datetime
 
-from sqlalchemy import DateTime, Integer, String, Text
+from sqlalchemy import Date, DateTime, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -20,6 +20,7 @@ class Host(TimestampMixin, Base):
     os_name: Mapped[str | None] = mapped_column(Text)
     location: Mapped[str | None] = mapped_column(String(120))
     owner_team: Mapped[str | None] = mapped_column(String(120))
+    support_end_date: Mapped[date | None] = mapped_column(Date)
     notes: Mapped[str | None] = mapped_column(Text)
 
     zabbix_hostid: Mapped[str | None] = mapped_column(String(80), index=True)

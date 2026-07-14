@@ -10,6 +10,7 @@ from app.db.session import SessionLocal
 from app.models import Host
 from app.services.zabbix import ZabbixApiError, ZabbixClient
 from app.services.zabbix_items import (
+    ZABBIX_DATABASE_ITEM_SEARCH_TERMS,
     ZABBIX_DETAIL_ITEM_KEYS,
     operating_system_item_label,
     serialize_zabbix_item_values,
@@ -152,9 +153,11 @@ def upsert_host(db, zabbix_host: dict, client: ZabbixClient) -> tuple[Host, bool
         (zabbix_host.get("tags") or []) + (zabbix_host.get("inheritedTags") or [])
     )
     inventory = normalize_inventory(zabbix_host.get("inventory"))
-    item_values = client.get_latest_item_values(hostid, ZABBIX_DETAIL_ITEM_KEYS)
     db_type = db_type_from_tags(tags) or db_type_from_groups(group_names)
     role = role_from_tags(tags) or role_from_groups(group_names)
+    item_values = client.get_latest_item_values(hostid, ZABBIX_DETAIL_ITEM_KEYS)
+    if role == "database":
+        item_values.update(client.get_latest_item_values_by_search(hostid, ZABBIX_DATABASE_ITEM_SEARCH_TERMS))
     state = client.host_state_from_host(zabbix_host)
 
     host = db.scalar(select(Host).where(Host.zabbix_hostid == hostid))

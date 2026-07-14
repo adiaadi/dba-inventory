@@ -1,7 +1,9 @@
 from collections import Counter
+from datetime import UTC, date, datetime
+from urllib.parse import parse_qs
 
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import desc, func, select
 from sqlalchemy.orm import Session, selectinload
 
@@ -52,6 +54,49 @@ DB_TYPE_VIEWS = {
 }
 
 DB_FAMILIES = ("Oracle", "PostgreSQL", "SQLServer")
+
+DATABASE_SIZE_TAG_NAMES = (
+    "db_size",
+    "database_size",
+    "database size",
+    "size",
+    "used_size",
+    "data_size",
+)
+
+DATABASE_SIZE_ITEM_MARKERS = (
+    "database size",
+    "db size",
+    "db.size",
+    "pgsql.db.size",
+    "oracle.db",
+    "mssql",
+    "sqlserver",
+)
+
+DATABASE_SIZE_EXCLUDE_MARKERS = (
+    "vm.memory",
+    "system.cpu",
+    "filesystem",
+    "vfs.fs",
+    "disk",
+    "tablespace",
+)
+
+REPLICA_MARKERS = (
+    "standby",
+    "replica",
+    "replication",
+    "secondary",
+    "slave",
+    "mirror",
+    "mirroring",
+    "log shipping",
+    "drdb",
+    "dr-db",
+    "readonly",
+    "read only",
+)
 
 ZABBIX_DATABASE_GROUPS = {
     "Oracle": ("Oracle Database", "Oracle Databases"),
@@ -416,6 +461,109 @@ def format_capacity_gb(value: float) -> str:
     return f"{value:.1f} GB".replace(".0 GB", " GB")
 
 
+def parse_size_bytes(value: str | None) -> float | None:
+    if not value or value == "-":
+        return None
+    text = value.strip().lower().replace(",", ".")
+    number = None
+    for part in text.split():
+        try:
+            number = float(part)
+            break
+        except ValueError:
+            continue
+    if number is None:
+        try:
+            number = float(text)
+        except ValueError:
+            return None
+    if "tb" in text or "tib" in text:
+        return number * 1024**4
+    if "gb" in text or "gib" in text:
+        return number * 1024**3
+    if "mb" in text or "mib" in text:
+        return number * 1024**2
+    if "kb" in text or "kib" in text:
+        return number * 1024
+    return number
+
+
+def format_size_bytes(value: float | None) -> str:
+    if value is None or value <= 0:
+        return "-"
+    tib = value / 1024**4
+    if tib >= 1:
+        return f"{tib:.1f} TB".replace(".0 TB", " TB")
+    gib = value / 1024**3
+    if gib >= 1:
+        return f"{gib:.1f} GB".replace(".0 GB", " GB")
+    mib = value / 1024**2
+    if mib >= 1:
+        return f"{mib:.0f} MB"
+    return f"{value:.0f} B"
+
+
+def database_size_label(host: Host) -> str:
+    for tag_name in DATABASE_SIZE_TAG_NAMES:
+        tag_value = first_tag_value(host, (tag_name,))
+        if tag_value:
+            parsed = parse_size_bytes(tag_value)
+            return format_size_bytes(parsed) if parsed else tag_value
+
+    candidates: list[tuple[float, str]] = []
+    for key, value in imported_zabbix_items(host).items():
+        key_text = key.lower()
+        if any(marker in key_text for marker in DATABASE_SIZE_EXCLUDE_MARKERS):
+            continue
+        if "size" not in key_text:
+            continue
+        if not any(marker in key_text for marker in DATABASE_SIZE_ITEM_MARKERS):
+            continue
+        parsed = parse_size_bytes(value)
+        if parsed:
+            candidates.append((parsed, format_size_bytes(parsed)))
+    if not candidates:
+        return "-"
+    return max(candidates, key=lambda item: item[0])[1]
+
+
+def database_role_text(host: Host) -> str:
+    tags = imported_zabbix_tags(host)
+    values = [
+        value
+        for tag_name in ("role", "db_role", "replication_role", "cluster_role", "status")
+        for value in tags.get(tag_name, [])
+    ]
+    values.extend([host.role or "", host.zabbix_host_name or "", host.hostname or ""])
+    return " ".join(values).lower()
+
+
+def is_primary_database_asset(host: Host) -> bool:
+    role_text = database_role_text(host)
+    return not any(marker in role_text for marker in REPLICA_MARKERS)
+
+
+def datacenter_label(host: Host) -> str:
+    tag_value = first_tag_value(host, ("datacenter", "data_center", "dc"))
+    if tag_value:
+        normalized = tag_value.strip().upper()
+        if normalized in {"MAIN", "DR"}:
+            return normalized
+        return tag_value.strip()
+    return "Unknown"
+
+
+def support_status_label(support_end_date: date | None) -> str:
+    if support_end_date is None:
+        return "not set"
+    today = datetime.now(UTC).date()
+    if support_end_date < today:
+        return "expired"
+    if (support_end_date - today).days <= 180:
+        return "expires soon"
+    return "active"
+
+
 def imported_zabbix_group_names(host: Host) -> list[str]:
     notes = host.notes or ""
     marker = "Imported from Zabbix groups:"
@@ -517,6 +665,31 @@ def detected_zabbix_asset_kind(host: Host) -> str:
     if "server" in role:
         return "server"
     return "database"
+
+
+@router.post("/hosts/{host_id}/support-end-date")
+async def update_host_support_end_date(
+    host_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    body = (await request.body()).decode("utf-8")
+    form_data = parse_qs(body)
+    raw_value = (form_data.get("support_end_date") or [""])[0].strip()
+
+    host = db.get(Host, host_id)
+    if host is not None:
+        if raw_value:
+            try:
+                host.support_end_date = date.fromisoformat(raw_value)
+            except ValueError:
+                host.support_end_date = None
+        else:
+            host.support_end_date = None
+        db.commit()
+
+    redirect_url = request.headers.get("referer") or "/?view=overview"
+    return RedirectResponse(redirect_url, status_code=303)
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -651,6 +824,48 @@ def dashboard(
                 "ram_label": format_capacity_gb(total_ram_gb) if total_ram_gb else "-",
             }
         )
+    database_size_sections = []
+    for family in DB_FAMILIES:
+        family_database_hosts = unique_hosts(
+            [host for host in all_hosts if is_family_database_asset(host, family)]
+        )
+        if family in {"PostgreSQL", "SQLServer"}:
+            family_database_hosts = [
+                host for host in family_database_hosts if is_primary_database_asset(host)
+            ]
+        database_size_sections.append(
+            {
+                "label": "SQL Server" if family == "SQLServer" else family,
+                "primary_only": family in {"PostgreSQL", "SQLServer"},
+                "rows": [
+                    {
+                        "name": host.zabbix_host_name or host.hostname,
+                        "server": host.hostname,
+                        "ip": host.ip_address or "-",
+                        "size": database_size_label(host),
+                        "monitoring": host.monitoring_status,
+                        "problem_count": host.problem_count or 0,
+                    }
+                    for host in family_database_hosts
+                ],
+            }
+        )
+    datacenter_counts = {
+        "MAIN": sum(1 for host in server_hosts if datacenter_label(host) == "MAIN"),
+        "DR": sum(1 for host in server_hosts if datacenter_label(host) == "DR"),
+    }
+    physical_server_rows = [
+        {
+            "host": host,
+            "model": host_model_labels.get(host.id) or "-",
+            "vendor": host_vendor_labels.get(host.id) or "-",
+            "datacenter": datacenter_label(host),
+            "support_status": support_status_label(host.support_end_date),
+        }
+        for host in server_hosts
+        if host_platform_labels.get(host.id) == "Physical"
+    ]
+    physical_server_rows.sort(key=lambda row: (row["vendor"], row["model"], row["host"].hostname))
     availability_counter = Counter(host.zabbix_agent_availability or "unknown" for host in server_hosts)
     availability_counts = sorted(availability_counter.items())
     problem_total = sum(host.problem_count or 0 for host in server_hosts)
@@ -752,8 +967,8 @@ def dashboard(
     }
     section_subtitles = {
         "overview": (
-            f"{counts['servers']} Servers, Oracle {db_family_server_counts['Oracle']}, "
-            f"PostgreSQL {db_family_server_counts['PostgreSQL']}, SQLServer {db_family_server_counts['SQLServer']}"
+            f"{counts['servers']} Servers, Oracle DB {db_family_counts['Oracle']}, "
+            f"PostgreSQL DB {db_family_counts['PostgreSQL']}, SQLServer DB {db_family_counts['SQLServer']}"
         ),
         "hosts": f"{len(filtered_server_hosts)} Servers in current view",
         "databases": f"{len(database_assets)} DB assets in current view",
@@ -808,6 +1023,9 @@ def dashboard(
             "environment_counts": environment_counts,
             "platform_summary": platform_summary,
             "capacity_by_db": capacity_by_db,
+            "database_size_sections": database_size_sections,
+            "datacenter_counts": datacenter_counts,
+            "physical_server_rows": physical_server_rows,
             "availability_counts": availability_counts,
             "problem_total": problem_total,
             "problem_average": problem_average,

@@ -202,6 +202,46 @@ class ZabbixClient:
                 item_values[str(key)] = str(value)
         return item_values
 
+    def get_latest_item_values_by_search(
+        self,
+        hostid: str,
+        search_terms: list[str] | tuple[str, ...],
+        limit: int = 50,
+    ) -> dict[str, str]:
+        if not search_terms:
+            return {}
+
+        item_values: dict[str, str] = {}
+        seen_itemids: set[str] = set()
+        for field in ("name", "key_"):
+            for term in search_terms:
+                items = self._call(
+                    "item.get",
+                    {
+                        "output": ["itemid", "name", "key_", "lastvalue", "units"],
+                        "hostids": [str(hostid)],
+                        "search": {field: term},
+                        "limit": limit,
+                    },
+                )
+                for item in items or []:
+                    itemid = str(item.get("itemid") or "")
+                    if not itemid or itemid in seen_itemids:
+                        continue
+                    seen_itemids.add(itemid)
+                    value = item.get("lastvalue")
+                    if value in (None, ""):
+                        continue
+                    name = item.get("name")
+                    key = item.get("key_")
+                    label = f"{name} ({key})" if name and key else key or name
+                    units = item.get("units")
+                    if units:
+                        value = f"{value} {units}"
+                    if label:
+                        item_values[str(label)] = str(value)
+        return item_values
+
     def get_hostid_by_hostname(self, hostname: str) -> str | None:
         host = self.get_host_by_hostname(hostname)
         if not host:

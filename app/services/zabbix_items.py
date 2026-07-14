@@ -18,6 +18,18 @@ ZABBIX_DETAIL_ITEM_KEYS = (
     *ZABBIX_OS_ITEM_KEYS,
 )
 
+ZABBIX_DATABASE_ITEM_SEARCH_TERMS = (
+    "Database",
+    "database",
+    "DB size",
+    "db size",
+    "database size",
+    "db.size",
+    "pgsql.db.size",
+    "oracle.db",
+    "mssql",
+)
+
 ZABBIX_ITEMS_NOTE_MARKER = "Zabbix items:"
 
 

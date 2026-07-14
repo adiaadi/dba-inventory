@@ -9,6 +9,7 @@ from app.db.session import SessionLocal
 from app.models import Host
 from app.services.zabbix import ZabbixApiError, ZabbixClient
 from app.services.zabbix_items import (
+    ZABBIX_DATABASE_ITEM_SEARCH_TERMS,
     ZABBIX_DETAIL_ITEM_KEYS,
     operating_system_item_label,
     replace_zabbix_item_values,
@@ -53,6 +54,10 @@ def sync_zabbix() -> int:
                 host.monitoring_status = state.monitoring_status
                 host.zabbix_last_sync_at = now
                 item_values = client.get_latest_item_values(state.hostid, ZABBIX_DETAIL_ITEM_KEYS)
+                if host.role == "database" or "class=database" in (host.notes or "").lower():
+                    item_values.update(
+                        client.get_latest_item_values_by_search(state.hostid, ZABBIX_DATABASE_ITEM_SEARCH_TERMS)
+                    )
                 if item_values:
                     host.notes = replace_zabbix_item_values(host.notes, item_values)
                     host.os_name = operating_system_item_label(item_values, host.os_name) or host.os_name

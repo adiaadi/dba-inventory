@@ -137,21 +137,21 @@
     {% else %}
       <section class="overview-kpis">
         <div class="overview-kpi overview-kpi-static">
-          <span class="kpi-title">Oracle</span>
-          <span class="kpi-value">{{ db_family_server_counts.Oracle }}</span>
-          <span class="kpi-delta text-muted">Servers</span>
+          <span class="kpi-title">Oracle DB</span>
+          <span class="kpi-value">{{ db_family_counts.Oracle }}</span>
+          <span class="kpi-delta text-muted">Databases</span>
           <i class="bi bi-database-check"></i>
         </div>
         <div class="overview-kpi overview-kpi-static">
-          <span class="kpi-title">PostgreSQL</span>
-          <span class="kpi-value">{{ db_family_server_counts.PostgreSQL }}</span>
-          <span class="kpi-delta text-muted">Servers</span>
+          <span class="kpi-title">PostgreSQL DB</span>
+          <span class="kpi-value">{{ db_family_counts.PostgreSQL }}</span>
+          <span class="kpi-delta text-muted">Databases</span>
           <i class="bi bi-database-fill"></i>
         </div>
         <div class="overview-kpi overview-kpi-static">
-          <span class="kpi-title">SQLServer</span>
-          <span class="kpi-value">{{ db_family_server_counts.SQLServer }}</span>
-          <span class="kpi-delta text-muted">Servers</span>
+          <span class="kpi-title">SQLServer DB</span>
+          <span class="kpi-value">{{ db_family_counts.SQLServer }}</span>
+          <span class="kpi-delta text-muted">Databases</span>
           <i class="bi bi-server"></i>
         </div>
         <div class="overview-kpi overview-kpi-static">
@@ -176,18 +176,62 @@
     {% endif %}
 
     {% if current_view == "overview" %}
-      <div class="overview-grid overview-grid-dashboard">
-        <section class="overview-panel overview-panel-span-2">
+      <div class="executive-grid">
+        <section class="overview-panel executive-panel executive-panel-span-2">
           <div class="overview-section-heading">
-            <h2>Inventory Composition</h2>
-            <span>Servers vs DB assets</span>
+            <h2>Database Estate</h2>
+            <span>from Zabbix database assets</span>
           </div>
-          <div class="chart-box chart-box-bar">
-            <canvas id="inventoryChart"></canvas>
+          <div class="executive-card-grid">
+            <div class="executive-card">
+              <span>Oracle Databases</span>
+              <strong>{{ db_family_counts.Oracle }}</strong>
+            </div>
+            <div class="executive-card">
+              <span>PostgreSQL Databases</span>
+              <strong>{{ db_family_counts.PostgreSQL }}</strong>
+            </div>
+            <div class="executive-card">
+              <span>SQLServer Databases</span>
+              <strong>{{ db_family_counts.SQLServer }}</strong>
+            </div>
           </div>
         </section>
 
-        <section class="overview-panel">
+        <section class="overview-panel executive-panel">
+          <div class="overview-section-heading">
+            <h2>Datacenter Footprint</h2>
+            <span>tag: datacenter</span>
+          </div>
+          <div class="executive-split">
+            <div>
+              <span>MAIN</span>
+              <strong>{{ datacenter_counts.MAIN }}</strong>
+            </div>
+            <div>
+              <span>DR</span>
+              <strong>{{ datacenter_counts.DR }}</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="overview-panel executive-panel">
+          <div class="overview-section-heading">
+            <h2>Infrastructure Mix</h2>
+            <span>Virtual / Physical</span>
+          </div>
+          <div class="health-list">
+            {% for row in platform_summary %}
+              <div class="health-row">
+                <span><i class="legend-dot"></i>{{ row.label }}</span>
+                <strong>{{ row.count }}</strong>
+              </div>
+              <div class="health-track health-track-dark"><span style="width: {{ row.percent }}%"></span></div>
+            {% endfor %}
+          </div>
+        </section>
+
+        <section class="overview-panel executive-panel">
           <div class="overview-section-heading">
             <h2>Monitoring Health</h2>
             <span>{{ counts.servers }} Servers</span>
@@ -205,94 +249,105 @@
           </div>
         </section>
 
-        <section class="overview-panel overview-panel-span-2">
+        <section class="overview-panel executive-panel executive-panel-span-3">
           <div class="overview-section-heading">
-            <h2>Environment Matrix</h2>
-            <span>DB type distribution</span>
+            <h2>Database Size</h2>
+            <span>PostgreSQL / SQLServer primary only</span>
           </div>
-          <div class="chart-box chart-box-bar">
-            <canvas id="environmentMatrixChart"></canvas>
-          </div>
-        </section>
-
-        <section class="overview-panel">
-          <div class="overview-section-heading">
-            <h2>Server Platform</h2>
-            <span>Virtual / Physical</span>
-          </div>
-          <div class="health-list">
-            {% for row in platform_summary %}
-              <div class="health-row">
-                <span><i class="legend-dot"></i>{{ row.label }}</span>
-                <strong>{{ row.count }}</strong>
+          <div class="db-size-grid">
+            {% for section in database_size_sections %}
+              <div class="db-size-card">
+                <div class="db-size-title">
+                  <strong>{{ section.label }}</strong>
+                  {% if section.primary_only %}<span>primary</span>{% endif %}
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-sm align-middle overview-table mb-0">
+                    <thead>
+                      <tr>
+                        <th>Database</th>
+                        <th>Server</th>
+                        <th>Size</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for item in section.rows[:8] %}
+                        <tr>
+                          <td>{{ item.name }}</td>
+                          <td>{{ item.server }}</td>
+                          <td class="text-nowrap">{{ item.size }}</td>
+                          <td><span class="badge text-bg-{{ item.monitoring|status_class }}">{{ item.monitoring }}</span></td>
+                        </tr>
+                      {% else %}
+                        <tr><td colspan="4" class="empty-state">No database assets found.</td></tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-              <div class="health-track health-track-dark"><span style="width: {{ row.percent }}%"></span></div>
             {% endfor %}
           </div>
         </section>
 
-        <section class="overview-panel">
+        <section class="overview-panel executive-panel executive-panel-span-2">
           <div class="overview-section-heading">
-            <h2>Capacity Snapshot</h2>
-            <span>from Zabbix items</span>
-          </div>
-          <table class="table table-sm align-middle overview-table capacity-table">
-            <thead>
-              <tr>
-                <th>DB Type</th>
-                <th>Servers</th>
-                <th>Core</th>
-                <th>RAM</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for row in capacity_by_db %}
-                <tr>
-                  <td>{{ row.label }}</td>
-                  <td>{{ row.servers }}</td>
-                  <td>{{ row.cores }}</td>
-                  <td>{{ row.ram_label }}</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </section>
-
-        <section class="overview-panel overview-table-panel">
-          <div class="overview-section-heading">
-            <h2>Open Problem Queue</h2>
-            <span>{{ top_hosts|length }} requires attention</span>
+            <h2>Physical Servers Support</h2>
+            <span>{{ physical_server_rows|length }} physical servers</span>
           </div>
           <div class="table-responsive">
             <table class="table table-sm align-middle overview-table">
               <thead>
                 <tr>
                   <th>Server</th>
-                  <th>DB Type</th>
-                  <th>Monitoring</th>
-                  <th>Problems</th>
+                  <th>Model</th>
+                  <th>Vendor</th>
+                  <th>Datacenter</th>
+                  <th>Support end</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                {% for host in top_hosts %}
-                  {% set instance_db_types = host.databases | map(attribute='db_type') | unique | list %}
+                {% for row in physical_server_rows %}
+                  {% set host = row.host %}
                   <tr>
                     <td>
                       <a class="table-link" href="/hosts/{{ host.id }}">{{ host.hostname }}</a>
+                      <div class="text-muted small">{{ host.ip_address or host.fqdn or "-" }}</div>
                     </td>
-                    <td>{{ host_db_labels.get(host.id) or host.db_type or (instance_db_types|join(", ")) or "-" }}</td>
-                    <td><span class="badge text-bg-{{ host.monitoring_status|status_class }}">{{ host.monitoring_status }}</span></td>
+                    <td>{{ row.model }}</td>
+                    <td>{{ row.vendor }}</td>
+                    <td>{{ row.datacenter }}</td>
                     <td>
-                      <span class="problem-count {% if host.problem_count > 0 %}has-problems{% endif %}">
-                        {{ host.problem_count }}
-                      </span>
+                      <form class="support-date-form" method="post" action="/hosts/{{ host.id }}/support-end-date">
+                        <input class="form-control form-control-sm" type="date" name="support_end_date" value="{{ host.support_end_date or '' }}">
+                        <button class="btn btn-sm btn-outline-secondary" type="submit">Save</button>
+                      </form>
                     </td>
+                    <td><span class="badge text-bg-light border">{{ row.support_status }}</span></td>
                   </tr>
                 {% else %}
-                  <tr><td colspan="4" class="empty-state">No open Zabbix problems.</td></tr>
+                  <tr><td colspan="6" class="empty-state">No physical servers found.</td></tr>
                 {% endfor %}
               </tbody>
             </table>
+          </div>
+        </section>
+
+        <section class="overview-panel executive-panel">
+          <div class="overview-section-heading">
+            <h2>Open Problem Queue</h2>
+            <span>{{ top_hosts|length }} requires attention</span>
+          </div>
+          <div class="health-list problem-list">
+            {% for host in top_hosts[:6] %}
+              <div class="problem-row">
+                <a class="table-link" href="/hosts/{{ host.id }}">{{ host.hostname }}</a>
+                <span class="problem-count {% if host.problem_count > 0 %}has-problems{% endif %}">{{ host.problem_count }}</span>
+              </div>
+            {% else %}
+              <div class="empty-state">No open Zabbix problems.</div>
+            {% endfor %}
           </div>
         </section>
       </div>
