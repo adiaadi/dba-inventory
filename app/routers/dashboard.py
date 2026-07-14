@@ -174,12 +174,22 @@ def has_tag_db_family(host: Host, tag_name: str, family: str) -> bool:
     return any(normalized_db_type(value) == family for value in tags.get(tag_name, []))
 
 
+def class_tag_values(host: Host) -> set[str]:
+    return {value.strip().lower() for value in imported_zabbix_tags(host).get("class", [])}
+
+
 def has_database_marker(host: Host) -> bool:
-    return has_tag_value(host, "class", "database") or has_tag_name(host, "database")
+    class_values = class_tag_values(host)
+    if class_values:
+        return "database" in class_values
+    return has_tag_name(host, "database")
 
 
 def has_os_marker(host: Host) -> bool:
-    return has_tag_value(host, "class", "os") or has_tag_name(host, "server")
+    class_values = class_tag_values(host)
+    if class_values:
+        return "os" in class_values
+    return has_tag_name(host, "server")
 
 
 def detected_db_type(host: Host) -> str | None:
@@ -392,9 +402,9 @@ def host_has_zabbix_group(host: Host, group_names: tuple[str, ...]) -> bool:
 
 
 def is_family_database_asset(host: Host, family: str) -> bool:
-    return has_tag_db_family(host, "database", family) or (
-        has_database_marker(host)
-        and host_has_zabbix_group(host, ZABBIX_DATABASE_GROUPS[family])
+    return has_database_marker(host) and (
+        has_tag_db_family(host, "database", family)
+        or host_has_zabbix_group(host, ZABBIX_DATABASE_GROUPS[family])
     )
 
 
@@ -405,9 +415,11 @@ def has_server_group_marker(host: Host) -> bool:
 def is_family_server_asset(host: Host, family: str) -> bool:
     if has_tag_db_family(host, "server", family):
         return True
-    if not host_has_zabbix_group(host, ZABBIX_SERVER_GROUPS[family]):
-        return False
-    return has_os_marker(host) or has_server_group_marker(host)
+    if has_os_marker(host) and has_tag_db_family(host, "database", family):
+        return True
+    return host_has_zabbix_group(host, ZABBIX_SERVER_GROUPS[family]) and (
+        has_os_marker(host) or has_server_group_marker(host)
+    )
 
 
 def is_zabbix_database_asset(host: Host) -> bool:
