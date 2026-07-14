@@ -115,6 +115,12 @@
       </div>
     {% endif %}
 
+    {% if zabbix_inventory_warning %}
+      <div class="alert alert-info py-2 mb-3" role="alert">
+        {{ zabbix_inventory_warning }}
+      </div>
+    {% endif %}
+
     {% if db_type_view %}
       <section class="overview-kpis overview-kpis-dbms">
         <a class="overview-kpi {% if current_asset_view == 'databases' %}active{% endif %}" href="/?view={{ current_view }}&asset_view=databases">

@@ -153,6 +153,11 @@ def has_tag_name(host: Host, tag_name: str) -> bool:
     return bool(imported_zabbix_tags(host).get(tag_name))
 
 
+def has_tag_db_family(host: Host, tag_name: str, family: str) -> bool:
+    tags = imported_zabbix_tags(host)
+    return any(normalized_db_type(value) == family for value in tags.get(tag_name, []))
+
+
 def has_database_marker(host: Host) -> bool:
     return has_tag_value(host, "class", "database") or has_tag_name(host, "database")
 
@@ -313,16 +318,16 @@ def host_has_zabbix_group(host: Host, group_names: tuple[str, ...]) -> bool:
 
 
 def is_family_database_asset(host: Host, family: str) -> bool:
-    return has_database_marker(host) and host_has_zabbix_group(
-        host,
-        ZABBIX_DATABASE_GROUPS[family],
+    return has_tag_db_family(host, "database", family) or (
+        has_database_marker(host)
+        and host_has_zabbix_group(host, ZABBIX_DATABASE_GROUPS[family])
     )
 
 
 def is_family_server_asset(host: Host, family: str) -> bool:
-    return has_os_marker(host) and host_has_zabbix_group(
-        host,
-        ZABBIX_SERVER_GROUPS[family],
+    return has_tag_db_family(host, "server", family) or (
+        has_os_marker(host)
+        and host_has_zabbix_group(host, ZABBIX_SERVER_GROUPS[family])
     )
 
 
@@ -331,9 +336,9 @@ def is_zabbix_database_asset(host: Host) -> bool:
 
 
 def is_zabbix_server_asset(host: Host) -> bool:
-    return has_os_marker(host) and host_has_zabbix_group(
-        host,
-        ZABBIX_SERVER_SUMMARY_GROUPS,
+    return any(is_family_server_asset(host, family) for family in DB_FAMILIES) or (
+        has_os_marker(host)
+        and host_has_zabbix_group(host, ZABBIX_SERVER_SUMMARY_GROUPS)
     )
 
 
@@ -432,6 +437,14 @@ def dashboard(
     }
     counts["databases"] = sum(db_family_counts.values())
     counts["servers"] = len(server_hosts)
+    zabbix_inventory_warning = None
+    if counts["hosts"] == 0:
+        zabbix_inventory_warning = "No cached Zabbix hosts yet. Click Refresh Zabbix to load live data."
+    elif counts["servers"] == 0 and counts["databases"] == 0:
+        zabbix_inventory_warning = (
+            f"{counts['hosts']} cached hosts found, but none matched inventory tags "
+            "class/database/server."
+        )
     monitoring_counter = Counter(host.monitoring_status or "unknown" for host in server_hosts)
     monitoring_counts = sorted(monitoring_counter.items())
     db_type_counts = [(label, count) for label, count in db_family_server_counts.items()]
@@ -586,6 +599,7 @@ def dashboard(
             "problem_average": problem_average,
             "last_sync_at": last_sync_at,
             "zabbix_refresh_error": zabbix_refresh_error,
+            "zabbix_inventory_warning": zabbix_inventory_warning,
             "top_hosts": top_hosts,
             "chart_data": chart_data,
             "clusters": clusters,
