@@ -7,9 +7,14 @@ ZABBIX_OS_ITEM_KEYS = (
     "system.sw.os",
 )
 
+ZABBIX_SERVER_MODEL_ITEM_KEY = "vfs.file.contents[/sys/class/dmi/id/product_name]"
+ZABBIX_SERVER_VENDOR_ITEM_KEY = "vfs.file.contents[/sys/class/dmi/id/sys_vendor]"
+
 ZABBIX_DETAIL_ITEM_KEYS = (
     "system.cpu.num",
     "vm.memory.size[total]",
+    ZABBIX_SERVER_MODEL_ITEM_KEY,
+    ZABBIX_SERVER_VENDOR_ITEM_KEY,
     *ZABBIX_OS_ITEM_KEYS,
 )
 
@@ -59,13 +64,25 @@ def operating_system_item_label(item_values: dict[str, str], fallback: str | Non
 
 
 def clean_operating_system_label(value: str | None) -> str | None:
+    return clean_item_text(value, max_length=80)
+
+
+def clean_item_text(value: str | None, max_length: int | None = None) -> str | None:
     if not value:
         return None
 
     text = " ".join(value.split())
-    if not text:
+    if not text or text.lower() in {"none", "unknown", "not specified", "to be filled by o.e.m."}:
         return None
 
-    if len(text) > 80:
-        return f"{text[:77].rstrip()}..."
+    if max_length and len(text) > max_length:
+        return f"{text[: max_length - 3].rstrip()}..."
     return text
+
+
+def server_model_item_label(item_values: dict[str, str], fallback: str | None = None) -> str | None:
+    return clean_item_text(item_values.get(ZABBIX_SERVER_MODEL_ITEM_KEY)) or clean_item_text(fallback)
+
+
+def server_vendor_item_label(item_values: dict[str, str], fallback: str | None = None) -> str | None:
+    return clean_item_text(item_values.get(ZABBIX_SERVER_VENDOR_ITEM_KEY)) or clean_item_text(fallback)

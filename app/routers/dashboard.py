@@ -13,7 +13,12 @@ from app.routers.common import (
     apply_host_filters,
     get_filter_options,
 )
-from app.services.zabbix_items import operating_system_item_label, parse_zabbix_item_values
+from app.services.zabbix_items import (
+    operating_system_item_label,
+    parse_zabbix_item_values,
+    server_model_item_label,
+    server_vendor_item_label,
+)
 from app.services.zabbix_refresh import maybe_refresh_zabbix_cache
 from app.web import templates
 
@@ -238,22 +243,32 @@ def operating_system_label(host: Host) -> str:
 
 
 def server_model_label(host: Host) -> str:
+    item_values = imported_zabbix_items(host)
+    item_label = server_model_item_label(item_values)
+    if item_label:
+        return item_label
+
     tag_value = first_tag_value(host, ("server_model", "model", "hardware_model"))
     if tag_value:
         return tag_value
 
     inventory = imported_zabbix_inventory(host)
-    vendor = inventory.get("vendor")
     model = inventory.get("model")
-    if vendor and model:
-        return f"{vendor} {model}"
-    return (
-        model
-        or inventory.get("hardware_full")
-        or inventory.get("hardware")
-        or inventory.get("chassis")
-        or "-"
-    )
+    fallback = model or inventory.get("hardware_full") or inventory.get("hardware") or inventory.get("chassis")
+    return server_model_item_label(item_values, fallback) or "-"
+
+
+def server_vendor_label(host: Host) -> str:
+    item_values = imported_zabbix_items(host)
+    item_label = server_vendor_item_label(item_values)
+    if item_label:
+        return item_label
+
+    tag_value = first_tag_value(host, ("server_vendor", "vendor", "hardware_vendor"))
+    if tag_value:
+        return tag_value
+    inventory = imported_zabbix_inventory(host)
+    return server_vendor_item_label(item_values, inventory.get("vendor")) or "-"
 
 
 def server_core_label(host: Host) -> str:
@@ -413,6 +428,7 @@ def dashboard(
     host_virtual_labels = {host.id: "YES" if is_virtual_server(host) else "NO" for host in all_hosts}
     host_os_labels = {host.id: operating_system_label(host) for host in all_hosts}
     host_model_labels = {host.id: server_model_label(host) for host in all_hosts}
+    host_vendor_labels = {host.id: server_vendor_label(host) for host in all_hosts}
     host_core_labels = {host.id: server_core_label(host) for host in all_hosts}
     host_ram_labels = {host.id: server_ram_label(host) for host in all_hosts}
     server_hosts = unique_hosts([host for host in all_hosts if is_zabbix_server_asset(host)])
@@ -577,6 +593,7 @@ def dashboard(
             "host_virtual_labels": host_virtual_labels,
             "host_os_labels": host_os_labels,
             "host_model_labels": host_model_labels,
+            "host_vendor_labels": host_vendor_labels,
             "host_core_labels": host_core_labels,
             "host_ram_labels": host_ram_labels,
             "server_db_type_options": ["PostgreSQL", "SQLServer", "Oracle"],

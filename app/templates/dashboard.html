@@ -292,6 +292,7 @@
                 {% if not is_database_asset_view %}
                   <th>Virtual</th>
                   <th>Server model</th>
+                  <th>Server vendor</th>
                   <th>Core</th>
                   <th>RAM</th>
                   <th>Operating system</th>
@@ -315,6 +316,7 @@
                   {% if not is_database_asset_view %}
                     <td>{{ host_virtual_labels.get(host.id) or "NO" }}</td>
                     <td>{{ host_model_labels.get(host.id) or "-" }}</td>
+                    <td>{{ host_vendor_labels.get(host.id) or "-" }}</td>
                     <td>{{ host_core_labels.get(host.id) or "-" }}</td>
                     <td>{{ host_ram_labels.get(host.id) or "-" }}</td>
                     <td>{{ host_os_labels.get(host.id) or "-" }}</td>
@@ -328,7 +330,7 @@
                 </tr>
               {% else %}
                 <tr>
-                  <td colspan="{% if is_database_asset_view %}5{% else %}11{% endif %}" class="empty-state">
+                  <td colspan="{% if is_database_asset_view %}5{% else %}12{% endif %}" class="empty-state">
                     {% if is_database_asset_view %}No instances found.{% else %}No servers found.{% endif %}
                   </td>
                 </tr>
