@@ -8,6 +8,7 @@ from app.core.config import get_settings
 from app.db.session import SessionLocal
 from app.models import Host
 from app.services.zabbix import ZabbixApiError, ZabbixClient
+from app.services.zabbix_items import ZABBIX_DETAIL_ITEM_KEYS, replace_zabbix_item_values
 
 
 def sync_zabbix() -> int:
@@ -47,6 +48,10 @@ def sync_zabbix() -> int:
                 host.problem_count = state.problem_count
                 host.monitoring_status = state.monitoring_status
                 host.zabbix_last_sync_at = now
+                item_values = client.get_latest_item_values(state.hostid, ZABBIX_DETAIL_ITEM_KEYS)
+                if item_values:
+                    host.notes = replace_zabbix_item_values(host.notes, item_values)
+                    host.os_name = item_values.get("system.sw.os") or host.os_name
                 print(
                     f"{host.hostname}: hostid={state.hostid} "
                     f"availability={state.agent_availability} "

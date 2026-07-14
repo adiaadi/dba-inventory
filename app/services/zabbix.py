@@ -171,6 +171,25 @@ class ZabbixClient:
             },
         )
 
+    def get_latest_item_values(self, hostid: str, item_keys: list[str] | tuple[str, ...]) -> dict[str, str]:
+        if not item_keys:
+            return {}
+        items = self._call(
+            "item.get",
+            {
+                "output": ["itemid", "key_", "lastvalue"],
+                "hostids": [str(hostid)],
+                "filter": {"key_": list(item_keys)},
+            },
+        )
+        item_values: dict[str, str] = {}
+        for item in items or []:
+            key = item.get("key_")
+            value = item.get("lastvalue")
+            if key and value not in (None, ""):
+                item_values[str(key)] = str(value)
+        return item_values
+
     def get_hostid_by_hostname(self, hostname: str) -> str | None:
         host = self.get_host_by_hostname(hostname)
         if not host:

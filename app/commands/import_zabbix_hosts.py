@@ -9,6 +9,7 @@ from app.core.config import get_settings
 from app.db.session import SessionLocal
 from app.models import Host
 from app.services.zabbix import ZabbixApiError, ZabbixClient
+from app.services.zabbix_items import ZABBIX_DETAIL_ITEM_KEYS, serialize_zabbix_item_values
 
 DEFAULT_GROUP_SETS = {
     "Oracle Databases": ["Oracle Database", "Oracle Databases"],
@@ -133,6 +134,7 @@ def upsert_host(db, zabbix_host: dict, client: ZabbixClient) -> tuple[Host, bool
     group_names = normalize_group_names(zabbix_host.get("groups") or [])
     tags = normalize_tags(zabbix_host.get("tags") or [])
     inventory = normalize_inventory(zabbix_host.get("inventory"))
+    item_values = client.get_latest_item_values(hostid, ZABBIX_DETAIL_ITEM_KEYS)
     db_type = db_type_from_tags(tags) or db_type_from_groups(group_names)
     role = role_from_tags(tags) or role_from_groups(group_names)
     state = client.host_state_from_host(zabbix_host)
@@ -158,7 +160,13 @@ def upsert_host(db, zabbix_host: dict, client: ZabbixClient) -> tuple[Host, bool
     host.environment = environment_from_name(f"{inventory_hostname} {display_name}")
     host.role = role
     host.db_type = db_type
-    host.os_name = inventory.get("os_full") or inventory.get("os") or inventory.get("os_short") or host.os_name
+    host.os_name = (
+        item_values.get("system.sw.os")
+        or inventory.get("os_full")
+        or inventory.get("os")
+        or inventory.get("os_short")
+        or host.os_name
+    )
     host.location = inventory.get("location") or host.location
     host.owner_team = owner_team_from_db_type(db_type)
     inventory_text = ", ".join(f"{key}: {value}" for key, value in sorted(inventory.items()))
@@ -172,6 +180,8 @@ def upsert_host(db, zabbix_host: dict, client: ZabbixClient) -> tuple[Host, bool
         notes.append(f"Zabbix tags: {tags_text}")
     if inventory_text:
         notes.append(f"Zabbix inventory: {inventory_text}")
+    if item_values:
+        notes.append(f"Zabbix items: {serialize_zabbix_item_values(item_values)}")
     host.notes = "; ".join(notes)
     host.zabbix_hostid = hostid
     host.zabbix_host_name = display_name

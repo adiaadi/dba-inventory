@@ -251,19 +251,26 @@
           {% endif %}
         </div>
         <div class="table-responsive">
+          {% set is_database_asset_view = db_type_view and current_asset_view == "databases" %}
           <table class="table table-sm align-middle table-hover overview-table">
             <thead>
               <tr>
-                <th>{% if db_type_view %}Zabbix Object{% else %}Server{% endif %}</th>
+                <th>{% if is_database_asset_view %}Instance Name{% else %}Server{% endif %}</th>
                 <th>IP</th>
-                <th>Environment</th>
-                <th>Role</th>
+                {% if is_database_asset_view %}
+                  <th>Role</th>
+                {% else %}
+                  <th>Environment</th>
+                  <th>Role</th>
+                {% endif %}
                 <th>DB Type</th>
-                <th>Virtual</th>
-                <th>Server model</th>
-                <th>Core</th>
-                <th>RAM</th>
-                <th>Operating system</th>
+                {% if not is_database_asset_view %}
+                  <th>Virtual</th>
+                  <th>Server model</th>
+                  <th>Core</th>
+                  <th>RAM</th>
+                  <th>Operating system</th>
+                {% endif %}
                 <th>Monitoring</th>
                 <th>Problems</th>
               </tr>
@@ -276,14 +283,20 @@
                     <a class="table-link" href="/hosts/{{ host.id }}">{{ host.zabbix_host_name or host.hostname }}</a>
                   </td>
                   <td>{{ host.ip_address or "-" }}</td>
-                  <td><span class="pill">{{ host.environment }}</span></td>
-                  <td>{{ host.role }}</td>
+                  {% if is_database_asset_view %}
+                    <td>{{ host.role }}</td>
+                  {% else %}
+                    <td><span class="pill">{{ host.environment }}</span></td>
+                    <td>{{ host.role }}</td>
+                  {% endif %}
                   <td>{{ host_db_labels.get(host.id) or host.db_type or (instance_db_types|join(", ")) or "-" }}</td>
-                  <td>{{ host_virtual_labels.get(host.id) or "NO" }}</td>
-                  <td>{{ host_model_labels.get(host.id) or "-" }}</td>
-                  <td>{{ host_core_labels.get(host.id) or "-" }}</td>
-                  <td>{{ host_ram_labels.get(host.id) or "-" }}</td>
-                  <td>{{ host_os_labels.get(host.id) or "-" }}</td>
+                  {% if not is_database_asset_view %}
+                    <td>{{ host_virtual_labels.get(host.id) or "NO" }}</td>
+                    <td>{{ host_model_labels.get(host.id) or "-" }}</td>
+                    <td>{{ host_core_labels.get(host.id) or "-" }}</td>
+                    <td>{{ host_ram_labels.get(host.id) or "-" }}</td>
+                    <td>{{ host_os_labels.get(host.id) or "-" }}</td>
+                  {% endif %}
                   <td><span class="badge text-bg-{{ host.monitoring_status|status_class }}">{{ host.monitoring_status }}</span></td>
                   <td>
                     <span class="problem-count {% if host.problem_count > 0 %}has-problems{% endif %}">
@@ -292,7 +305,11 @@
                   </td>
                 </tr>
               {% else %}
-                <tr><td colspan="12" class="empty-state">No servers found.</td></tr>
+                <tr>
+                  <td colspan="{% if is_database_asset_view %}6{% else %}12{% endif %}" class="empty-state">
+                    {% if is_database_asset_view %}No instances found.{% else %}No servers found.{% endif %}
+                  </td>
+                </tr>
               {% endfor %}
             </tbody>
           </table>

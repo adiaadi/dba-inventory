@@ -13,6 +13,7 @@ from app.routers.common import (
     apply_host_filters,
     get_filter_options,
 )
+from app.services.zabbix_items import parse_zabbix_item_values
 from app.web import templates
 
 router = APIRouter()
@@ -128,6 +129,10 @@ def imported_zabbix_inventory(host: Host) -> dict[str, str]:
     return inventory
 
 
+def imported_zabbix_items(host: Host) -> dict[str, str]:
+    return parse_zabbix_item_values(host.notes)
+
+
 def first_tag_value(host: Host, tag_names: tuple[str, ...]) -> str | None:
     tags = imported_zabbix_tags(host)
     for tag_name in tag_names:
@@ -207,9 +212,11 @@ def is_virtual_server(host: Host) -> bool:
 
 
 def operating_system_label(host: Host) -> str:
+    item_values = imported_zabbix_items(host)
     inventory = imported_zabbix_inventory(host)
     return (
-        host.os_name
+        item_values.get("system.sw.os")
+        or host.os_name
         or inventory.get("os_full")
         or inventory.get("os")
         or inventory.get("os_short")
@@ -237,11 +244,36 @@ def server_model_label(host: Host) -> str:
 
 
 def server_core_label(host: Host) -> str:
-    return first_tag_value(host, ("core", "cores", "cpu_core", "cpu_cores", "vcpu", "vcpus", "cpu")) or "-"
+    item_values = imported_zabbix_items(host)
+    return (
+        item_values.get("system.cpu.num")
+        or first_tag_value(host, ("core", "cores", "cpu_core", "cpu_cores", "vcpu", "vcpus", "cpu"))
+        or "-"
+    )
 
 
 def server_ram_label(host: Host) -> str:
-    return first_tag_value(host, ("ram", "memory", "mem", "ram_gb", "memory_gb")) or "-"
+    item_values = imported_zabbix_items(host)
+    item_ram = format_memory_label(item_values.get("vm.memory.size[total]"))
+    return item_ram or first_tag_value(host, ("ram", "memory", "mem", "ram_gb", "memory_gb")) or "-"
+
+
+def format_memory_label(value: str | None) -> str | None:
+    if not value:
+        return None
+    try:
+        bytes_value = float(value)
+    except ValueError:
+        return value
+    if bytes_value <= 0:
+        return value
+    gib = bytes_value / 1024**3
+    if gib >= 1:
+        return f"{gib:.1f} GB".replace(".0 GB", " GB")
+    mib = bytes_value / 1024**2
+    if mib >= 1:
+        return f"{mib:.0f} MB"
+    return f"{bytes_value:.0f} B"
 
 
 def imported_zabbix_group_names(host: Host) -> list[str]:
