@@ -141,19 +141,19 @@
         <div class="overview-kpi overview-kpi-static">
           <span class="kpi-title">Oracle</span>
           <span class="kpi-value">{{ db_family_server_counts.Oracle }}</span>
-          <span class="kpi-delta text-muted">servers</span>
+          <span class="kpi-delta text-muted">Servers</span>
           <i class="bi bi-database-check"></i>
         </div>
         <div class="overview-kpi overview-kpi-static">
           <span class="kpi-title">PostgreSQL</span>
           <span class="kpi-value">{{ db_family_server_counts.PostgreSQL }}</span>
-          <span class="kpi-delta text-muted">servers</span>
+          <span class="kpi-delta text-muted">Servers</span>
           <i class="bi bi-database-fill"></i>
         </div>
         <div class="overview-kpi overview-kpi-static">
           <span class="kpi-title">SQLServer</span>
           <span class="kpi-value">{{ db_family_server_counts.SQLServer }}</span>
-          <span class="kpi-delta text-muted">servers</span>
+          <span class="kpi-delta text-muted">Servers</span>
           <i class="bi bi-server"></i>
         </div>
         <div class="overview-kpi overview-kpi-static">
@@ -268,7 +268,7 @@
                 <input type="hidden" name="role" value="{{ filters.role or '' }}">
                 <input type="hidden" name="monitoring_status" value="{{ filters.monitoring_status or '' }}">
                 <select class="form-select form-select-sm" name="db_type" aria-label="DB Type" onchange="this.form.submit()">
-                  <option value="">All DB Types</option>
+                  <option value="">All</option>
                   {% for option in server_db_type_options %}
                     <option value="{{ option }}" {% if active_server_db_type == option %}selected{% endif %}>{{ option }}</option>
                   {% endfor %}
@@ -285,11 +285,8 @@
               <tr>
                 <th>{% if is_database_asset_view %}Instance Name{% else %}Server{% endif %}</th>
                 <th>IP</th>
-                {% if is_database_asset_view %}
-                  <th>Role</th>
-                {% else %}
+                {% if not is_database_asset_view %}
                   <th>Environment</th>
-                  <th>Role</th>
                 {% endif %}
                 <th>DB Type</th>
                 {% if not is_database_asset_view %}
@@ -311,11 +308,8 @@
                     <a class="table-link" href="/hosts/{{ host.id }}">{{ host.zabbix_host_name or host.hostname }}</a>
                   </td>
                   <td>{{ host.ip_address or "-" }}</td>
-                  {% if is_database_asset_view %}
-                    <td>{{ host.role }}</td>
-                  {% else %}
+                  {% if not is_database_asset_view %}
                     <td><span class="pill">{{ host.environment }}</span></td>
-                    <td>{{ host.role }}</td>
                   {% endif %}
                   <td>{{ host_db_labels.get(host.id) or host.db_type or (instance_db_types|join(", ")) or "-" }}</td>
                   {% if not is_database_asset_view %}
@@ -334,7 +328,7 @@
                 </tr>
               {% else %}
                 <tr>
-                  <td colspan="{% if is_database_asset_view %}6{% else %}12{% endif %}" class="empty-state">
+                  <td colspan="{% if is_database_asset_view %}5{% else %}11{% endif %}" class="empty-state">
                     {% if is_database_asset_view %}No instances found.{% else %}No servers found.{% endif %}
                   </td>
                 </tr>
@@ -363,7 +357,6 @@
                   <th>DB Asset</th>
                   <th>Server</th>
                   <th>Environment</th>
-                  <th>Role</th>
                   <th>Monitoring</th>
                   <th>Problems</th>
                 </tr>
@@ -380,7 +373,6 @@
                       <div class="text-muted small">{{ host.ip_address or host.fqdn or "-" }}</div>
                     </td>
                     <td><span class="pill">{{ host.environment }}</span></td>
-                    <td>{{ host.role }}</td>
                     <td><span class="badge text-bg-{{ host.monitoring_status|status_class }}">{{ host.monitoring_status }}</span></td>
                     <td>
                       <span class="problem-count {% if host.problem_count > 0 %}has-problems{% endif %}">
@@ -389,7 +381,7 @@
                     </td>
                   </tr>
                 {% else %}
-                  <tr><td colspan="6" class="empty-state">No DB assets found.</td></tr>
+                  <tr><td colspan="5" class="empty-state">No DB assets found.</td></tr>
                 {% endfor %}
               </tbody>
             </table>

@@ -22,7 +22,6 @@
           <th>Server</th>
           <th>IP</th>
           <th>Environment</th>
-          <th>Role</th>
           <th>DB Types</th>
           <th>Zabbix</th>
           <th>Monitoring</th>
@@ -39,7 +38,6 @@
             </td>
             <td>{{ host.ip_address or "-" }}</td>
             <td><span class="pill">{{ host.environment }}</span></td>
-            <td>{{ host.role }}</td>
             <td>
               {% if host.db_type %}
                 <span class="badge text-bg-light border">{{ host.db_type }}</span>
@@ -70,7 +68,7 @@
             <td>{{ host.owner_team or "-" }}</td>
           </tr>
         {% else %}
-          <tr><td colspan="9" class="empty-state">No servers found.</td></tr>
+          <tr><td colspan="8" class="empty-state">No servers found.</td></tr>
         {% endfor %}
       </tbody>
     </table>

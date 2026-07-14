@@ -22,7 +22,6 @@
           <th>Database</th>
           <th>Server</th>
           <th>Environment</th>
-          <th>Role</th>
           <th>Version</th>
           <th>PoWA</th>
           <th>Snapshot</th>
@@ -39,7 +38,6 @@
             </td>
             <td>{{ database.host.hostname }}</td>
             <td><span class="pill">{{ database.environment }}</span></td>
-            <td>{{ database.role }}</td>
             <td>{{ database.version or "-" }}</td>
             <td>
               <div>{{ database.powa_repository or "-" }}</div>
@@ -50,7 +48,7 @@
             <td><span class="badge text-bg-{{ database.host.monitoring_status|status_class }}">{{ database.host.monitoring_status }}</span></td>
           </tr>
         {% else %}
-          <tr><td colspan="9" class="empty-state">No databases found.</td></tr>
+          <tr><td colspan="8" class="empty-state">No databases found.</td></tr>
         {% endfor %}
       </tbody>
     </table>

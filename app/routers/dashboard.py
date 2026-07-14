@@ -536,10 +536,10 @@ def dashboard(
     }
     section_subtitles = {
         "overview": (
-            f"{counts['servers']} servers, Oracle {db_family_server_counts['Oracle']}, "
+            f"{counts['servers']} Servers, Oracle {db_family_server_counts['Oracle']}, "
             f"PostgreSQL {db_family_server_counts['PostgreSQL']}, SQLServer {db_family_server_counts['SQLServer']}"
         ),
-        "hosts": f"{len(filtered_server_hosts)} servers in current view",
+        "hosts": f"{len(filtered_server_hosts)} Servers in current view",
         "databases": f"{len(database_assets)} DB assets in current view",
         "clusters": f"{len(clusters)} clusters in current view",
         **{
@@ -549,7 +549,7 @@ def dashboard(
     }
     if db_type_view:
         section_subtitles[current_view] = (
-            f"{len(type_database_assets)} databases, {len(type_server_assets)} servers from Zabbix"
+            f"{len(type_database_assets)} databases, {len(type_server_assets)} Servers from Zabbix"
         )
 
     return templates.TemplateResponse(

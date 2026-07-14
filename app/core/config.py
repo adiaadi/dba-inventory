@@ -26,6 +26,7 @@ def env_int(name: str, default: int) -> int:
 class Settings:
     app_name: str = getenv("APP_NAME", "DBA Inventory")
     app_env: str = getenv("APP_ENV", "local")
+    app_timezone: str = getenv("APP_TIMEZONE", "Asia/Almaty")
     database_url: str = getenv(
         "DATABASE_URL",
         "postgresql+psycopg://dba_inventory:dba_inventory@localhost:5432/dba_inventory",
