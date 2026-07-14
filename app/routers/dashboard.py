@@ -214,11 +214,9 @@ def unique_hosts(hosts: list[Host]) -> list[Host]:
     return unique
 
 
-def detected_server_platform(host: Host) -> str:
-    vendor = server_vendor_label(host)
-    model = server_model_label(host)
+def detected_server_platform_from_values(vendor: str | None, model: str | None, fallback_text: str = "") -> str:
     vendor_model_parts = [value for value in (vendor, model) if value and value != "-"]
-    text = " ".join(vendor_model_parts).lower() or host_search_text(host)
+    text = " ".join(vendor_model_parts).lower() or fallback_text
     virtual_markers = (
         "qemu",
         "kvm",
@@ -263,6 +261,22 @@ def detected_server_platform(host: Host) -> str:
     if any(marker in text for marker in physical_markers):
         return "Physical"
     return "Unknown"
+
+
+def detected_server_platform(host: Host) -> str:
+    return detected_server_platform_from_values(
+        server_vendor_label(host),
+        server_model_label(host),
+        host_search_text(host),
+    )
+
+
+def virtual_status_label(platform: str | None) -> str:
+    if platform == "Virtual":
+        return "YES"
+    if platform == "Physical":
+        return "NO"
+    return "-"
 
 
 def is_virtual_server(host: Host) -> bool:
@@ -463,12 +477,22 @@ def dashboard(
         host.id: detected_db_type_by_zabbix_rules(host) or detected_db_type(host)
         for host in all_hosts
     }
-    host_platform_labels = {host.id: detected_server_platform(host) for host in all_hosts}
     host_asset_kinds = {host.id: detected_zabbix_asset_kind(host) for host in all_hosts}
-    host_virtual_labels = {host.id: "YES" if is_virtual_server(host) else "NO" for host in all_hosts}
     host_os_labels = {host.id: operating_system_label(host) for host in all_hosts}
     host_model_labels = {host.id: server_model_label(host) for host in all_hosts}
     host_vendor_labels = {host.id: server_vendor_label(host) for host in all_hosts}
+    host_platform_labels = {
+        host.id: detected_server_platform_from_values(
+            host_vendor_labels.get(host.id),
+            host_model_labels.get(host.id),
+            host_search_text(host),
+        )
+        for host in all_hosts
+    }
+    host_virtual_labels = {
+        host.id: virtual_status_label(host_platform_labels.get(host.id))
+        for host in all_hosts
+    }
     host_core_labels = {host.id: server_core_label(host) for host in all_hosts}
     host_ram_labels = {host.id: server_ram_label(host) for host in all_hosts}
     server_hosts = unique_hosts([host for host in all_hosts if is_zabbix_server_asset(host)])
