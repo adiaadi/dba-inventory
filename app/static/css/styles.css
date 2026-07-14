@@ -657,6 +657,19 @@ body {
   font-weight: 700;
 }
 
+.overview-section-tools {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.server-summary-filter {
+  margin: 0;
+  min-width: 168px;
+}
+
 .chart-box {
   height: 180px;
   position: relative;

@@ -232,7 +232,22 @@
             <span>{{ display_hosts|length }} records from Zabbix</span>
           {% else %}
             <h2>Server Summary</h2>
-            <span>{{ display_hosts|length }} records</span>
+            <div class="overview-section-tools">
+              <form class="server-summary-filter" action="/" method="get">
+                <input type="hidden" name="view" value="hosts">
+                <input type="hidden" name="asset_view" value="{{ current_asset_view }}">
+                <input type="hidden" name="environment" value="{{ filters.environment or '' }}">
+                <input type="hidden" name="role" value="{{ filters.role or '' }}">
+                <input type="hidden" name="monitoring_status" value="{{ filters.monitoring_status or '' }}">
+                <select class="form-select form-select-sm" name="db_type" aria-label="DB Type" onchange="this.form.submit()">
+                  <option value="">All DB Types</option>
+                  {% for option in server_db_type_options %}
+                    <option value="{{ option }}" {% if active_server_db_type == option %}selected{% endif %}>{{ option }}</option>
+                  {% endfor %}
+                </select>
+              </form>
+              <span>{{ display_hosts|length }} records</span>
+            </div>
           {% endif %}
         </div>
         <div class="table-responsive">

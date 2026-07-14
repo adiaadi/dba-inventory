@@ -312,9 +312,12 @@ def dashboard(
         server_hosts,
         key=lambda host: (-(host.problem_count or 0), host.monitoring_status or "", host.hostname),
     )[:10]
+    requested_db_type = normalized_db_type(db_type)
     hosts_stmt = select(Host).options(selectinload(Host.databases)).order_by(Host.hostname)
-    hosts_stmt = apply_host_filters(hosts_stmt, db_type, environment, role, monitoring_status)
+    hosts_stmt = apply_host_filters(hosts_stmt, None, environment, role, monitoring_status)
     hosts_list = db.scalars(hosts_stmt).all()
+    if requested_db_type:
+        hosts_list = [host for host in hosts_list if host_db_labels.get(host.id) == requested_db_type]
     type_base_stmt = select(Host).options(selectinload(Host.databases)).order_by(Host.hostname)
     type_base_stmt = apply_host_filters(type_base_stmt, None, environment, role, monitoring_status)
     type_base_hosts = db.scalars(type_base_stmt).all()
@@ -444,6 +447,8 @@ def dashboard(
             "host_model_labels": host_model_labels,
             "host_core_labels": host_core_labels,
             "host_ram_labels": host_ram_labels,
+            "server_db_type_options": ["PostgreSQL", "SQLServer", "Oracle"],
+            "active_server_db_type": requested_db_type,
             "database_assets": database_assets,
             "server_assets": server_assets,
             "type_database_assets": type_database_assets,
