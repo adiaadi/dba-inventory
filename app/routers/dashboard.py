@@ -13,7 +13,7 @@ from app.routers.common import (
     apply_host_filters,
     get_filter_options,
 )
-from app.services.zabbix_items import parse_zabbix_item_values
+from app.services.zabbix_items import operating_system_item_label, parse_zabbix_item_values
 from app.services.zabbix_refresh import maybe_refresh_zabbix_cache
 from app.web import templates
 
@@ -233,14 +233,8 @@ def is_virtual_server(host: Host) -> bool:
 def operating_system_label(host: Host) -> str:
     item_values = imported_zabbix_items(host)
     inventory = imported_zabbix_inventory(host)
-    return (
-        item_values.get("system.sw.os")
-        or host.os_name
-        or inventory.get("os_full")
-        or inventory.get("os")
-        or inventory.get("os_short")
-        or "-"
-    )
+    fallback = host.os_name or inventory.get("os_full") or inventory.get("os") or inventory.get("os_short")
+    return operating_system_item_label(item_values, fallback) or "-"
 
 
 def server_model_label(host: Host) -> str:

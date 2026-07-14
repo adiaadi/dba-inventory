@@ -9,7 +9,11 @@ from app.core.config import get_settings
 from app.db.session import SessionLocal
 from app.models import Host
 from app.services.zabbix import ZabbixApiError, ZabbixClient
-from app.services.zabbix_items import ZABBIX_DETAIL_ITEM_KEYS, serialize_zabbix_item_values
+from app.services.zabbix_items import (
+    ZABBIX_DETAIL_ITEM_KEYS,
+    operating_system_item_label,
+    serialize_zabbix_item_values,
+)
 
 DEFAULT_GROUP_SETS = {
     "Oracle Databases": ["Oracle Database", "Oracle Databases"],
@@ -163,7 +167,7 @@ def upsert_host(db, zabbix_host: dict, client: ZabbixClient) -> tuple[Host, bool
     host.role = role
     host.db_type = db_type
     host.os_name = (
-        item_values.get("system.sw.os")
+        operating_system_item_label(item_values)
         or inventory.get("os_full")
         or inventory.get("os")
         or inventory.get("os_short")
