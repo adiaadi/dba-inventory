@@ -215,9 +215,49 @@ def unique_hosts(hosts: list[Host]) -> list[Host]:
 
 
 def detected_server_platform(host: Host) -> str:
-    text = host_search_text(host)
-    virtual_markers = ("virtual", "vmware", "hyper-v", "hyperv", "kvm", "proxmox", "cloud", "-vm", "_vm")
-    physical_markers = ("physical", "bare metal", "baremetal", "hardware")
+    vendor = server_vendor_label(host)
+    model = server_model_label(host)
+    vendor_model_parts = [value for value in (vendor, model) if value and value != "-"]
+    text = " ".join(vendor_model_parts).lower() or host_search_text(host)
+    virtual_markers = (
+        "qemu",
+        "kvm",
+        "vmware",
+        "virtualbox",
+        "virtual machine",
+        "hyper-v",
+        "hyperv",
+        "proxmox",
+        "xen",
+        "bochs",
+        "virtual",
+        "parallels",
+        "openstack",
+        "cloud",
+        "rhev",
+        "ovirt",
+        "-vm",
+        "_vm",
+    )
+    physical_markers = (
+        "dell",
+        "dell inc",
+        "hpe",
+        "hewlett packard",
+        "hewlett-packard",
+        " hp ",
+        "lenovo",
+        "ibm",
+        "cisco",
+        "supermicro",
+        "super micro",
+        "fujitsu",
+        "oracle corporation",
+        "huawei",
+        "inspur",
+        "bare metal",
+        "baremetal",
+    )
     if any(marker in text for marker in virtual_markers):
         return "Virtual"
     if any(marker in text for marker in physical_markers):
