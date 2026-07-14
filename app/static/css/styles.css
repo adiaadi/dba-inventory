@@ -550,6 +550,10 @@ body {
   grid-template-columns: repeat(2, minmax(220px, 1fr));
 }
 
+.overview-kpis-dbms .kpi-delta {
+  display: none !important;
+}
+
 .overview-kpi {
   background: #fff;
   border: 1px solid #e1e6ee;

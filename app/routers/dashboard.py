@@ -398,11 +398,16 @@ def is_family_database_asset(host: Host, family: str) -> bool:
     )
 
 
+def has_server_group_marker(host: Host) -> bool:
+    return any(is_server_group_name(group_name) for group_name in imported_zabbix_group_names(host))
+
+
 def is_family_server_asset(host: Host, family: str) -> bool:
-    return has_tag_db_family(host, "server", family) or (
-        has_os_marker(host)
-        and host_has_zabbix_group(host, ZABBIX_SERVER_GROUPS[family])
-    )
+    if has_tag_db_family(host, "server", family):
+        return True
+    if not host_has_zabbix_group(host, ZABBIX_SERVER_GROUPS[family]):
+        return False
+    return has_os_marker(host) or has_server_group_marker(host)
 
 
 def is_zabbix_database_asset(host: Host) -> bool:
@@ -411,7 +416,7 @@ def is_zabbix_database_asset(host: Host) -> bool:
 
 def is_zabbix_server_asset(host: Host) -> bool:
     return any(is_family_server_asset(host, family) for family in DB_FAMILIES) or (
-        has_os_marker(host)
+        (has_os_marker(host) or has_server_group_marker(host))
         and host_has_zabbix_group(host, ZABBIX_SERVER_SUMMARY_GROUPS)
     )
 
