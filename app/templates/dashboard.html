@@ -137,6 +137,12 @@
     {% endif %}
 
     {% if current_view == "overview" %}
+      {% set db_logo_map = {
+        "Oracle": "/static/img/oracle.png",
+        "PostgreSQL": "/static/img/postgresql.png",
+        "SQL Server": "/static/img/sqlserver.png",
+        "SQLServer": "/static/img/sqlserver.png"
+      } %}
       <div class="executive-grid">
         <section class="overview-panel executive-panel executive-panel-span-2">
           <div class="overview-section-heading">
@@ -144,17 +150,26 @@
             <span>from Zabbix database assets</span>
           </div>
           <div class="executive-card-grid">
-            <div class="executive-card">
-              <span>Oracle Databases</span>
-              <strong>{{ db_family_counts.Oracle }}</strong>
+            <div class="executive-card executive-card-logo">
+              <img src="/static/img/oracle.png" alt="Oracle">
+              <div>
+                <span>Oracle Databases</span>
+                <strong>{{ db_family_counts.Oracle }}</strong>
+              </div>
             </div>
-            <div class="executive-card">
-              <span>PostgreSQL Databases</span>
-              <strong>{{ db_family_counts.PostgreSQL }}</strong>
+            <div class="executive-card executive-card-logo">
+              <img src="/static/img/postgresql.png" alt="PostgreSQL">
+              <div>
+                <span>PostgreSQL Databases</span>
+                <strong>{{ db_family_counts.PostgreSQL }}</strong>
+              </div>
             </div>
-            <div class="executive-card">
-              <span>SQLServer Databases</span>
-              <strong>{{ db_family_counts.SQLServer }}</strong>
+            <div class="executive-card executive-card-logo">
+              <img src="/static/img/sqlserver.png" alt="SQL Server">
+              <div>
+                <span>SQLServer Databases</span>
+                <strong>{{ db_family_counts.SQLServer }}</strong>
+              </div>
             </div>
           </div>
         </section>
@@ -184,7 +199,16 @@
           <div class="health-list">
             {% for row in platform_summary %}
               <div class="health-row">
-                <span><i class="legend-dot"></i>{{ row.label }}</span>
+                <span>
+                  {% if row.label == "Virtual" %}
+                    <i class="bi bi-cloud platform-icon"></i>
+                  {% elif row.label == "Physical" %}
+                    <i class="bi bi-server platform-icon"></i>
+                  {% else %}
+                    <i class="bi bi-question-circle platform-icon"></i>
+                  {% endif %}
+                  {{ row.label }}
+                </span>
                 <strong>{{ row.count }}</strong>
               </div>
               <div class="health-track health-track-dark"><span style="width: {{ row.percent }}%"></span></div>
@@ -219,7 +243,10 @@
             {% for section in database_size_sections %}
               <div class="db-size-card">
                 <div class="db-size-title">
-                  <strong>{{ section.label }}</strong>
+                  <strong>
+                    <img class="db-inline-logo" src="{{ db_logo_map.get(section.label, '/static/img/sqlserver.png') }}" alt="{{ section.label }}">
+                    {{ section.label }}
+                  </strong>
                   {% if section.primary_only %}<span>primary</span>{% endif %}
                 </div>
                 <div class="table-responsive">

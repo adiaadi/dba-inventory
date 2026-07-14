@@ -644,6 +644,18 @@ body {
   padding: 14px;
 }
 
+.executive-card-logo {
+  align-items: center;
+  grid-template-columns: 64px minmax(0, 1fr);
+}
+
+.executive-card-logo img {
+  display: block;
+  max-height: 46px;
+  max-width: 56px;
+  object-fit: contain;
+}
+
 .executive-card span,
 .executive-split span {
   color: #475467;
@@ -700,11 +712,32 @@ body {
   padding-bottom: 6px;
 }
 
+.db-size-title strong {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+  min-width: 0;
+}
+
+.db-inline-logo {
+  display: inline-block;
+  height: 24px;
+  max-width: 42px;
+  object-fit: contain;
+}
+
 .db-size-title span {
   color: #667085;
   font-size: 0.72rem;
   font-weight: 750;
   text-transform: uppercase;
+}
+
+.platform-icon {
+  color: var(--brand);
+  font-size: 1rem;
+  line-height: 1;
+  width: 18px;
 }
 
 .support-date-form {
