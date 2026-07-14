@@ -145,7 +145,20 @@ def first_tag_value(host: Host, tag_names: tuple[str, ...]) -> str | None:
 
 def has_tag_value(host: Host, tag_name: str, expected_value: str) -> bool:
     tags = imported_zabbix_tags(host)
-    return any(value.lower() == expected_value.lower() for value in tags.get(tag_name, []))
+    normalized_expected = expected_value.strip().lower()
+    return any(value.strip().lower() == normalized_expected for value in tags.get(tag_name, []))
+
+
+def has_tag_name(host: Host, tag_name: str) -> bool:
+    return bool(imported_zabbix_tags(host).get(tag_name))
+
+
+def has_database_marker(host: Host) -> bool:
+    return has_tag_value(host, "class", "database") or has_tag_name(host, "database")
+
+
+def has_os_marker(host: Host) -> bool:
+    return has_tag_value(host, "class", "os") or has_tag_name(host, "server")
 
 
 def detected_db_type(host: Host) -> str | None:
@@ -176,7 +189,7 @@ def detected_db_type(host: Host) -> str | None:
 
 
 def is_os_class_host(host: Host) -> bool:
-    return has_tag_value(host, "class", "os")
+    return has_os_marker(host)
 
 
 def unique_hosts(hosts: list[Host]) -> list[Host]:
@@ -300,14 +313,14 @@ def host_has_zabbix_group(host: Host, group_names: tuple[str, ...]) -> bool:
 
 
 def is_family_database_asset(host: Host, family: str) -> bool:
-    return has_tag_value(host, "class", "database") and host_has_zabbix_group(
+    return has_database_marker(host) and host_has_zabbix_group(
         host,
         ZABBIX_DATABASE_GROUPS[family],
     )
 
 
 def is_family_server_asset(host: Host, family: str) -> bool:
-    return has_tag_value(host, "class", "os") and host_has_zabbix_group(
+    return has_os_marker(host) and host_has_zabbix_group(
         host,
         ZABBIX_SERVER_GROUPS[family],
     )
@@ -318,7 +331,7 @@ def is_zabbix_database_asset(host: Host) -> bool:
 
 
 def is_zabbix_server_asset(host: Host) -> bool:
-    return has_tag_value(host, "class", "os") and host_has_zabbix_group(
+    return has_os_marker(host) and host_has_zabbix_group(
         host,
         ZABBIX_SERVER_SUMMARY_GROUPS,
     )
@@ -348,9 +361,9 @@ def detected_zabbix_asset_kind(host: Host) -> str:
         return "server"
 
     tags = imported_zabbix_tags(host)
-    if has_tag_value(host, "class", "database"):
+    if has_database_marker(host):
         return "database"
-    if has_tag_value(host, "class", "os"):
+    if has_os_marker(host):
         return "server"
     if tags.get("database"):
         return "database"
@@ -378,13 +391,14 @@ def dashboard(
     environment: str | None = None,
     role: str | None = None,
     monitoring_status: str | None = None,
+    refresh: bool = False,
     db: Session = Depends(get_db),
 ):
     allowed_views = {"overview", "hosts", "databases", "clusters", *DB_TYPE_VIEWS.keys()}
     current_view = view if view in allowed_views else "overview"
     current_asset_view = asset_view if asset_view in {"databases", "servers"} else "databases"
     filters = active_filters(db_type, environment, role, monitoring_status)
-    zabbix_refresh_error = maybe_refresh_zabbix_cache(db)
+    zabbix_refresh_error = maybe_refresh_zabbix_cache(db, force=refresh)
     counts = {
         "hosts": db.scalar(select(func.count(Host.id))) or 0,
         "databases": db.scalar(select(func.count(DatabaseInstance.id))) or 0,

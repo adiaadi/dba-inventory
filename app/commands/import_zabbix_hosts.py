@@ -68,7 +68,7 @@ def db_type_from_tags(tags: dict[str, list[str]]) -> str | None:
 
 
 def role_from_tags(tags: dict[str, list[str]]) -> str | None:
-    class_values = {value.lower() for value in tags.get("class", [])}
+    class_values = {value.strip().lower() for value in tags.get("class", [])}
     if "database" in class_values:
         return "database"
     if "os" in class_values:
@@ -132,7 +132,9 @@ def upsert_host(db, zabbix_host: dict, client: ZabbixClient) -> tuple[Host, bool
     inventory_hostname = zabbix_host.get("host") or zabbix_host.get("name") or f"zabbix-{hostid}"
     display_name = zabbix_host.get("name") or inventory_hostname
     group_names = normalize_group_names(zabbix_host.get("groups") or [])
-    tags = normalize_tags(zabbix_host.get("tags") or [])
+    tags = normalize_tags(
+        (zabbix_host.get("tags") or []) + (zabbix_host.get("inheritedTags") or [])
+    )
     inventory = normalize_inventory(zabbix_host.get("inventory"))
     item_values = client.get_latest_item_values(hostid, ZABBIX_DETAIL_ITEM_KEYS)
     db_type = db_type_from_tags(tags) or db_type_from_groups(group_names)

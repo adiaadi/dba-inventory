@@ -31,7 +31,7 @@ def _is_stale(last_sync_at: datetime | None, now: datetime, ttl_seconds: int) ->
     return now - last_sync_at >= timedelta(seconds=ttl_seconds)
 
 
-def maybe_refresh_zabbix_cache(db: Session) -> str | None:
+def maybe_refresh_zabbix_cache(db: Session, force: bool = False) -> str | None:
     settings = get_settings()
     if (
         not settings.zabbix_url
@@ -42,12 +42,12 @@ def maybe_refresh_zabbix_cache(db: Session) -> str | None:
 
     now = datetime.now(UTC)
     last_sync_at = db.scalar(select(func.max(Host.zabbix_last_sync_at)))
-    if not _is_stale(last_sync_at, now, settings.zabbix_auto_refresh_seconds):
+    if not force and not _is_stale(last_sync_at, now, settings.zabbix_auto_refresh_seconds):
         return None
 
     global _last_attempt_at, _last_error
     retry_floor = min(settings.zabbix_auto_refresh_seconds, 60)
-    if _last_attempt_at and now - _last_attempt_at < timedelta(seconds=retry_floor):
+    if not force and _last_attempt_at and now - _last_attempt_at < timedelta(seconds=retry_floor):
         return _last_error
 
     if not _refresh_lock.acquire(blocking=False):
@@ -55,9 +55,12 @@ def maybe_refresh_zabbix_cache(db: Session) -> str | None:
 
     try:
         _last_attempt_at = now
-        import_zabbix_hosts(verbose=False)
+        created, updated = import_zabbix_hosts(verbose=False)
         db.expire_all()
-        _last_error = None
+        if created + updated == 0:
+            _last_error = "Zabbix refresh returned 0 hosts for configured groups."
+        else:
+            _last_error = None
     except (RuntimeError, ZabbixApiError) as exc:
         _last_error = str(exc)
     finally:

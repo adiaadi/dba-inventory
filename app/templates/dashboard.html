@@ -83,6 +83,18 @@
         {% endif %}
       </div>
       <div class="overview-actions">
+        <form action="/" method="get" class="d-inline">
+          <input type="hidden" name="view" value="{{ current_view }}">
+          <input type="hidden" name="asset_view" value="{{ current_asset_view }}">
+          <input type="hidden" name="db_type" value="{{ filters.db_type or '' }}">
+          <input type="hidden" name="environment" value="{{ filters.environment or '' }}">
+          <input type="hidden" name="role" value="{{ filters.role or '' }}">
+          <input type="hidden" name="monitoring_status" value="{{ filters.monitoring_status or '' }}">
+          <input type="hidden" name="refresh" value="1">
+          <button class="btn btn-outline-secondary btn-sm" type="submit">
+            <i class="bi bi-arrow-repeat"></i> Refresh Zabbix
+          </button>
+        </form>
         {% if current_view == "hosts" or db_type_view %}
           <a class="btn btn-success btn-sm" href="/exports/hosts.xlsx"><i class="bi bi-file-earmark-excel"></i> Export Servers</a>
         {% elif current_view == "databases" %}
@@ -92,6 +104,10 @@
         {% endif %}
       </div>
     </header>
+
+    {% if last_sync_at %}
+      <div class="text-muted small mb-2">Last Zabbix sync: {{ last_sync_at|date_time }}</div>
+    {% endif %}
 
     {% if zabbix_refresh_error %}
       <div class="alert alert-warning py-2 mb-3" role="alert">

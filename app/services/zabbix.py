@@ -103,29 +103,14 @@ class ZabbixClient:
 
     def get_host_by_hostname(self, hostname: str) -> dict[str, Any] | None:
         for field in ("host", "name"):
-            result = self._call(
-                "host.get",
+            result = self._call_host_get(
                 {
                     "output": ["hostid", "host", "name", "status"],
                     "filter": {field: [hostname]},
                     "selectInterfaces": ["interfaceid", "type", "main", "available", "error"],
-                    "selectInventory": [
-                        "type",
-                        "type_full",
-                        "os",
-                        "os_full",
-                        "os_short",
-                        "hardware",
-                        "hardware_full",
-                        "chassis",
-                        "vendor",
-                        "model",
-                        "hw_arch",
-                        "location",
-                    ],
-                    "selectTags": ["tag", "value"],
+                    "selectInventory": self._inventory_fields(),
                     "limit": 1,
-                },
+                }
             )
             if result:
                 return result[0]
@@ -145,31 +130,58 @@ class ZabbixClient:
     def get_hosts_by_groupids(self, groupids: list[str]) -> list[dict[str, Any]]:
         if not groupids:
             return []
-        return self._call(
-            "host.get",
+        return self._call_host_get(
             {
                 "output": ["hostid", "host", "name", "status"],
                 "groupids": groupids,
                 "selectGroups": ["groupid", "name"],
-                "selectInterfaces": ["interfaceid", "type", "main", "available", "ip", "dns", "useip", "error"],
-                "selectInventory": [
+                "selectInterfaces": [
+                    "interfaceid",
                     "type",
-                    "type_full",
-                    "os",
-                    "os_full",
-                    "os_short",
-                    "hardware",
-                    "hardware_full",
-                    "chassis",
-                    "vendor",
-                    "model",
-                    "hw_arch",
-                    "location",
+                    "main",
+                    "available",
+                    "ip",
+                    "dns",
+                    "useip",
+                    "error",
                 ],
-                "selectTags": ["tag", "value"],
+                "selectInventory": self._inventory_fields(),
                 "sortfield": ["name", "host"],
-            },
+            }
         )
+
+    def _call_host_get(self, params: dict[str, Any]) -> list[dict[str, Any]]:
+        params_with_tags = {
+            **params,
+            "selectTags": ["tag", "value"],
+            "selectInheritedTags": ["tag", "value"],
+        }
+        try:
+            return self._call("host.get", params_with_tags)
+        except ZabbixApiError as exc:
+            if "selectInheritedTags" not in str(exc):
+                raise
+            params_without_inherited_tags = {
+                **params,
+                "selectTags": ["tag", "value"],
+            }
+            return self._call("host.get", params_without_inherited_tags)
+
+    def _inventory_fields(self) -> list[str]:
+        return [
+            "type",
+            "type_full",
+            "os",
+            "os_full",
+            "os_short",
+            "hardware",
+            "hardware_full",
+            "chassis",
+            "vendor",
+            "model",
+            "hw_arch",
+            "location",
+        ]
 
     def get_latest_item_values(self, hostid: str, item_keys: list[str] | tuple[str, ...]) -> dict[str, str]:
         if not item_keys:
