@@ -503,12 +503,12 @@ def format_size_bytes(value: float | None) -> str:
     return f"{value:.0f} B"
 
 
-def database_size_label(host: Host) -> str:
+def database_size_value(host: Host) -> tuple[float | None, str]:
     for tag_name in DATABASE_SIZE_TAG_NAMES:
         tag_value = first_tag_value(host, (tag_name,))
         if tag_value:
             parsed = parse_size_bytes(tag_value)
-            return format_size_bytes(parsed) if parsed else tag_value
+            return parsed, format_size_bytes(parsed) if parsed else tag_value
 
     candidates: list[tuple[float, str]] = []
     for key, value in imported_zabbix_items(host).items():
@@ -523,8 +523,12 @@ def database_size_label(host: Host) -> str:
         if parsed:
             candidates.append((parsed, format_size_bytes(parsed)))
     if not candidates:
-        return "-"
-    return max(candidates, key=lambda item: item[0])[1]
+        return None, "-"
+    return max(candidates, key=lambda item: item[0])
+
+
+def database_size_label(host: Host) -> str:
+    return database_size_value(host)[1]
 
 
 def database_role_text(host: Host) -> str:
@@ -833,21 +837,32 @@ def dashboard(
             family_database_hosts = [
                 host for host in family_database_hosts if is_primary_database_asset(host)
             ]
+        rows = []
+        for host in family_database_hosts:
+            size_bytes, size_label = database_size_value(host)
+            rows.append(
+                {
+                    "name": host.zabbix_host_name or host.hostname,
+                    "server": host.hostname,
+                    "ip": host.ip_address or "-",
+                    "size": size_label,
+                    "size_bytes": size_bytes or 0,
+                    "monitoring": host.monitoring_status,
+                    "problem_count": host.problem_count or 0,
+                }
+            )
+        rows.sort(key=lambda row: row["size_bytes"], reverse=True)
+        max_size = max((row["size_bytes"] for row in rows), default=0)
+        total_size = sum(row["size_bytes"] for row in rows)
+        for row in rows:
+            row["percent"] = round((row["size_bytes"] / max_size) * 100, 1) if max_size else 0
         database_size_sections.append(
             {
                 "label": "SQL Server" if family == "SQLServer" else family,
                 "primary_only": family in {"PostgreSQL", "SQLServer"},
-                "rows": [
-                    {
-                        "name": host.zabbix_host_name or host.hostname,
-                        "server": host.hostname,
-                        "ip": host.ip_address or "-",
-                        "size": database_size_label(host),
-                        "monitoring": host.monitoring_status,
-                        "problem_count": host.problem_count or 0,
-                    }
-                    for host in family_database_hosts
-                ],
+                "rows": rows,
+                "total_size": format_size_bytes(total_size) if total_size else "-",
+                "has_size_data": max_size > 0,
             }
         )
     datacenter_counts = {

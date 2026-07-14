@@ -273,45 +273,44 @@
           </div>
         </section>
 
-        <section class="overview-panel executive-panel executive-panel-span-3">
+        <section class="overview-panel executive-panel executive-panel-span-3 database-size-panel">
           <div class="overview-section-heading">
             <h2>Database Size</h2>
-            <span>PostgreSQL / SQLServer primary only</span>
+            <span>3D view - PostgreSQL / SQLServer primary only</span>
           </div>
-          <div class="db-size-grid">
+          <div class="db-size-3d-grid">
             {% for section in database_size_sections %}
-              <div class="db-size-card">
+              <div class="db-size-3d-card">
                 <div class="db-size-title">
                   <strong>
                     <img class="db-inline-logo" src="{{ db_logo_map.get(section.label, '/static/img/sqlserver.png') }}" alt="{{ section.label }}">
                     {{ section.label }}
                   </strong>
-                  {% if section.primary_only %}<span>primary</span>{% endif %}
+                  <span>{{ section.total_size }}{% if section.primary_only %}<em>primary</em>{% endif %}</span>
                 </div>
-                <div class="table-responsive">
-                  <table class="table table-sm align-middle overview-table mb-0">
-                    <thead>
-                      <tr>
-                        <th>Database</th>
-                        <th>Server</th>
-                        <th>Size</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {% for item in section.rows[:8] %}
-                        <tr>
-                          <td>{{ item.name }}</td>
-                          <td>{{ item.server }}</td>
-                          <td class="text-nowrap">{{ item.size }}</td>
-                          <td><span class="badge text-bg-{{ item.monitoring|status_class }}">{{ item.monitoring }}</span></td>
-                        </tr>
-                      {% else %}
-                        <tr><td colspan="4" class="empty-state">No database assets found.</td></tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
-                </div>
+                {% if section.has_size_data %}
+                  <div class="db-size-3d-chart">
+                    {% for item in section.rows[:7] %}
+                      <div class="db-size-3d-row">
+                        <div class="db-size-3d-label">
+                          <span>{{ item.name }}</span>
+                          <strong>{{ item.size }}</strong>
+                        </div>
+                        <div class="db-size-3d-track">
+                          <span class="db-size-3d-bar" style="width: {{ item.percent }}%"></span>
+                        </div>
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% else %}
+                  <div class="db-size-empty-3d">
+                    <i class="bi bi-bar-chart"></i>
+                    <span>No size data from Zabbix</span>
+                  </div>
+                {% endif %}
+                {% if section.rows|length > 7 %}
+                  <div class="db-size-footnote">Top 7 of {{ section.rows|length }} databases</div>
+                {% endif %}
               </div>
             {% endfor %}
           </div>
