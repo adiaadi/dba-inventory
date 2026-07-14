@@ -98,13 +98,13 @@
         <a class="overview-kpi {% if current_asset_view == 'databases' %}active{% endif %}" href="/?view={{ current_view }}&asset_view=databases">
           <span class="kpi-title">Databases</span>
           <span class="kpi-value">{{ type_database_assets|length }}</span>
-          <span class="kpi-delta text-success">{{ db_type_view.label }} Zabbix Database group</span>
+          <span class="kpi-delta text-success">{{ db_type_view.database_group }} + class=database</span>
           <i class="bi bi-database-check"></i>
         </a>
         <a class="overview-kpi {% if current_asset_view == 'servers' %}active{% endif %}" href="/?view={{ current_view }}&asset_view=servers">
           <span class="kpi-title">Servers</span>
           <span class="kpi-value">{{ type_server_assets|length }}</span>
-          <span class="kpi-delta text-success">{{ db_type_view.label }} Zabbix Server group</span>
+          <span class="kpi-delta text-success">{{ db_type_view.server_group }} + class=os</span>
           <i class="bi bi-hdd-network"></i>
         </a>
       </section>

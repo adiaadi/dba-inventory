@@ -16,7 +16,6 @@ DEFAULT_GROUP_SETS = {
     "PostgreSQL Databases": ["PostgreSQL Database", "PostgreSQL Databases"],
     "PostgreSQL Servers": ["PostgreSQL Server", "PostgreSQL Servers"],
     "SQLServer Databases": ["SQLServer Database", "SQLServer Databases", "SQL Server Database", "SQL Server Databases"],
-    "SQLServer Servers": ["SQLServer Server", "SQLServer Servers", "SQL Server Server", "SQL Server Servers"],
 }
 
 DEFAULT_GROUPS = [
@@ -68,6 +67,11 @@ def db_type_from_tags(tags: dict[str, list[str]]) -> str | None:
 
 
 def role_from_tags(tags: dict[str, list[str]]) -> str | None:
+    class_values = {value.lower() for value in tags.get("class", [])}
+    if "database" in class_values:
+        return "database"
+    if "os" in class_values:
+        return "database server"
     if tags.get("database"):
         return "database"
     if tags.get("server"):

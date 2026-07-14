@@ -23,20 +23,46 @@ DB_TYPE_VIEWS = {
         "title": "ORACLE",
         "db_types": ["Oracle"],
         "logo": "/static/img/oracle.png",
+        "database_group": "Oracle Database",
+        "server_group": "Oracle Server",
     },
     "postgresql": {
         "label": "PostgreSQL",
         "title": "POSTGRESQL",
         "db_types": ["PostgreSQL"],
         "logo": "/static/img/postgresql.png",
+        "database_group": "PostgreSQL Database",
+        "server_group": "PostgreSQL Server",
     },
     "sqlserver": {
         "label": "SQLServer",
         "title": "SQL SERVER",
         "db_types": ["SQL Server", "SQLServer"],
         "logo": "/static/img/sqlserver.png",
+        "database_group": "SQLServer Database",
+        "server_group": "SQLServer Database",
     },
 }
+
+DB_FAMILIES = ("Oracle", "PostgreSQL", "SQLServer")
+
+ZABBIX_DATABASE_GROUPS = {
+    "Oracle": ("Oracle Database", "Oracle Databases"),
+    "PostgreSQL": ("PostgreSQL Database", "PostgreSQL Databases"),
+    "SQLServer": ("SQLServer Database", "SQLServer Databases", "SQL Server Database", "SQL Server Databases"),
+}
+
+ZABBIX_SERVER_GROUPS = {
+    "Oracle": ("Oracle Server", "Oracle Servers"),
+    "PostgreSQL": ("PostgreSQL Server", "PostgreSQL Servers"),
+    "SQLServer": ("SQLServer Database", "SQLServer Databases", "SQL Server Database", "SQL Server Databases"),
+}
+
+ZABBIX_SERVER_SUMMARY_GROUPS = tuple(
+    group_name
+    for group_names in ZABBIX_SERVER_GROUPS.values()
+    for group_name in group_names
+)
 
 
 def host_search_text(host: Host) -> str:
@@ -227,6 +253,51 @@ def imported_zabbix_group_names(host: Host) -> list[str]:
     return [group_name.strip() for group_name in group_text.split(",") if group_name.strip()]
 
 
+def normalized_zabbix_name(value: str) -> str:
+    return " ".join(value.strip().lower().split())
+
+
+def host_has_zabbix_group(host: Host, group_names: tuple[str, ...]) -> bool:
+    imported_groups = {
+        normalized_zabbix_name(group_name)
+        for group_name in imported_zabbix_group_names(host)
+    }
+    expected_groups = {normalized_zabbix_name(group_name) for group_name in group_names}
+    return bool(imported_groups & expected_groups)
+
+
+def is_family_database_asset(host: Host, family: str) -> bool:
+    return has_tag_value(host, "class", "database") and host_has_zabbix_group(
+        host,
+        ZABBIX_DATABASE_GROUPS[family],
+    )
+
+
+def is_family_server_asset(host: Host, family: str) -> bool:
+    return has_tag_value(host, "class", "os") and host_has_zabbix_group(
+        host,
+        ZABBIX_SERVER_GROUPS[family],
+    )
+
+
+def is_zabbix_database_asset(host: Host) -> bool:
+    return any(is_family_database_asset(host, family) for family in DB_FAMILIES)
+
+
+def is_zabbix_server_asset(host: Host) -> bool:
+    return has_tag_value(host, "class", "os") and host_has_zabbix_group(
+        host,
+        ZABBIX_SERVER_SUMMARY_GROUPS,
+    )
+
+
+def detected_db_type_by_zabbix_rules(host: Host) -> str | None:
+    for family in DB_FAMILIES:
+        if is_family_database_asset(host, family) or is_family_server_asset(host, family):
+            return family
+    return None
+
+
 def is_database_group_name(group_name: str) -> bool:
     normalized = group_name.strip().lower()
     return normalized.endswith(" database") or normalized.endswith(" databases")
@@ -238,7 +309,16 @@ def is_server_group_name(group_name: str) -> bool:
 
 
 def detected_zabbix_asset_kind(host: Host) -> str:
+    if is_zabbix_database_asset(host):
+        return "database"
+    if is_zabbix_server_asset(host):
+        return "server"
+
     tags = imported_zabbix_tags(host)
+    if has_tag_value(host, "class", "database"):
+        return "database"
+    if has_tag_value(host, "class", "os"):
+        return "server"
     if tags.get("database"):
         return "database"
     if tags.get("server"):
@@ -277,7 +357,10 @@ def dashboard(
         "clusters": db.scalar(select(func.count(Cluster.id))) or 0,
     }
     all_hosts = db.scalars(select(Host).options(selectinload(Host.databases)).order_by(Host.hostname)).all()
-    host_db_labels = {host.id: detected_db_type(host) for host in all_hosts}
+    host_db_labels = {
+        host.id: detected_db_type_by_zabbix_rules(host) or detected_db_type(host)
+        for host in all_hosts
+    }
     host_platform_labels = {host.id: detected_server_platform(host) for host in all_hosts}
     host_asset_kinds = {host.id: detected_zabbix_asset_kind(host) for host in all_hosts}
     host_virtual_labels = {host.id: "YES" if is_virtual_server(host) else "NO" for host in all_hosts}
@@ -285,23 +368,14 @@ def dashboard(
     host_model_labels = {host.id: server_model_label(host) for host in all_hosts}
     host_core_labels = {host.id: server_core_label(host) for host in all_hosts}
     host_ram_labels = {host.id: server_ram_label(host) for host in all_hosts}
-    os_class_hosts = unique_hosts([host for host in all_hosts if is_os_class_host(host)])
-    server_hosts = os_class_hosts
+    server_hosts = unique_hosts([host for host in all_hosts if is_zabbix_server_asset(host)])
     db_family_counts = {
-        family: sum(
-            1
-            for host in all_hosts
-            if host_db_labels.get(host.id) == family and host_asset_kinds.get(host.id) == "database"
-        )
-        for family in ("Oracle", "PostgreSQL", "SQLServer")
+        family: len(unique_hosts([host for host in all_hosts if is_family_database_asset(host, family)]))
+        for family in DB_FAMILIES
     }
     db_family_server_counts = {
-        family: sum(
-            1
-            for host in server_hosts
-            if host_db_labels.get(host.id) == family
-        )
-        for family in ("Oracle", "PostgreSQL", "SQLServer")
+        family: len(unique_hosts([host for host in all_hosts if is_family_server_asset(host, family)]))
+        for family in DB_FAMILIES
     }
     platform_counts = {
         "Virtual": sum(1 for host in server_hosts if host_platform_labels.get(host.id) == "Virtual"),
@@ -339,34 +413,25 @@ def dashboard(
     type_database_assets: list[Host] = []
     type_server_assets: list[Host] = []
     if db_type_view:
-        type_hosts = [
-            host for host in type_base_hosts if host_db_labels.get(host.id) == db_type_view["label"]
-        ]
-        type_database_assets = [
-            host for host in type_hosts if host_asset_kinds.get(host.id) == "database"
-        ]
-        type_server_assets = [
-            host for host in type_hosts if host_asset_kinds.get(host.id) == "server"
-        ]
-        if not type_database_assets:
-            type_database_assets = type_hosts
-        if not type_server_assets:
-            type_server_assets = type_hosts
+        type_database_assets = unique_hosts(
+            [host for host in type_base_hosts if is_family_database_asset(host, db_type_view["label"])]
+        )
+        type_server_assets = unique_hosts(
+            [host for host in type_base_hosts if is_family_server_asset(host, db_type_view["label"])]
+        )
         display_hosts = type_database_assets if current_asset_view == "databases" else type_server_assets
 
-    database_assets = [
+    database_assets = unique_hosts([
         host
         for host in type_base_hosts
-        if host_db_labels.get(host.id) in {"Oracle", "PostgreSQL", "SQLServer"}
-        and host_asset_kinds.get(host.id) == "database"
-    ]
-    server_assets = [
+        if is_zabbix_database_asset(host)
+    ])
+    server_assets = unique_hosts([
         host
         for host in type_base_hosts
-        if host_db_labels.get(host.id) in {"Oracle", "PostgreSQL", "SQLServer"}
-        and host_asset_kinds.get(host.id) == "server"
-    ]
-    filtered_server_hosts = unique_hosts([host for host in hosts_list if is_os_class_host(host)])
+        if is_zabbix_server_asset(host)
+    ])
+    filtered_server_hosts = unique_hosts([host for host in hosts_list if is_zabbix_server_asset(host)])
     if current_view == "hosts":
         display_hosts = filtered_server_hosts
 
