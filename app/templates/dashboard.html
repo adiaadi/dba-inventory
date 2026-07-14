@@ -176,47 +176,93 @@
     {% endif %}
 
     {% if current_view == "overview" %}
-      <div class="overview-grid">
-        <section class="overview-panel overview-panel-wide">
-          <h2>Servers by Environment</h2>
-          <div class="chart-box chart-box-line">
-            <canvas id="environmentChart"></canvas>
+      <div class="overview-grid overview-grid-dashboard">
+        <section class="overview-panel overview-panel-span-2">
+          <div class="overview-section-heading">
+            <h2>Inventory Composition</h2>
+            <span>Servers vs DB assets</span>
           </div>
-        </section>
-
-        <section class="overview-panel">
-          <h2>Monitoring Status</h2>
-          <div class="chart-box">
-            <canvas id="monitoringChart"></canvas>
-          </div>
-          <div class="chart-legend-list">
-            {% for status, count in monitoring_counts %}
-              <span><i class="legend-dot"></i>{{ status }} <strong>{{ count }}</strong></span>
-            {% endfor %}
-          </div>
-        </section>
-
-        <section class="overview-panel">
-          <h2>Server Platform</h2>
-          <div class="chart-box">
-            <canvas id="platformChart"></canvas>
-          </div>
-          <div class="chart-legend-list">
-            {% for label, count in platform_counts.items() %}
-              <span><i class="legend-dot"></i>{{ label }} <strong>{{ count }}</strong></span>
-            {% endfor %}
-          </div>
-        </section>
-
-        <section class="overview-panel overview-panel-wide">
-          <h2>DB Types by Servers</h2>
           <div class="chart-box chart-box-bar">
-            <canvas id="dbTypeChart"></canvas>
+            <canvas id="inventoryChart"></canvas>
           </div>
+        </section>
+
+        <section class="overview-panel">
+          <div class="overview-section-heading">
+            <h2>Monitoring Health</h2>
+            <span>{{ counts.servers }} Servers</span>
+          </div>
+          <div class="health-list">
+            {% for row in monitoring_summary %}
+              <div class="health-row">
+                <span><i class="legend-dot"></i>{{ row.label }}</span>
+                <strong>{{ row.count }}</strong>
+              </div>
+              <div class="health-track"><span style="width: {{ row.percent }}%"></span></div>
+            {% else %}
+              <div class="empty-state">No monitoring data.</div>
+            {% endfor %}
+          </div>
+        </section>
+
+        <section class="overview-panel overview-panel-span-2">
+          <div class="overview-section-heading">
+            <h2>Environment Matrix</h2>
+            <span>DB type distribution</span>
+          </div>
+          <div class="chart-box chart-box-bar">
+            <canvas id="environmentMatrixChart"></canvas>
+          </div>
+        </section>
+
+        <section class="overview-panel">
+          <div class="overview-section-heading">
+            <h2>Server Platform</h2>
+            <span>Virtual / Physical</span>
+          </div>
+          <div class="health-list">
+            {% for row in platform_summary %}
+              <div class="health-row">
+                <span><i class="legend-dot"></i>{{ row.label }}</span>
+                <strong>{{ row.count }}</strong>
+              </div>
+              <div class="health-track health-track-dark"><span style="width: {{ row.percent }}%"></span></div>
+            {% endfor %}
+          </div>
+        </section>
+
+        <section class="overview-panel">
+          <div class="overview-section-heading">
+            <h2>Capacity Snapshot</h2>
+            <span>from Zabbix items</span>
+          </div>
+          <table class="table table-sm align-middle overview-table capacity-table">
+            <thead>
+              <tr>
+                <th>DB Type</th>
+                <th>Servers</th>
+                <th>Core</th>
+                <th>RAM</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in capacity_by_db %}
+                <tr>
+                  <td>{{ row.label }}</td>
+                  <td>{{ row.servers }}</td>
+                  <td>{{ row.cores }}</td>
+                  <td>{{ row.ram_label }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </section>
 
         <section class="overview-panel overview-table-panel">
-          <h2>Top Servers by Problems</h2>
+          <div class="overview-section-heading">
+            <h2>Open Problem Queue</h2>
+            <span>{{ top_hosts|length }} requires attention</span>
+          </div>
           <div class="table-responsive">
             <table class="table table-sm align-middle overview-table">
               <thead>
@@ -243,7 +289,7 @@
                     </td>
                   </tr>
                 {% else %}
-                  <tr><td colspan="4" class="empty-state">No servers found.</td></tr>
+                  <tr><td colspan="4" class="empty-state">No open Zabbix problems.</td></tr>
                 {% endfor %}
               </tbody>
             </table>
@@ -492,6 +538,34 @@
   const dashboardData = {{ chart_data|tojson }};
   const palette = ["#e30613", "#111827", "#9ca3af", "#0f8b5f", "#f59e0b", "#64748b"];
 
+  function makeDatasetChart(id, type, labels, datasets, options = {}) {
+    const element = document.getElementById(id);
+    if (!element || typeof Chart === "undefined") {
+      return;
+    }
+
+    return new Chart(element, {
+      type,
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: "bottom",
+            labels: { boxWidth: 10, usePointStyle: true },
+          },
+        },
+        scales: {
+          x: { grid: { display: false } },
+          y: { beginAtZero: true, ticks: { precision: 0 } },
+        },
+        ...options,
+      },
+    });
+  }
+
   function makeChart(id, type, labels, values, options = {}) {
     const element = document.getElementById(id);
     if (!element || typeof Chart === "undefined") {
@@ -526,9 +600,28 @@
     });
   }
 
-  makeChart("environmentChart", "line", dashboardData.environmentLabels, dashboardData.environmentValues);
-  makeChart("monitoringChart", "doughnut", dashboardData.monitoringLabels, dashboardData.monitoringValues, { cutout: "68%" });
-  makeChart("platformChart", "doughnut", dashboardData.platformLabels, dashboardData.platformValues, { cutout: "68%" });
+  makeDatasetChart("inventoryChart", "bar", dashboardData.inventoryLabels, [
+    {
+      label: "Servers",
+      data: dashboardData.inventoryServerValues,
+      backgroundColor: "#e30613",
+      borderColor: "#e30613",
+      borderWidth: 1,
+    },
+    {
+      label: "DB assets",
+      data: dashboardData.inventoryDatabaseValues,
+      backgroundColor: "#111827",
+      borderColor: "#111827",
+      borderWidth: 1,
+    },
+  ]);
+  makeDatasetChart("environmentMatrixChart", "bar", dashboardData.environmentMatrixLabels, dashboardData.environmentMatrixDatasets, {
+    scales: {
+      x: { stacked: true, grid: { display: false } },
+      y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } },
+    },
+  });
   makeChart("dbTypeChart", "bar", dashboardData.dbTypeLabels, dashboardData.dbTypeValues);
 </script>
 {% endblock %}

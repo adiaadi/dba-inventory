@@ -379,6 +379,43 @@ def format_memory_label(value: str | None) -> str | None:
     return f"{bytes_value:.0f} B"
 
 
+def parse_core_count(value: str | None) -> int:
+    if not value or value == "-":
+        return 0
+    try:
+        return int(float(value))
+    except ValueError:
+        return 0
+
+
+def parse_memory_gb(value: str | None) -> float:
+    if not value or value == "-":
+        return 0
+    text = value.strip().lower().replace(",", ".")
+    number = None
+    for part in text.split():
+        try:
+            number = float(part)
+            break
+        except ValueError:
+            continue
+    if number is None:
+        return 0
+    if "tb" in text:
+        return number * 1024
+    if "mb" in text:
+        return number / 1024
+    if "kb" in text:
+        return number / 1024**2
+    return number
+
+
+def format_capacity_gb(value: float) -> str:
+    if value >= 1024:
+        return f"{value / 1024:.1f} TB".replace(".0 TB", " TB")
+    return f"{value:.1f} GB".replace(".0 GB", " GB")
+
+
 def imported_zabbix_group_names(host: Host) -> list[str]:
     notes = host.notes or ""
     marker = "Imported from Zabbix groups:"
@@ -553,16 +590,78 @@ def dashboard(
         )
     monitoring_counter = Counter(host.monitoring_status or "unknown" for host in server_hosts)
     monitoring_counts = sorted(monitoring_counter.items())
+    monitoring_summary = [
+        {
+            "label": status or "unknown",
+            "count": count,
+            "percent": round((count / counts["servers"]) * 100, 1) if counts["servers"] else 0,
+        }
+        for status, count in monitoring_counts
+    ]
+    platform_summary = [
+        {
+            "label": label,
+            "count": count,
+            "percent": round((count / counts["servers"]) * 100, 1) if counts["servers"] else 0,
+        }
+        for label, count in platform_counts.items()
+    ]
     db_type_counts = [(label, count) for label, count in db_family_server_counts.items()]
     environment_counter = Counter(host.environment or "unknown" for host in server_hosts)
     environment_counts = sorted(environment_counter.items())
+    environment_labels = sorted(environment_counter.keys())
+    db_family_palette = {
+        "Oracle": "#e30613",
+        "PostgreSQL": "#111827",
+        "SQLServer": "#64748b",
+    }
+    environment_matrix_datasets = [
+        {
+            "label": family,
+            "data": [
+                len(
+                    unique_hosts(
+                        [
+                            host
+                            for host in server_hosts
+                            if (host.environment or "unknown") == environment_label
+                            and host_db_labels.get(host.id) == family
+                        ]
+                    )
+                )
+                for environment_label in environment_labels
+            ],
+            "backgroundColor": db_family_palette[family],
+            "borderColor": db_family_palette[family],
+        }
+        for family in DB_FAMILIES
+    ]
+    capacity_by_db = []
+    for family in DB_FAMILIES:
+        family_hosts = unique_hosts(
+            [host for host in server_hosts if host_db_labels.get(host.id) == family]
+        )
+        total_cores = sum(parse_core_count(host_core_labels.get(host.id)) for host in family_hosts)
+        total_ram_gb = sum(parse_memory_gb(host_ram_labels.get(host.id)) for host in family_hosts)
+        capacity_by_db.append(
+            {
+                "label": family,
+                "servers": len(family_hosts),
+                "cores": total_cores,
+                "ram_label": format_capacity_gb(total_ram_gb) if total_ram_gb else "-",
+            }
+        )
     availability_counter = Counter(host.zabbix_agent_availability or "unknown" for host in server_hosts)
     availability_counts = sorted(availability_counter.items())
     problem_total = sum(host.problem_count or 0 for host in server_hosts)
     problem_average = round(problem_total / counts["servers"], 2) if counts["servers"] else 0
     last_sync_at = db.scalar(select(func.max(Host.zabbix_last_sync_at)))
     top_hosts = sorted(
-        server_hosts,
+        [
+            host
+            for host in server_hosts
+            if (host.problem_count or 0) > 0 or (host.monitoring_status or "").lower() != "ok"
+        ],
         key=lambda host: (-(host.problem_count or 0), host.monitoring_status or "", host.hostname),
     )[:10]
     requested_db_type = normalized_db_type(db_type)
@@ -625,8 +724,13 @@ def dashboard(
         "monitoringValues": [count for _, count in monitoring_counts],
         "dbTypeLabels": [db_type or "unknown" for db_type, _ in db_type_counts],
         "dbTypeValues": [count for _, count in db_type_counts],
+        "inventoryLabels": list(DB_FAMILIES),
+        "inventoryServerValues": [db_family_server_counts[family] for family in DB_FAMILIES],
+        "inventoryDatabaseValues": [db_family_counts[family] for family in DB_FAMILIES],
         "environmentLabels": [environment or "unknown" for environment, _ in environment_counts],
         "environmentValues": [count for _, count in environment_counts],
+        "environmentMatrixLabels": environment_labels,
+        "environmentMatrixDatasets": environment_matrix_datasets,
         "availabilityLabels": [availability or "unknown" for availability, _ in availability_counts],
         "availabilityValues": [count for _, count in availability_counts],
         "platformLabels": list(platform_counts.keys()),
@@ -699,8 +803,11 @@ def dashboard(
             "type_database_assets": type_database_assets,
             "type_server_assets": type_server_assets,
             "monitoring_counts": monitoring_counts,
+            "monitoring_summary": monitoring_summary,
             "db_type_counts": db_type_counts,
             "environment_counts": environment_counts,
+            "platform_summary": platform_summary,
+            "capacity_by_db": capacity_by_db,
             "availability_counts": availability_counts,
             "problem_total": problem_total,
             "problem_average": problem_average,
