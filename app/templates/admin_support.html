@@ -57,7 +57,11 @@
                 <td>
                   <input class="form-control form-control-sm admin-date-input" type="date" name="support_end_date_{{ host.id }}" value="{{ host.support_end_date or '' }}">
                 </td>
-                <td><span class="badge text-bg-light border">{{ row.support_status }}</span></td>
+                <td>
+                  <span class="support-status-badge support-status-{{ row.support_status|lower|replace(' ', '-') }}">
+                    {{ row.support_status }}
+                  </span>
+                </td>
               </tr>
             {% else %}
               <tr>

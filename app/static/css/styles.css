@@ -1779,6 +1779,43 @@ body {
   font-weight: 750;
 }
 
+.support-status-badge {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 0.72rem;
+  font-weight: 750;
+  line-height: 1;
+  min-width: 74px;
+  justify-content: center;
+  padding: 6px 10px;
+  text-transform: uppercase;
+}
+
+.support-status-active {
+  background: #dcfce7;
+  border: 1px solid #86efac;
+  color: #166534;
+}
+
+.support-status-expires-soon {
+  background: #fef3c7;
+  border: 1px solid #fbbf24;
+  color: #92400e;
+}
+
+.support-status-expired {
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  color: #991b1b;
+}
+
+.support-status-not-set {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+}
+
 .server-workbench {
   background: #e7e9ef;
   border: 1px solid #aeb7c5;

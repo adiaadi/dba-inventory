@@ -327,7 +327,11 @@
                         {{ host.support_end_date or "-" }}
                       {% endif %}
                     </td>
-                    <td><span class="badge text-bg-light border">{{ row.support_status }}</span></td>
+                    <td>
+                      <span class="support-status-badge support-status-{{ row.support_status|lower|replace(' ', '-') }}">
+                        {{ row.support_status }}
+                      </span>
+                    </td>
                   </tr>
                 {% else %}
                   <tr><td colspan="6" class="empty-state">{{ ui_text(request, "empty.no_physical_servers", "No physical servers found.") }}</td></tr>
