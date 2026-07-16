@@ -18,24 +18,6 @@
         {% endfor %}
       </select>
     </label>
-    <label class="form-label">
-      <span>Role</span>
-      <select class="form-select" name="role">
-        <option value="">All</option>
-        {% for value in filter_options.roles %}
-          <option value="{{ value }}" {% if filters.role == value %}selected{% endif %}>{{ value }}</option>
-        {% endfor %}
-      </select>
-    </label>
-    <label class="form-label">
-      <span>Monitoring</span>
-      <select class="form-select" name="monitoring_status">
-        <option value="">All</option>
-        {% for value in filter_options.monitoring_statuses %}
-          <option value="{{ value }}" {% if filters.monitoring_status == value %}selected{% endif %}>{{ value }}</option>
-        {% endfor %}
-      </select>
-    </label>
   </div>
   <div class="filter-actions">
     <button class="btn btn-primary" type="submit">

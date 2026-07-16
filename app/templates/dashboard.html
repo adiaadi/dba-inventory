@@ -39,24 +39,6 @@
           {% endfor %}
         </select>
       </label>
-      <label>
-        Role
-        <select class="form-select form-select-sm" name="role">
-          <option value="">All</option>
-          {% for value in filter_options.roles %}
-            <option value="{{ value }}" {% if filters.role == value %}selected{% endif %}>{{ value }}</option>
-          {% endfor %}
-        </select>
-      </label>
-      <label>
-        Monitoring
-        <select class="form-select form-select-sm" name="monitoring_status">
-          <option value="">All</option>
-          {% for value in filter_options.monitoring_statuses %}
-            <option value="{{ value }}" {% if filters.monitoring_status == value %}selected{% endif %}>{{ value }}</option>
-          {% endfor %}
-        </select>
-      </label>
       <div class="overview-filter-actions">
         <button class="btn btn-primary btn-sm" type="submit">Apply</button>
         <a class="btn btn-outline-secondary btn-sm" href="/?view={{ current_view }}">Reset</a>
@@ -88,8 +70,6 @@
           <input type="hidden" name="asset_view" value="{{ current_asset_view }}">
           <input type="hidden" name="db_type" value="{{ filters.db_type or '' }}">
           <input type="hidden" name="environment" value="{{ filters.environment or '' }}">
-          <input type="hidden" name="role" value="{{ filters.role or '' }}">
-          <input type="hidden" name="monitoring_status" value="{{ filters.monitoring_status or '' }}">
           <input type="hidden" name="refresh" value="1">
           <button class="btn btn-outline-secondary btn-sm" type="submit">
             <i class="bi bi-arrow-repeat"></i> Refresh Zabbix
@@ -417,8 +397,6 @@
                 <input type="hidden" name="view" value="hosts">
                 <input type="hidden" name="asset_view" value="{{ current_asset_view }}">
                 <input type="hidden" name="environment" value="{{ filters.environment or '' }}">
-                <input type="hidden" name="role" value="{{ filters.role or '' }}">
-                <input type="hidden" name="monitoring_status" value="{{ filters.monitoring_status or '' }}">
                 <select class="form-select form-select-sm" name="db_type" aria-label="DB Type" onchange="this.form.submit()">
                   <option value="">All</option>
                   {% for option in server_db_type_options %}
