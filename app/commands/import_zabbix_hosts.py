@@ -115,16 +115,19 @@ def role_from_groups(group_names: list[str]) -> str:
     return "database"
 
 
-def environment_from_name(name: str) -> str:
-    normalized = name.lower()
-    if any(marker in normalized for marker in ("-prod", "_prod", "prod-", "prod_", "production")):
-        return "prod"
-    if any(marker in normalized for marker in ("-test", "_test", "test-", "test_", "tst")):
-        return "test"
-    if any(marker in normalized for marker in ("-dev", "_dev", "dev-", "dev_")):
-        return "dev"
-    if any(marker in normalized for marker in ("-dr", "_dr", "drdb")):
-        return "dr"
+def environment_from_tags(tags: dict[str, list[str]]) -> str:
+    for tag_value in tags.get("environment", []):
+        normalized = tag_value.strip().lower().replace("_", "-")
+        if normalized in {"prod", "production"}:
+            return "prod"
+        if normalized in {"test", "tst"}:
+            return "test"
+        if normalized in {"dev", "development"}:
+            return "dev"
+        if normalized in {"standby", "dr"}:
+            return "standby"
+        if normalized:
+            return normalized[:40]
     return "unknown"
 
 
@@ -168,7 +171,7 @@ def upsert_host(db, zabbix_host: dict, client: ZabbixClient) -> tuple[Host, bool
         created = True
         host = Host(
             hostname=inventory_hostname,
-            environment=environment_from_name(inventory_hostname),
+            environment=environment_from_tags(tags),
             role=role,
             owner_team=owner_team_from_db_type(db_type),
             monitoring_status="unknown",
@@ -178,7 +181,7 @@ def upsert_host(db, zabbix_host: dict, client: ZabbixClient) -> tuple[Host, bool
     host.hostname = inventory_hostname
     host.fqdn = zabbix_host.get("host")
     host.ip_address = client.primary_interface_address(zabbix_host)
-    host.environment = environment_from_name(f"{inventory_hostname} {display_name}")
+    host.environment = environment_from_tags(tags)
     host.role = role
     host.db_type = db_type
     host.os_name = (
