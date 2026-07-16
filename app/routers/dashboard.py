@@ -360,6 +360,33 @@ def operating_system_label(host: Host) -> str:
     return operating_system_item_label(item_values, fallback) or "-"
 
 
+def operating_system_family_label(value: str | None) -> str:
+    normalized = (value or "").strip().lower()
+    if not normalized or normalized == "-":
+        return "Unknown"
+    if "ubuntu" in normalized:
+        return "Ubuntu"
+    if "oracle linux" in normalized or "oracle enterprise linux" in normalized or normalized.startswith("oel"):
+        return "OEL"
+    if "red hat" in normalized or "rhel" in normalized:
+        return "RHEL"
+    if "rocky" in normalized:
+        return "Rocky Linux"
+    if "alma" in normalized:
+        return "AlmaLinux"
+    if "centos" in normalized:
+        return "CentOS"
+    if "debian" in normalized:
+        return "Debian"
+    if "suse" in normalized or "sles" in normalized:
+        return "SUSE"
+    if "windows" in normalized or "microsoft" in normalized:
+        return "Windows"
+    if "linux" in normalized:
+        return "Linux"
+    return value.strip()
+
+
 def server_model_label(host: Host) -> str:
     item_values = imported_zabbix_items(host)
     item_label = server_model_item_label(item_values)
@@ -779,6 +806,14 @@ def dashboard(
         }
         for label, count in platform_counts.items()
     ]
+    os_family_counter = Counter(
+        operating_system_family_label(host_os_labels.get(host.id))
+        for host in server_hosts
+    )
+    os_family_counts = sorted(
+        os_family_counter.items(),
+        key=lambda item: (-item[1], item[0]),
+    )
     db_type_counts = [(label, count) for label, count in db_family_server_counts.items()]
     environment_counter = Counter((host.environment or "UNKNOWN").upper() for host in server_hosts)
     environment_counts = sorted(environment_counter.items())
@@ -961,6 +996,8 @@ def dashboard(
         "availabilityValues": [count for _, count in availability_counts],
         "platformLabels": list(platform_counts.keys()),
         "platformValues": list(platform_counts.values()),
+        "osLabels": [label for label, _ in os_family_counts],
+        "osValues": [count for _, count in os_family_counts],
     }
     section_tabs = [
         {"key": "overview", "label": ui_text_value(request, "nav.overview", "Overview"), "icon": "bi-grid-1x2"},
@@ -1017,6 +1054,7 @@ def dashboard(
             "db_family_counts": db_family_counts,
             "db_family_server_counts": db_family_server_counts,
             "platform_counts": platform_counts,
+            "os_family_counts": os_family_counts,
             "host_db_labels": host_db_labels,
             "host_platform_labels": host_platform_labels,
             "host_asset_kinds": host_asset_kinds,

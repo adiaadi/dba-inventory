@@ -213,6 +213,10 @@
         "SQL Server": "/static/img/sqlserver.png",
         "SQLServer": "/static/img/sqlserver.png"
       } %}
+      {% set overview_db_total = counts.databases or 0 %}
+      {% set oracle_db_percent = ((db_family_counts.Oracle / overview_db_total * 100)|round(1)) if overview_db_total else 0 %}
+      {% set postgresql_db_percent = ((db_family_counts.PostgreSQL / overview_db_total * 100)|round(1)) if overview_db_total else 0 %}
+      {% set sqlserver_db_percent = ((db_family_counts.SQLServer / overview_db_total * 100)|round(1)) if overview_db_total else 0 %}
       <div class="executive-grid executive-summary-grid">
         <section class="overview-panel executive-panel executive-panel-estate">
           <div class="overview-section-heading">
@@ -223,21 +227,21 @@
             <div class="executive-card executive-card-logo">
               <img src="/static/img/oracle.png" alt="Oracle">
               <div>
-                <span>{{ ui_text(request, "label.oracle_databases", "Oracle Databases") }}</span>
+                <span class="executive-db-label">{{ ui_text(request, "label.oracle", "Oracle") }}<small>{{ ui_text(request, "label.databases", "Databases") }}</small></span>
                 <strong>{{ db_family_counts.Oracle }}</strong>
               </div>
             </div>
             <div class="executive-card executive-card-logo">
               <img src="/static/img/postgresql.png" alt="PostgreSQL">
               <div>
-                <span>{{ ui_text(request, "label.postgresql_databases", "PostgreSQL Databases") }}</span>
+                <span class="executive-db-label">{{ ui_text(request, "label.postgresql", "PostgreSQL") }}<small>{{ ui_text(request, "label.databases", "Databases") }}</small></span>
                 <strong>{{ db_family_counts.PostgreSQL }}</strong>
               </div>
             </div>
             <div class="executive-card executive-card-logo">
               <img src="/static/img/sqlserver.png" alt="SQL Server">
               <div>
-                <span>{{ ui_text(request, "label.sqlserver_databases", "SQLServer Databases") }}</span>
+                <span class="executive-db-label">{{ ui_text(request, "label.sqlserver", "SQLServer") }}<small>{{ ui_text(request, "label.databases", "Databases") }}</small></span>
                 <strong>{{ db_family_counts.SQLServer }}</strong>
               </div>
             </div>
@@ -258,9 +262,9 @@
               </div>
             </div>
             <div class="executive-chart-legend">
-              <div><span><i class="summary-dot dot-oracle"></i>{{ ui_text(request, "label.oracle", "Oracle") }}</span><strong>{{ db_family_counts.Oracle }}</strong></div>
-              <div><span><i class="summary-dot dot-postgresql"></i>{{ ui_text(request, "label.postgresql", "PostgreSQL") }}</span><strong>{{ db_family_counts.PostgreSQL }}</strong></div>
-              <div><span><i class="summary-dot dot-sqlserver"></i>{{ ui_text(request, "label.sqlserver", "SQLServer") }}</span><strong>{{ db_family_counts.SQLServer }}</strong></div>
+              <div><span><i class="summary-dot dot-oracle"></i>{{ ui_text(request, "label.oracle", "Oracle") }}</span><strong>{{ db_family_counts.Oracle }} <small>{{ oracle_db_percent }}%</small></strong></div>
+              <div><span><i class="summary-dot dot-postgresql"></i>{{ ui_text(request, "label.postgresql", "PostgreSQL") }}</span><strong>{{ db_family_counts.PostgreSQL }} <small>{{ postgresql_db_percent }}%</small></strong></div>
+              <div><span><i class="summary-dot dot-sqlserver"></i>{{ ui_text(request, "label.sqlserver", "SQLServer") }}</span><strong>{{ db_family_counts.SQLServer }} <small>{{ sqlserver_db_percent }}%</small></strong></div>
             </div>
           </div>
         </section>
@@ -288,11 +292,11 @@
 
         <section class="overview-panel executive-panel executive-chart-panel">
           <div class="overview-section-heading">
-            <h2>{{ ui_text(request, "panel.operational_health", "Operational Health") }}</h2>
-            <span>{{ ui_text(request, "panel.operational_health_note", "Monitoring status by servers") }}</span>
+            <h2>{{ ui_text(request, "panel.operating_systems", "Operating Systems") }}</h2>
+            <span>{{ ui_text(request, "panel.operating_systems_note", "Ubuntu / OEL / Windows") }}</span>
           </div>
           <div class="executive-health-chart">
-            <canvas id="executiveHealthChart"></canvas>
+            <canvas id="executiveOsChart"></canvas>
           </div>
         </section>
 
@@ -690,7 +694,23 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script>
   const dashboardData = {{ chart_data|tojson }};
-  const palette = ["#e30613", "#111827", "#9ca3af", "#0f8b5f", "#f59e0b", "#64748b"];
+  const palette = ["#e30613", "#111827", "#9ca3af", "#0f8b5f", "#f59e0b", "#64748b", "#2563eb", "#7c3aed", "#0ea5e9", "#14b8a6"];
+  if (typeof Chart !== "undefined") {
+    Chart.defaults.plugins.tooltip.backgroundColor = "#111827";
+    Chart.defaults.plugins.tooltip.titleColor = "#ffffff";
+    Chart.defaults.plugins.tooltip.bodyColor = "#ffffff";
+    Chart.defaults.plugins.tooltip.borderColor = "#e30613";
+    Chart.defaults.plugins.tooltip.borderWidth = 1;
+    Chart.defaults.plugins.tooltip.displayColors = true;
+  }
+
+  function percentTooltipLabel(context) {
+    const values = context.dataset.data || [];
+    const total = values.reduce((sum, value) => sum + Number(value || 0), 0);
+    const value = Number(context.raw || 0);
+    const percent = total ? ((value / total) * 100).toFixed(1).replace(".0", "") : "0";
+    return `${context.label}: ${value} (${percent}%)`;
+  }
 
   function makeDatasetChart(id, type, labels, datasets, options = {}) {
     const element = document.getElementById(id);
@@ -780,13 +800,25 @@
   makeChart("dbTypeChart", "bar", dashboardData.dbTypeLabels, dashboardData.dbTypeValues);
   makeChart("executiveDatabasePortfolioChart", "doughnut", dashboardData.inventoryLabels, dashboardData.inventoryDatabaseValues, {
     cutout: "68%",
-    plugins: { legend: { display: false }, tooltip: { enabled: true } },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        enabled: true,
+        callbacks: { label: percentTooltipLabel },
+      },
+    },
   });
   makeChart("executiveServerEstateChart", "doughnut", dashboardData.platformLabels, dashboardData.platformValues, {
     cutout: "68%",
-    plugins: { legend: { display: false }, tooltip: { enabled: true } },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        enabled: true,
+        callbacks: { label: percentTooltipLabel },
+      },
+    },
   });
-  makeChart("executiveHealthChart", "bar", dashboardData.monitoringLabels, dashboardData.monitoringValues, {
+  makeChart("executiveOsChart", "bar", dashboardData.osLabels, dashboardData.osValues, {
     indexAxis: "y",
     plugins: { legend: { display: false } },
     scales: {

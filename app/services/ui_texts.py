@@ -44,6 +44,8 @@ DEFAULT_UI_TEXTS = [
     {"key": "panel.server_estate_note", "category": "Panels", "label": "Server estate note", "default": "Virtual / Physical / Unknown"},
     {"key": "panel.operational_health", "category": "Panels", "label": "Operational health chart", "default": "Operational Health"},
     {"key": "panel.operational_health_note", "category": "Panels", "label": "Operational health note", "default": "Monitoring status by servers"},
+    {"key": "panel.operating_systems", "category": "Panels", "label": "Operating systems chart", "default": "Operating Systems"},
+    {"key": "panel.operating_systems_note", "category": "Panels", "label": "Operating systems note", "default": "Ubuntu / OEL / Windows"},
     {"key": "panel.datacenter_footprint", "category": "Panels", "label": "Datacenter footprint panel", "default": "Datacenter Footprint"},
     {"key": "panel.datacenter_note", "category": "Panels", "label": "Datacenter note", "default": "MAIN / DR sites"},
     {"key": "panel.infrastructure_mix", "category": "Panels", "label": "Infrastructure mix panel", "default": "Infrastructure Mix"},

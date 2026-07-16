@@ -1023,6 +1023,21 @@ body {
   font-weight: 750;
 }
 
+.executive-db-label {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.executive-db-label small {
+  color: #475467;
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+
 .executive-card strong,
 .executive-split strong {
   color: var(--brand-dark);
@@ -1040,17 +1055,26 @@ body {
 
 .executive-panel-estate .executive-card {
   min-height: 116px;
-  padding: 12px;
+  padding: 10px;
 }
 
 .executive-panel-estate .executive-card-logo {
-  gap: 8px;
-  grid-template-columns: minmax(42px, 50px) minmax(0, 1fr);
+  gap: 6px;
+  grid-template-columns: minmax(34px, 42px) minmax(0, 1fr);
 }
 
 .executive-panel-estate .executive-card-logo img {
-  max-height: 42px;
-  max-width: 48px;
+  max-height: 38px;
+  max-width: 42px;
+}
+
+.executive-panel-estate .executive-db-label {
+  font-size: 0.76rem;
+  line-height: 1.08;
+}
+
+.executive-panel-estate .executive-db-label small {
+  font-size: 0.68rem;
 }
 
 .executive-chart-panel {
@@ -1136,6 +1160,13 @@ body {
   color: var(--brand-dark);
   font-size: 0.95rem;
   font-weight: 900;
+}
+
+.executive-chart-legend strong small {
+  color: #667085;
+  font-size: 0.72rem;
+  font-weight: 850;
+  margin-left: 4px;
 }
 
 .executive-health-chart {
