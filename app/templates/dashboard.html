@@ -135,42 +135,52 @@
         </a>
       </section>
     {% elif current_view == "hosts" %}
-      <section class="overview-kpis">
-        <div class="overview-kpi overview-kpi-static">
-          <span class="kpi-title">Oracle</span>
-          <span class="kpi-value">{{ db_family_server_counts.Oracle }}</span>
-          <span class="kpi-delta text-muted">Servers</span>
-          <i class="bi bi-database-check"></i>
+      <section class="inventory-summary-groups">
+        <div class="inventory-summary-card">
+          <div class="inventory-summary-head">
+            <div>
+              <span>Databases</span>
+              <strong>{{ counts.databases }}</strong>
+            </div>
+            <i class="bi bi-database-check"></i>
+          </div>
+          <div class="inventory-summary-list">
+            <div>
+              <span>Oracle</span>
+              <strong>{{ db_family_counts.Oracle }}</strong>
+            </div>
+            <div>
+              <span>PostgreSQL</span>
+              <strong>{{ db_family_counts.PostgreSQL }}</strong>
+            </div>
+            <div>
+              <span>SQLServer</span>
+              <strong>{{ db_family_counts.SQLServer }}</strong>
+            </div>
+          </div>
         </div>
-        <div class="overview-kpi overview-kpi-static">
-          <span class="kpi-title">PostgreSQL</span>
-          <span class="kpi-value">{{ db_family_server_counts.PostgreSQL }}</span>
-          <span class="kpi-delta text-muted">Servers</span>
-          <i class="bi bi-database-fill"></i>
-        </div>
-        <div class="overview-kpi overview-kpi-static">
-          <span class="kpi-title">SQLServer</span>
-          <span class="kpi-value">{{ db_family_server_counts.SQLServer }}</span>
-          <span class="kpi-delta text-muted">Servers</span>
-          <i class="bi bi-server"></i>
-        </div>
-        <div class="overview-kpi overview-kpi-static">
-          <span class="kpi-title">Servers</span>
-          <span class="kpi-value">{{ counts.servers }}</span>
-          <span class="kpi-delta text-muted">total</span>
-          <i class="bi bi-hdd-network"></i>
-        </div>
-        <div class="overview-kpi overview-kpi-static">
-          <span class="kpi-title">Virtual</span>
-          <span class="kpi-value">{{ platform_counts.Virtual }}</span>
-          <span class="kpi-delta text-muted">virtual</span>
-          <i class="bi bi-cloud"></i>
-        </div>
-        <div class="overview-kpi overview-kpi-static">
-          <span class="kpi-title">Physical</span>
-          <span class="kpi-value">{{ platform_counts.Physical }}</span>
-          <span class="kpi-delta text-muted">physical</span>
-          <i class="bi bi-pc-display"></i>
+        <div class="inventory-summary-card">
+          <div class="inventory-summary-head">
+            <div>
+              <span>Servers</span>
+              <strong>{{ counts.servers }}</strong>
+            </div>
+            <i class="bi bi-hdd-network"></i>
+          </div>
+          <div class="inventory-summary-list">
+            <div>
+              <span>Total</span>
+              <strong>{{ counts.servers }}</strong>
+            </div>
+            <div>
+              <span>Virtual</span>
+              <strong>{{ platform_counts.Virtual }}</strong>
+            </div>
+            <div>
+              <span>Physical</span>
+              <strong>{{ platform_counts.Physical }}</strong>
+            </div>
+          </div>
         </div>
       </section>
     {% endif %}
