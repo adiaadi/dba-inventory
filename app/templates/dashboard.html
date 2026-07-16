@@ -216,16 +216,33 @@
         <section class="overview-panel executive-panel">
           <div class="overview-section-heading">
             <h2>Datacenter Footprint</h2>
-            <span>tag: datacenter</span>
+            <span>MAIN / DR sites</span>
           </div>
-          <div class="executive-split">
-            <div>
-              <span>MAIN</span>
+          <div class="datacenter-map">
+            <div class="datacenter-node datacenter-node-main">
+              <div class="datacenter-node-head">
+                <span class="datacenter-icon"><i class="bi bi-building"></i></span>
+                <span>MAIN Datacenter</span>
+              </div>
               <strong>{{ datacenter_counts.MAIN }}</strong>
+              <small>Primary site</small>
+              <div class="datacenter-racks" aria-hidden="true">
+                <span></span><span></span><span></span>
+              </div>
             </div>
-            <div>
-              <span>DR</span>
+            <div class="datacenter-link" aria-hidden="true">
+              <span></span>
+            </div>
+            <div class="datacenter-node datacenter-node-dr">
+              <div class="datacenter-node-head">
+                <span class="datacenter-icon"><i class="bi bi-hdd-rack"></i></span>
+                <span>DR Datacenter</span>
+              </div>
               <strong>{{ datacenter_counts.DR }}</strong>
+              <small>Recovery site</small>
+              <div class="datacenter-racks" aria-hidden="true">
+                <span></span><span></span><span></span>
+              </div>
             </div>
           </div>
         </section>
