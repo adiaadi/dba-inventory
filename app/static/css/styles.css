@@ -966,7 +966,7 @@ body {
 .executive-grid {
   display: grid;
   gap: 14px;
-  grid-template-columns: repeat(4, minmax(260px, 1fr));
+  grid-template-columns: repeat(3, minmax(280px, 1fr));
 }
 
 .executive-panel {
@@ -1204,7 +1204,7 @@ body {
 }
 
 .summary-support-panel {
-  grid-column: span 3;
+  grid-column: span 2;
 }
 
 .summary-side-stack {
@@ -1213,12 +1213,16 @@ body {
   grid-column: span 1;
 }
 
+.summary-side-stack .overview-panel {
+  min-height: 100%;
+}
+
 .summary-side-stack .datacenter-map {
   grid-template-columns: minmax(0, 1fr) 38px minmax(0, 1fr);
 }
 
 .summary-side-stack .datacenter-node {
-  min-height: 156px;
+  min-height: 210px;
 }
 
 .executive-split {
