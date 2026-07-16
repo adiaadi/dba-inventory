@@ -114,10 +114,6 @@ ZABBIX_SERVER_GROUPS = {
         "SQLServer Servers",
         "SQL Server Server",
         "SQL Server Servers",
-        "SQLServer Database",
-        "SQLServer Databases",
-        "SQL Server Database",
-        "SQL Server Databases",
     ),
 }
 
@@ -591,10 +587,9 @@ def host_has_zabbix_group(host: Host, group_names: tuple[str, ...]) -> bool:
 
 
 def is_family_database_asset(host: Host, family: str) -> bool:
-    return has_database_marker(host) and (
-        has_tag_db_family(host, "database", family)
-        or host_has_zabbix_group(host, ZABBIX_DATABASE_GROUPS[family])
-    )
+    if host_has_zabbix_group(host, ZABBIX_DATABASE_GROUPS[family]):
+        return True
+    return has_database_marker(host) and has_tag_db_family(host, "database", family)
 
 
 def has_server_group_marker(host: Host) -> bool:
@@ -604,11 +599,7 @@ def has_server_group_marker(host: Host) -> bool:
 def is_family_server_asset(host: Host, family: str) -> bool:
     if has_tag_db_family(host, "server", family):
         return True
-    if has_os_marker(host) and has_tag_db_family(host, "database", family):
-        return True
-    return host_has_zabbix_group(host, ZABBIX_SERVER_GROUPS[family]) and (
-        has_os_marker(host) or has_server_group_marker(host)
-    )
+    return host_has_zabbix_group(host, ZABBIX_SERVER_GROUPS[family])
 
 
 def is_zabbix_database_asset(host: Host) -> bool:
