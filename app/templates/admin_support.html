@@ -48,8 +48,7 @@
               <tr>
                 <td>
                   <input type="hidden" name="host_ids" value="{{ host.id }}">
-                  <a class="table-link" href="/hosts/{{ host.id }}">{{ host.hostname }}</a>
-                  <div class="text-muted small">{{ host.ip_address or host.fqdn or "-" }}</div>
+                  <a class="table-link" href="/hosts/{{ host.id }}">{{ host.hostname|upper }}</a>
                 </td>
                 <td>{{ row.model }}</td>
                 <td>{{ row.vendor }}</td>
