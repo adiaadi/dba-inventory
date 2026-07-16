@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import ssl
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urljoin
@@ -59,6 +60,9 @@ class ZabbixClient:
         if not verify_ssl:
             return ssl._create_unverified_context()
         if ca_file:
+            ca_path = Path(ca_file)
+            if not ca_path.is_file():
+                raise ZabbixApiError(f"ZABBIX_CA_FILE must point to a certificate file: {ca_file}")
             return ssl.create_default_context(cafile=ca_file)
         return ssl.create_default_context()
 

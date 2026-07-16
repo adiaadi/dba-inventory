@@ -6,10 +6,10 @@ from threading import Lock
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.commands.import_zabbix_hosts import import_zabbix_hosts
 from app.core.config import get_settings
 from app.models import Host
 from app.services.zabbix import ZabbixApiError
+from app.services.zabbix_inventory import refresh_zabbix_inventory
 
 _refresh_lock = Lock()
 _last_attempt_at: datetime | None = None
@@ -55,7 +55,7 @@ def maybe_refresh_zabbix_cache(db: Session, force: bool = False) -> str | None:
 
     try:
         _last_attempt_at = now
-        created, updated = import_zabbix_hosts(verbose=False)
+        created, updated = refresh_zabbix_inventory(verbose=False)
         db.expire_all()
         if created + updated == 0:
             _last_error = "Zabbix refresh returned 0 hosts for configured groups."

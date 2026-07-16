@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import sys
 from datetime import UTC, datetime
 
 from sqlalchemy import select
@@ -8,7 +7,7 @@ from sqlalchemy import select
 from app.core.config import get_settings
 from app.db.session import SessionLocal
 from app.models import Host
-from app.services.zabbix import ZabbixApiError, ZabbixClient
+from app.services.zabbix import ZabbixClient
 from app.services.zabbix_items import (
     ZABBIX_DATABASE_ITEM_SEARCH_TERMS,
     ZABBIX_DETAIL_ITEM_KEYS,
@@ -217,7 +216,7 @@ def upsert_host(db, zabbix_host: dict, client: ZabbixClient) -> tuple[Host, bool
     return host, created
 
 
-def import_zabbix_hosts(group_names: list[str] | None = None, verbose: bool = True) -> tuple[int, int]:
+def refresh_zabbix_inventory(group_names: list[str] | None = None, verbose: bool = True) -> tuple[int, int]:
     settings = get_settings()
     if not settings.zabbix_url or not settings.zabbix_api_token:
         raise RuntimeError("ZABBIX_URL and ZABBIX_API_TOKEN must be set")
@@ -279,18 +278,3 @@ def import_zabbix_hosts(group_names: list[str] | None = None, verbose: bool = Tr
     finally:
         db.close()
     return created, updated
-
-
-def main() -> None:
-    group_names = sys.argv[1:] or None
-    try:
-        created, updated = import_zabbix_hosts(group_names)
-    except ZabbixApiError as exc:
-        raise SystemExit(f"Zabbix import failed: {exc}") from exc
-    except RuntimeError as exc:
-        raise SystemExit(str(exc)) from exc
-    print(f"Zabbix import complete. Created: {created}. Updated: {updated}.")
-
-
-if __name__ == "__main__":
-    main()

@@ -115,7 +115,7 @@ ZABBIX_API_TOKEN=your-zabbix-api-token
 ZABBIX_VERIFY_SSL=true
 ```
 
-Синхронизация обновляет `zabbix_hostid`, `zabbix_host_name`, `zabbix_url`, `zabbix_agent_availability`, `monitoring_status`, `problem_count` и время последней синхронизации.
+Синхронизация импортирует реальные hosts из Zabbix groups, обновляет tags/inventory/items, `environment`, `zabbix_hostid`, `zabbix_host_name`, `zabbix_url`, `zabbix_agent_availability`, `monitoring_status`, `problem_count` и время последней синхронизации.
 
 Для Docker Compose:
 
@@ -126,7 +126,7 @@ sudo docker compose -f docker-compose.ghcr.yml exec app ./sync_zabbix
 Импорт реальных хостов из групп Zabbix `Oracle Database`, `Oracle Server`, `PostgreSQL Database`, `PostgreSQL Server`, `SQLServer Database`, `SQLServer`:
 
 ```bash
-sudo docker compose -f docker-compose.ghcr.yml exec app ./import_zabbix_hosts
+sudo docker compose -f docker-compose.ghcr.yml exec app ./sync_zabbix
 ```
 
 Очистка demo seed-данных (`payments-*`, `billing-*`, `crm-*`) после импорта реальных Zabbix hosts:
@@ -142,7 +142,7 @@ sudo docker compose \
   -f docker-compose.ghcr.yml \
   -f docker-compose.zabbix-host.yml \
   -f docker-compose.zabbix-ca.yml \
-  exec app ./import_zabbix_hosts
+  exec app ./sync_zabbix
 ```
 
 ```bash
