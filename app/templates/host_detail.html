@@ -40,7 +40,7 @@
     <header class="server-titlebar">
       <div>
         <h1>{{ host.hostname }}</h1>
-        <p>{{ db_label }} / {{ host.environment }} / {{ host.role }}</p>
+        <p>{{ db_label }} / {{ host.environment|upper }} / {{ host.role }}</p>
       </div>
       <div class="server-status-pack">
         <span class="badge text-bg-{{ host.monitoring_status|status_class }}">{{ host.monitoring_status }}</span>

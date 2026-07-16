@@ -775,7 +775,7 @@ def dashboard(
         for label, count in platform_counts.items()
     ]
     db_type_counts = [(label, count) for label, count in db_family_server_counts.items()]
-    environment_counter = Counter(host.environment or "unknown" for host in server_hosts)
+    environment_counter = Counter((host.environment or "UNKNOWN").upper() for host in server_hosts)
     environment_counts = sorted(environment_counter.items())
     environment_labels = sorted(environment_counter.keys())
     db_family_palette = {
@@ -792,7 +792,7 @@ def dashboard(
                         [
                             host
                             for host in server_hosts
-                            if (host.environment or "unknown") == environment_label
+                            if (host.environment or "UNKNOWN").upper() == environment_label
                             and host_db_labels.get(host.id) == family
                         ]
                     )
@@ -948,7 +948,7 @@ def dashboard(
         "inventoryLabels": list(DB_FAMILIES),
         "inventoryServerValues": [db_family_server_counts[family] for family in DB_FAMILIES],
         "inventoryDatabaseValues": [db_family_counts[family] for family in DB_FAMILIES],
-        "environmentLabels": [environment or "unknown" for environment, _ in environment_counts],
+        "environmentLabels": [environment or "UNKNOWN" for environment, _ in environment_counts],
         "environmentValues": [count for _, count in environment_counts],
         "environmentMatrixLabels": environment_labels,
         "environmentMatrixDatasets": environment_matrix_datasets,

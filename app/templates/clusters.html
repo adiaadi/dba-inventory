@@ -32,7 +32,7 @@
               <div class="text-muted small">{{ cluster.description or "-" }}</div>
             </td>
             <td>{{ cluster.cluster_type }}</td>
-            <td><span class="pill">{{ cluster.environment }}</span></td>
+            <td><span class="pill">{{ cluster.environment|upper }}</span></td>
             <td>{{ cluster.primary_node or "-" }}</td>
             <td><span class="badge text-bg-{{ cluster.status|status_class }}">{{ cluster.status }}</span></td>
             <td>

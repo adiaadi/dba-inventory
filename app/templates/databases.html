@@ -37,7 +37,7 @@
               <div class="text-muted small">{{ database.db_type }}{% if database.port %}:{{ database.port }}{% endif %}</div>
             </td>
             <td>{{ database.host.hostname }}</td>
-            <td><span class="pill">{{ database.environment }}</span></td>
+            <td><span class="pill">{{ database.environment|upper }}</span></td>
             <td>{{ database.version or "-" }}</td>
             <td>
               <div>{{ database.powa_repository or "-" }}</div>

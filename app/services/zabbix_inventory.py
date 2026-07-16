@@ -118,16 +118,16 @@ def environment_from_tags(tags: dict[str, list[str]]) -> str:
     for tag_value in tags.get("environment", []):
         normalized = tag_value.strip().lower().replace("_", "-")
         if normalized in {"prod", "production"}:
-            return "prod"
+            return "PROD"
         if normalized in {"test", "tst"}:
-            return "test"
+            return "TEST"
         if normalized in {"dev", "development"}:
-            return "dev"
+            return "DEV"
         if normalized in {"standby", "dr"}:
-            return "standby"
+            return "STANDBY"
         if normalized:
-            return normalized[:40]
-    return "unknown"
+            return normalized[:40].upper()
+    return "UNKNOWN"
 
 
 def owner_team_from_db_type(db_type: str | None) -> str:

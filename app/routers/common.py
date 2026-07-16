@@ -1,4 +1,4 @@
-from sqlalchemy import Select, or_, select
+from sqlalchemy import Select, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.models import Cluster, ClusterMember, DatabaseInstance, Host
@@ -33,10 +33,17 @@ def merged_distinct_values(db: Session, *columns) -> list[str]:
     return sorted(values)
 
 
+def merged_upper_values(db: Session, *columns) -> list[str]:
+    values: set[str] = set()
+    for column in columns:
+        values.update(value.upper() for value in distinct_values(db, column))
+    return sorted(values)
+
+
 def get_filter_options(db: Session) -> dict[str, list[str]]:
     return {
         "db_types": merged_distinct_values(db, Host.db_type, DatabaseInstance.db_type),
-        "environments": merged_distinct_values(db, Host.environment, DatabaseInstance.environment, Cluster.environment),
+        "environments": merged_upper_values(db, Host.environment, DatabaseInstance.environment, Cluster.environment),
         "roles": merged_distinct_values(db, Host.role, DatabaseInstance.role, ClusterMember.role),
         "monitoring_statuses": distinct_values(db, Host.monitoring_status),
     }
@@ -56,7 +63,7 @@ def apply_host_filters(
             .distinct()
         )
     if environment:
-        stmt = stmt.where(Host.environment == environment)
+        stmt = stmt.where(func.upper(Host.environment) == environment.upper())
     if role:
         stmt = stmt.where(Host.role == role)
     if monitoring_status:
@@ -76,7 +83,7 @@ def apply_database_filters(
     if db_type:
         stmt = stmt.where(DatabaseInstance.db_type == db_type)
     if environment:
-        stmt = stmt.where(DatabaseInstance.environment == environment)
+        stmt = stmt.where(func.upper(DatabaseInstance.environment) == environment.upper())
     if role:
         stmt = stmt.where(DatabaseInstance.role == role)
     return stmt
@@ -99,5 +106,5 @@ def apply_cluster_filters(
             stmt = stmt.join(DatabaseInstance.host).where(Host.monitoring_status == monitoring_status)
         stmt = stmt.distinct()
     if environment:
-        stmt = stmt.where(Cluster.environment == environment)
+        stmt = stmt.where(func.upper(Cluster.environment) == environment.upper())
     return stmt
