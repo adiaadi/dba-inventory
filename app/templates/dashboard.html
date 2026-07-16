@@ -122,7 +122,6 @@
       {% set server_total = counts.servers or 0 %}
       {% set virtual_servers = platform_counts.Virtual or 0 %}
       {% set physical_servers = platform_counts.Physical or 0 %}
-      {% set unknown_servers = platform_counts.get("Unknown", 0) %}
       {% set virtual_pct = (virtual_servers / server_total * 100) if server_total else 0 %}
       {% set physical_pct = (physical_servers / server_total * 100) if server_total else 0 %}
       {% set physical_end = virtual_pct + physical_pct %}
@@ -194,12 +193,6 @@
                 <span><i class="summary-dot dot-physical"></i>{{ ui_text(request, "label.physical", "Physical") }}</span>
                 <strong>{{ platform_counts.Physical }}</strong>
               </div>
-              {% if unknown_servers %}
-                <div>
-                  <span><i class="summary-dot dot-unknown"></i>{{ ui_text(request, "label.unknown", "Unknown") }}</span>
-                  <strong>{{ unknown_servers }}</strong>
-                </div>
-              {% endif %}
             </div>
           </div>
         </div>
@@ -268,7 +261,7 @@
         <section class="overview-panel executive-panel executive-chart-panel">
           <div class="overview-section-heading">
             <h2>{{ ui_text(request, "panel.server_estate", "Server Estate") }}</h2>
-            <span>{{ ui_text(request, "panel.server_estate_note", "Virtual / Physical / Unknown") }}</span>
+            <span>{{ ui_text(request, "panel.server_estate_note", "Virtual / Physical") }}</span>
           </div>
           <div class="executive-chart-body">
             <div class="executive-chart-wrap">
@@ -281,7 +274,6 @@
             <div class="executive-chart-legend">
               <div><span><i class="summary-dot dot-virtual"></i>{{ ui_text(request, "label.virtual", "Virtual") }}</span><strong>{{ platform_counts.Virtual }}</strong></div>
               <div><span><i class="summary-dot dot-physical"></i>{{ ui_text(request, "label.physical", "Physical") }}</span><strong>{{ platform_counts.Physical }}</strong></div>
-              <div><span><i class="summary-dot dot-unknown"></i>{{ ui_text(request, "label.unknown", "Unknown") }}</span><strong>{{ platform_counts.Unknown }}</strong></div>
             </div>
           </div>
         </section>

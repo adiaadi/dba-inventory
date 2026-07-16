@@ -798,13 +798,17 @@ def dashboard(
         }
         for status, count in monitoring_counts
     ]
+    visible_platform_counts = {
+        label: platform_counts[label]
+        for label in ("Virtual", "Physical")
+    }
     platform_summary = [
         {
             "label": label,
             "count": count,
             "percent": round((count / counts["servers"]) * 100, 1) if counts["servers"] else 0,
         }
-        for label, count in platform_counts.items()
+        for label, count in visible_platform_counts.items()
     ]
     os_family_counter = Counter(
         operating_system_family_label(host_os_labels.get(host.id))
@@ -994,8 +998,8 @@ def dashboard(
         "environmentMatrixDatasets": environment_matrix_datasets,
         "availabilityLabels": [availability or "unknown" for availability, _ in availability_counts],
         "availabilityValues": [count for _, count in availability_counts],
-        "platformLabels": list(platform_counts.keys()),
-        "platformValues": list(platform_counts.values()),
+        "platformLabels": list(visible_platform_counts.keys()),
+        "platformValues": list(visible_platform_counts.values()),
         "osLabels": [label for label, _ in os_family_counts],
         "osValues": [count for _, count in os_family_counts],
     }
