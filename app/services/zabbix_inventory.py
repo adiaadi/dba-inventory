@@ -216,7 +216,22 @@ def upsert_host(db, zabbix_host: dict, client: ZabbixClient) -> tuple[Host, bool
     return host, created
 
 
-def refresh_zabbix_inventory(group_names: list[str] | None = None, verbose: bool = True) -> tuple[int, int]:
+def prune_stale_zabbix_hosts(db, seen_hostids: set[str], verbose: bool = True) -> int:
+    imported_hosts = db.scalars(select(Host).where(Host.zabbix_hostid.is_not(None))).all()
+    stale_hosts = [
+        host
+        for host in imported_hosts
+        if str(host.zabbix_hostid) not in seen_hostids
+        and "Imported from Zabbix groups:" in (host.notes or "")
+    ]
+    for host in stale_hosts:
+        if verbose:
+            print(f"deleted: {host.hostname} hostid={host.zabbix_hostid} no longer in Zabbix inventory groups")
+        db.delete(host)
+    return len(stale_hosts)
+
+
+def refresh_zabbix_inventory(group_names: list[str] | None = None, verbose: bool = True) -> tuple[int, int, int]:
     settings = get_settings()
     if not settings.zabbix_url or not settings.zabbix_api_token:
         raise RuntimeError("ZABBIX_URL and ZABBIX_API_TOKEN must be set")
@@ -247,11 +262,12 @@ def refresh_zabbix_inventory(group_names: list[str] | None = None, verbose: bool
     if not zabbix_hosts:
         if verbose:
             print("No Zabbix hosts found for selected groups.")
-        return 0, 0
+        return 0, 0, 0
 
     db = SessionLocal()
     created = 0
     updated = 0
+    deleted = 0
     seen_hostids: set[str] = set()
     try:
         for zabbix_host in zabbix_hosts:
@@ -271,10 +287,14 @@ def refresh_zabbix_inventory(group_names: list[str] | None = None, verbose: bool
                     f"{action}: {host.hostname} hostid={host.zabbix_hostid} "
                     f"status={host.monitoring_status} problems={host.problem_count}"
                 )
+        if group_names is None and not missing_group_names:
+            deleted = prune_stale_zabbix_hosts(db, seen_hostids, verbose=verbose)
+        elif verbose:
+            print("Stale host cleanup skipped because refresh used custom or incomplete group set.")
         db.commit()
     except Exception:
         db.rollback()
         raise
     finally:
         db.close()
-    return created, updated
+    return created, updated, deleted

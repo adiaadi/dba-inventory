@@ -55,9 +55,9 @@ def maybe_refresh_zabbix_cache(db: Session, force: bool = False) -> str | None:
 
     try:
         _last_attempt_at = now
-        created, updated = refresh_zabbix_inventory(verbose=False)
+        created, updated, deleted = refresh_zabbix_inventory(verbose=False)
         db.expire_all()
-        if created + updated == 0:
+        if created + updated + deleted == 0:
             _last_error = "Zabbix refresh returned 0 hosts for configured groups."
         else:
             _last_error = None
