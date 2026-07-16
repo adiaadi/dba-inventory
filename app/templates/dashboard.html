@@ -251,9 +251,9 @@
               </div>
             </div>
             <div class="executive-chart-legend">
-              <div><span><i class="summary-dot dot-oracle"></i>{{ ui_text(request, "label.oracle", "Oracle") }}</span><strong>{{ db_family_counts.Oracle }}</strong></div>
-              <div><span><i class="summary-dot dot-postgresql"></i>{{ ui_text(request, "label.postgresql", "PostgreSQL") }}</span><strong>{{ db_family_counts.PostgreSQL }}</strong></div>
-              <div><span><i class="summary-dot dot-sqlserver"></i>{{ ui_text(request, "label.sqlserver", "SQLServer") }}</span><strong>{{ db_family_counts.SQLServer }}</strong></div>
+              <div><span><img class="executive-legend-logo executive-legend-logo-wide" src="/static/img/oracle.png" alt="Oracle">{{ ui_text(request, "label.oracle", "Oracle") }}</span><strong>{{ db_family_counts.Oracle }}</strong></div>
+              <div><span><img class="executive-legend-logo" src="/static/img/postgresql.png" alt="PostgreSQL">{{ ui_text(request, "label.postgresql", "PostgreSQL") }}</span><strong>{{ db_family_counts.PostgreSQL }}</strong></div>
+              <div><span><img class="executive-legend-logo" src="/static/img/sqlserver.png" alt="SQL Server">{{ ui_text(request, "label.sqlserver", "SQLServer") }}</span><strong>{{ db_family_counts.SQLServer }}</strong></div>
             </div>
           </div>
         </section>
@@ -272,8 +272,8 @@
               </div>
             </div>
             <div class="executive-chart-legend">
-              <div><span><i class="summary-dot dot-virtual"></i>{{ ui_text(request, "label.virtual", "Virtual") }}</span><strong>{{ platform_counts.Virtual }}</strong></div>
-              <div><span><i class="summary-dot dot-physical"></i>{{ ui_text(request, "label.physical", "Physical") }}</span><strong>{{ platform_counts.Physical }}</strong></div>
+              <div><span><i class="bi bi-cloud executive-legend-icon"></i>{{ ui_text(request, "label.virtual", "Virtual") }}</span><strong>{{ platform_counts.Virtual }}</strong></div>
+              <div><span><i class="bi bi-server executive-legend-icon"></i>{{ ui_text(request, "label.physical", "Physical") }}</span><strong>{{ platform_counts.Physical }}</strong></div>
             </div>
           </div>
         </section>
