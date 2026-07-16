@@ -60,7 +60,7 @@
           </div>
         {% else %}
           <div>
-            <h1>{{ section_title }}</h1>
+            <h1 class="{% if current_view in ['overview', 'hosts'] %}section-title-strong{% endif %}">{{ section_title }}</h1>
             <p>{{ section_subtitle }}</p>
           </div>
         {% endif %}

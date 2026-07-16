@@ -459,6 +459,10 @@ body {
   min-width: 0;
 }
 
+.section-title-strong {
+  font-weight: 900;
+}
+
 .overview-heading > p {
   color: #5b6778;
   margin: 0;
