@@ -802,11 +802,11 @@
   });
   makeChart("dbTypeChart", "bar", dashboardData.dbTypeLabels, dashboardData.dbTypeValues);
   makeChart("executiveDatabasePortfolioChart", "doughnut", dashboardData.inventoryLabels, dashboardData.inventoryDatabaseValues, {
-    cutout: "64%",
+    cutout: "68%",
     datasetBackgroundColor: executiveDoughnutPalette,
-    datasetBorderWidth: 4,
-    datasetBorderRadius: 8,
-    datasetHoverOffset: 10,
+    datasetBorderWidth: 3,
+    datasetBorderRadius: 0,
+    datasetHoverOffset: 6,
     plugins: {
       legend: { display: false },
       tooltip: {
@@ -816,11 +816,11 @@
     },
   });
   makeChart("executiveServerEstateChart", "doughnut", dashboardData.platformLabels, dashboardData.platformValues, {
-    cutout: "64%",
+    cutout: "68%",
     datasetBackgroundColor: executiveDoughnutPalette,
-    datasetBorderWidth: 4,
-    datasetBorderRadius: 8,
-    datasetHoverOffset: 10,
+    datasetBorderWidth: 3,
+    datasetBorderRadius: 0,
+    datasetHoverOffset: 6,
     plugins: {
       legend: { display: false },
       tooltip: {
