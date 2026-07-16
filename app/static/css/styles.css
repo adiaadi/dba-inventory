@@ -1662,6 +1662,21 @@ body {
   min-width: 168px;
 }
 
+.column-filter-form {
+  align-items: center;
+  display: inline-grid;
+  gap: 4px;
+  grid-template-columns: auto minmax(72px, 84px);
+  margin: 0;
+}
+
+.column-filter-form .form-select {
+  font-size: 0.72rem;
+  min-height: 28px;
+  padding-bottom: 2px;
+  padding-top: 2px;
+}
+
 .chart-box {
   height: 180px;
   position: relative;

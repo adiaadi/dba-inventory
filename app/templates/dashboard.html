@@ -20,6 +20,7 @@
     <form class="overview-filters" action="/" method="get">
       <input type="hidden" name="view" value="{{ current_view }}">
       <input type="hidden" name="asset_view" value="{{ current_asset_view }}">
+      <input type="hidden" name="virtual" value="{{ active_virtual_filter or '' }}">
       <div class="sidebar-caption">{{ ui_text(request, "sidebar.filters", "Filters") }}</div>
       <label>
         {{ ui_text(request, "filter.environment", "Environment") }}
@@ -70,6 +71,7 @@
           <input type="hidden" name="asset_view" value="{{ current_asset_view }}">
           <input type="hidden" name="db_type" value="{{ filters.db_type or '' }}">
           <input type="hidden" name="environment" value="{{ filters.environment or '' }}">
+          <input type="hidden" name="virtual" value="{{ active_virtual_filter or '' }}">
           <input type="hidden" name="refresh" value="1">
           <button class="btn btn-outline-secondary btn-sm" type="submit">
             <i class="bi bi-arrow-repeat"></i> {{ ui_text(request, "action.refresh_zabbix", "Refresh Zabbix") }}
@@ -384,6 +386,7 @@
                 <input type="hidden" name="view" value="hosts">
                 <input type="hidden" name="asset_view" value="{{ current_asset_view }}">
                 <input type="hidden" name="environment" value="{{ filters.environment or '' }}">
+                <input type="hidden" name="virtual" value="{{ active_virtual_filter or '' }}">
                 <select class="form-select form-select-sm" name="db_type" aria-label="{{ ui_text(request, "filter.db_type", "DB Type") }}" onchange="this.form.submit()">
                   <option value="">{{ ui_text(request, "filter.all", "All") }}</option>
                   {% for option in server_db_type_options %}
@@ -407,7 +410,20 @@
                 {% endif %}
                 <th>{{ ui_text(request, "label.db_type", "DB Type") }}</th>
                 {% if not is_database_asset_view %}
-                  <th>{{ ui_text(request, "label.virtual", "Virtual") }}</th>
+                  <th>
+                    <form class="column-filter-form" action="/" method="get">
+                      <input type="hidden" name="view" value="{{ current_view }}">
+                      <input type="hidden" name="asset_view" value="{{ current_asset_view }}">
+                      <input type="hidden" name="db_type" value="{{ filters.db_type or '' }}">
+                      <input type="hidden" name="environment" value="{{ filters.environment or '' }}">
+                      <span>{{ ui_text(request, "label.virtual", "Virtual") }}</span>
+                      <select class="form-select form-select-sm" name="virtual" aria-label="{{ ui_text(request, "label.virtual", "Virtual") }}" onchange="this.form.submit()">
+                        <option value="">{{ ui_text(request, "filter.all", "All") }}</option>
+                        <option value="YES" {% if active_virtual_filter == "YES" %}selected{% endif %}>YES</option>
+                        <option value="NO" {% if active_virtual_filter == "NO" %}selected{% endif %}>NO</option>
+                      </select>
+                    </form>
+                  </th>
                   <th>{{ ui_text(request, "label.server_model", "Server model") }}</th>
                   <th>{{ ui_text(request, "label.server_vendor", "Server vendor") }}</th>
                   <th>{{ ui_text(request, "label.core", "Core") }}</th>

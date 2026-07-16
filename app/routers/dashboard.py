@@ -343,6 +343,13 @@ def virtual_status_label(platform: str | None) -> str:
     return "-"
 
 
+def normalized_virtual_filter(value: str | None) -> str | None:
+    normalized = (value or "").strip().upper()
+    if normalized in {"YES", "NO"}:
+        return normalized
+    return None
+
+
 def is_virtual_server(host: Host) -> bool:
     explicit_value = first_tag_value(host, ("virtual", "is_virtual", "vm"))
     if explicit_value:
@@ -728,6 +735,7 @@ def dashboard(
     environment: str | None = None,
     role: str | None = None,
     monitoring_status: str | None = None,
+    virtual: str | None = None,
     refresh: bool = False,
     db: Session = Depends(get_db),
 ):
@@ -735,6 +743,7 @@ def dashboard(
     current_view = view if view in allowed_views else "overview"
     current_asset_view = asset_view if asset_view in {"databases", "servers"} else "databases"
     filters = active_filters(db_type, environment, role, monitoring_status)
+    active_virtual_filter = normalized_virtual_filter(virtual)
     zabbix_refresh_error = maybe_refresh_zabbix_cache(db, force=refresh)
     counts = {
         "hosts": db.scalar(select(func.count(Host.id))) or 0,
@@ -950,6 +959,12 @@ def dashboard(
         type_server_assets = unique_hosts(
             [host for host in type_base_hosts if is_family_server_asset(host, db_type_view["label"])]
         )
+        if active_virtual_filter and current_asset_view == "servers":
+            type_server_assets = [
+                host
+                for host in type_server_assets
+                if host_virtual_labels.get(host.id) == active_virtual_filter
+            ]
         display_hosts = type_database_assets if current_asset_view == "databases" else type_server_assets
 
     database_assets = unique_hosts([
@@ -963,6 +978,12 @@ def dashboard(
         if is_zabbix_server_asset(host)
     ])
     filtered_server_hosts = unique_hosts([host for host in hosts_list if is_zabbix_server_asset(host)])
+    if active_virtual_filter:
+        filtered_server_hosts = [
+            host
+            for host in filtered_server_hosts
+            if host_virtual_labels.get(host.id) == active_virtual_filter
+        ]
     if current_view == "hosts":
         display_hosts = filtered_server_hosts
 
@@ -1070,6 +1091,7 @@ def dashboard(
             "host_ram_labels": host_ram_labels,
             "server_db_type_options": ["PostgreSQL", "SQLServer", "Oracle"],
             "active_server_db_type": requested_db_type,
+            "active_virtual_filter": active_virtual_filter,
             "database_assets": database_assets,
             "server_assets": server_assets,
             "type_database_assets": type_database_assets,
