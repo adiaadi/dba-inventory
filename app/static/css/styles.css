@@ -658,6 +658,22 @@ body {
   grid-template-columns: minmax(108px, 132px) minmax(0, 1fr);
 }
 
+.inventory-kpi-chart-wrap {
+  align-items: center;
+  aspect-ratio: 1;
+  display: flex;
+  justify-content: center;
+  min-width: 108px;
+  position: relative;
+}
+
+.inventory-kpi-chart-wrap canvas {
+  height: 100% !important;
+  position: relative;
+  width: 100% !important;
+  z-index: 2;
+}
+
 .inventory-kpi-donut {
   align-items: center;
   aspect-ratio: 1;
@@ -705,9 +721,15 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1px;
+  height: 58%;
+  justify-content: center;
+  left: 21%;
   line-height: 1;
-  position: relative;
+  pointer-events: none;
+  position: absolute;
   text-align: center;
+  top: 21%;
+  width: 58%;
   z-index: 1;
 }
 
@@ -2116,6 +2138,7 @@ body {
     grid-template-columns: 1fr;
   }
 
+  .inventory-kpi-chart-wrap,
   .inventory-kpi-donut {
     justify-self: center;
     max-width: 132px;

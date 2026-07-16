@@ -118,13 +118,12 @@
       {% set db_total = counts.databases or 0 %}
       {% set db_oracle_pct = (db_family_counts.Oracle / db_total * 100) if db_total else 0 %}
       {% set db_postgresql_pct = (db_family_counts.PostgreSQL / db_total * 100) if db_total else 0 %}
-      {% set db_postgresql_end = db_oracle_pct + db_postgresql_pct %}
+      {% set db_sqlserver_pct = (db_family_counts.SQLServer / db_total * 100) if db_total else 0 %}
       {% set server_total = counts.servers or 0 %}
       {% set virtual_servers = platform_counts.Virtual or 0 %}
       {% set physical_servers = platform_counts.Physical or 0 %}
       {% set virtual_pct = (virtual_servers / server_total * 100) if server_total else 0 %}
       {% set physical_pct = (physical_servers / server_total * 100) if server_total else 0 %}
-      {% set physical_end = virtual_pct + physical_pct %}
       <section class="inventory-summary-groups">
         <div class="inventory-summary-card">
           <div class="inventory-summary-head">
@@ -135,11 +134,8 @@
             <i class="bi bi-database-check"></i>
           </div>
           <div class="inventory-summary-body">
-            <div
-              class="inventory-kpi-donut inventory-kpi-donut-db"
-              style="--db-oracle-end: {{ '%.2f'|format(db_oracle_pct) }}%; --db-postgresql-end: {{ '%.2f'|format(db_postgresql_end) }}%;"
-              aria-label="Database KPI chart"
-            >
+            <div class="inventory-kpi-chart-wrap" aria-label="Database KPI chart">
+              <canvas id="inventoryDatabasePortfolioChart"></canvas>
               <div class="inventory-kpi-center">
                 <strong>{{ counts.databases }}</strong>
                 <span>{{ ui_text(request, "label.db_assets", "DB assets") }}</span>
@@ -148,15 +144,15 @@
             <div class="inventory-summary-list">
               <div>
                 <span><i class="summary-dot dot-oracle"></i>{{ ui_text(request, "label.oracle", "Oracle") }}</span>
-                <strong>{{ db_family_counts.Oracle }}</strong>
+                <strong>{{ '%.1f'|format(db_oracle_pct) }}%</strong>
               </div>
               <div>
                 <span><i class="summary-dot dot-postgresql"></i>{{ ui_text(request, "label.postgresql", "PostgreSQL") }}</span>
-                <strong>{{ db_family_counts.PostgreSQL }}</strong>
+                <strong>{{ '%.1f'|format(db_postgresql_pct) }}%</strong>
               </div>
               <div>
                 <span><i class="summary-dot dot-sqlserver"></i>{{ ui_text(request, "label.sqlserver", "SQLServer") }}</span>
-                <strong>{{ db_family_counts.SQLServer }}</strong>
+                <strong>{{ '%.1f'|format(db_sqlserver_pct) }}%</strong>
               </div>
             </div>
           </div>
@@ -170,11 +166,8 @@
             <i class="bi bi-hdd-network"></i>
           </div>
           <div class="inventory-summary-body">
-            <div
-              class="inventory-kpi-donut inventory-kpi-donut-server"
-              style="--server-virtual-end: {{ '%.2f'|format(virtual_pct) }}%; --server-physical-end: {{ '%.2f'|format(physical_end) }}%;"
-              aria-label="Server KPI chart"
-            >
+            <div class="inventory-kpi-chart-wrap" aria-label="Server KPI chart">
+              <canvas id="inventoryServerEstateChart"></canvas>
               <div class="inventory-kpi-center">
                 <strong>{{ counts.servers }}</strong>
                 <span>{{ ui_text(request, "label.servers", "Servers") }}</span>
@@ -182,16 +175,12 @@
             </div>
             <div class="inventory-summary-list">
               <div>
-                <span><i class="summary-dot dot-total"></i>{{ ui_text(request, "label.total", "Total") }}</span>
-                <strong>{{ counts.servers }}</strong>
-              </div>
-              <div>
                 <span><i class="summary-dot dot-virtual"></i>{{ ui_text(request, "label.virtual", "Virtual") }}</span>
-                <strong>{{ platform_counts.Virtual }}</strong>
+                <strong>{{ '%.1f'|format(virtual_pct) }}%</strong>
               </div>
               <div>
                 <span><i class="summary-dot dot-physical"></i>{{ ui_text(request, "label.physical", "Physical") }}</span>
-                <strong>{{ platform_counts.Physical }}</strong>
+                <strong>{{ '%.1f'|format(physical_pct) }}%</strong>
               </div>
             </div>
           </div>
@@ -206,6 +195,13 @@
         "SQL Server": "/static/img/sqlserver.png",
         "SQLServer": "/static/img/sqlserver.png"
       } %}
+      {% set overview_db_total = counts.databases or 0 %}
+      {% set overview_oracle_pct = (db_family_counts.Oracle / overview_db_total * 100) if overview_db_total else 0 %}
+      {% set overview_postgresql_pct = (db_family_counts.PostgreSQL / overview_db_total * 100) if overview_db_total else 0 %}
+      {% set overview_sqlserver_pct = (db_family_counts.SQLServer / overview_db_total * 100) if overview_db_total else 0 %}
+      {% set overview_server_total = counts.servers or 0 %}
+      {% set overview_virtual_pct = (platform_counts.Virtual / overview_server_total * 100) if overview_server_total else 0 %}
+      {% set overview_physical_pct = (platform_counts.Physical / overview_server_total * 100) if overview_server_total else 0 %}
       <div class="executive-grid executive-summary-grid">
         <section class="overview-panel executive-panel executive-chart-panel">
           <div class="overview-section-heading">
@@ -221,9 +217,9 @@
               </div>
             </div>
             <div class="executive-chart-legend">
-              <div><span><img class="executive-legend-logo executive-legend-logo-wide" src="/static/img/oracle.png" alt="Oracle">{{ ui_text(request, "label.oracle", "Oracle") }}</span><strong>{{ db_family_counts.Oracle }}</strong></div>
-              <div><span><img class="executive-legend-logo" src="/static/img/postgresql.png" alt="PostgreSQL">{{ ui_text(request, "label.postgresql", "PostgreSQL") }}</span><strong>{{ db_family_counts.PostgreSQL }}</strong></div>
-              <div><span><img class="executive-legend-logo" src="/static/img/sqlserver.png" alt="SQL Server">{{ ui_text(request, "label.sqlserver", "SQLServer") }}</span><strong>{{ db_family_counts.SQLServer }}</strong></div>
+              <div><span><img class="executive-legend-logo executive-legend-logo-wide" src="/static/img/oracle.png" alt="Oracle">{{ ui_text(request, "label.oracle", "Oracle") }}</span><strong>{{ '%.1f'|format(overview_oracle_pct) }}%</strong></div>
+              <div><span><img class="executive-legend-logo" src="/static/img/postgresql.png" alt="PostgreSQL">{{ ui_text(request, "label.postgresql", "PostgreSQL") }}</span><strong>{{ '%.1f'|format(overview_postgresql_pct) }}%</strong></div>
+              <div><span><img class="executive-legend-logo" src="/static/img/sqlserver.png" alt="SQL Server">{{ ui_text(request, "label.sqlserver", "SQLServer") }}</span><strong>{{ '%.1f'|format(overview_sqlserver_pct) }}%</strong></div>
             </div>
           </div>
         </section>
@@ -242,8 +238,8 @@
               </div>
             </div>
             <div class="executive-chart-legend">
-              <div><span><i class="bi bi-cloud executive-legend-icon"></i>{{ ui_text(request, "label.virtual", "Virtual") }}</span><strong>{{ platform_counts.Virtual }}</strong></div>
-              <div><span><i class="bi bi-server executive-legend-icon"></i>{{ ui_text(request, "label.physical", "Physical") }}</span><strong>{{ platform_counts.Physical }}</strong></div>
+              <div><span><i class="bi bi-cloud executive-legend-icon"></i>{{ ui_text(request, "label.virtual", "Virtual") }}</span><strong>{{ '%.1f'|format(overview_virtual_pct) }}%</strong></div>
+              <div><span><i class="bi bi-server executive-legend-icon"></i>{{ ui_text(request, "label.physical", "Physical") }}</span><strong>{{ '%.1f'|format(overview_physical_pct) }}%</strong></div>
             </div>
           </div>
         </section>
@@ -648,7 +644,7 @@
     const total = values.reduce((sum, value) => sum + Number(value || 0), 0);
     const value = Number(context.raw || 0);
     const percent = total ? ((value / total) * 100).toFixed(1).replace(".0", "") : "0";
-    return `${context.label}: ${value} (${percent}%)`;
+    return `${percent}%`;
   }
 
   function makeDatasetChart(id, type, labels, datasets, options = {}) {
@@ -746,6 +742,42 @@
     },
   });
   makeChart("dbTypeChart", "bar", dashboardData.dbTypeLabels, dashboardData.dbTypeValues);
+  makeChart("inventoryDatabasePortfolioChart", "doughnut", dashboardData.inventoryLabels, dashboardData.inventoryDatabaseValues, {
+    cutout: "68%",
+    datasetBackgroundColor: executiveDoughnutPalette,
+    datasetBorderWidth: 3,
+    datasetBorderRadius: 0,
+    datasetHoverOffset: 6,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        enabled: true,
+        displayColors: false,
+        callbacks: {
+          title: () => [],
+          label: percentTooltipLabel,
+        },
+      },
+    },
+  });
+  makeChart("inventoryServerEstateChart", "doughnut", dashboardData.platformLabels, dashboardData.platformValues, {
+    cutout: "68%",
+    datasetBackgroundColor: executiveDoughnutPalette,
+    datasetBorderWidth: 3,
+    datasetBorderRadius: 0,
+    datasetHoverOffset: 6,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        enabled: true,
+        displayColors: false,
+        callbacks: {
+          title: () => [],
+          label: percentTooltipLabel,
+        },
+      },
+    },
+  });
   makeChart("executiveDatabasePortfolioChart", "doughnut", dashboardData.inventoryLabels, dashboardData.inventoryDatabaseValues, {
     cutout: "68%",
     datasetBackgroundColor: executiveDoughnutPalette,
@@ -756,7 +788,11 @@
       legend: { display: false },
       tooltip: {
         enabled: true,
-        callbacks: { label: percentTooltipLabel },
+        displayColors: false,
+        callbacks: {
+          title: () => [],
+          label: percentTooltipLabel,
+        },
       },
     },
   });
@@ -770,7 +806,11 @@
       legend: { display: false },
       tooltip: {
         enabled: true,
-        callbacks: { label: percentTooltipLabel },
+        displayColors: false,
+        callbacks: {
+          title: () => [],
+          label: percentTooltipLabel,
+        },
       },
     },
   });
