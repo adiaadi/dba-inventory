@@ -7,6 +7,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import desc, func, select
 from sqlalchemy.orm import Session, selectinload
 
+from app.core.config import get_settings
 from app.db.session import get_db
 from app.models import Cluster, ClusterMember, DatabaseInstance, Host
 from app.routers.common import (
@@ -22,9 +23,10 @@ from app.services.zabbix_items import (
     server_vendor_item_label,
 )
 from app.services.zabbix_refresh import maybe_refresh_zabbix_cache
-from app.web import templates
+from app.web import templates, ui_text_value
 
 router = APIRouter()
+settings = get_settings()
 
 DB_TYPE_VIEWS = {
     "oracle": {
@@ -668,6 +670,9 @@ async def update_host_support_end_date(
     request: Request,
     db: Session = Depends(get_db),
 ):
+    if request.session.get("admin_user") != settings.admin_username:
+        return RedirectResponse("/admin/login", status_code=303)
+
     body = (await request.body()).decode("utf-8")
     form_data = parse_qs(body)
     raw_value = (form_data.get("support_end_date") or [""])[0].strip()
@@ -958,35 +963,39 @@ def dashboard(
         "platformValues": list(platform_counts.values()),
     }
     section_tabs = [
-        {"key": "overview", "label": "Overview", "icon": "bi-grid-1x2"},
-        {"key": "hosts", "label": "Servers", "icon": "bi-hdd-network"},
-        {"key": "oracle", "label": "Oracle", "icon": "bi-database"},
-        {"key": "postgresql", "label": "PostgreSQL", "icon": "bi-database-fill"},
-        {"key": "sqlserver", "label": "SQLServer", "icon": "bi-server"},
+        {"key": "overview", "label": ui_text_value(request, "nav.overview", "Overview"), "icon": "bi-grid-1x2"},
+        {"key": "hosts", "label": ui_text_value(request, "nav.servers", "Servers"), "icon": "bi-hdd-network"},
+        {"key": "oracle", "label": ui_text_value(request, "nav.oracle", "Oracle"), "icon": "bi-database"},
+        {"key": "postgresql", "label": ui_text_value(request, "nav.postgresql", "PostgreSQL"), "icon": "bi-database-fill"},
+        {"key": "sqlserver", "label": ui_text_value(request, "nav.sqlserver", "SQLServer"), "icon": "bi-server"},
     ]
     section_titles = {
-        "overview": "SUMMARY OVERVIEW",
-        "hosts": "SERVERS OVERVIEW",
-        "databases": "DATABASE ASSETS INVENTORY",
-        "clusters": "HA/DR CLUSTERS INVENTORY",
-        **{key: config["title"] for key, config in DB_TYPE_VIEWS.items()},
+        "overview": ui_text_value(request, "section.overview.title", "SUMMARY OVERVIEW"),
+        "hosts": ui_text_value(request, "section.hosts.title", "SERVERS OVERVIEW"),
+        "databases": ui_text_value(request, "section.databases.title", "DATABASE ASSETS INVENTORY"),
+        "clusters": ui_text_value(request, "section.clusters.title", "HA/DR CLUSTERS INVENTORY"),
+        "oracle": ui_text_value(request, "section.oracle.title", DB_TYPE_VIEWS["oracle"]["title"]),
+        "postgresql": ui_text_value(request, "section.postgresql.title", DB_TYPE_VIEWS["postgresql"]["title"]),
+        "sqlserver": ui_text_value(request, "section.sqlserver.title", DB_TYPE_VIEWS["sqlserver"]["title"]),
     }
+    servers_label = ui_text_value(request, "label.servers", "Servers")
+    records_label = ui_text_value(request, "label.records", "records")
     section_subtitles = {
         "overview": (
-            f"{counts['servers']} Servers, Oracle DB {db_family_counts['Oracle']}, "
+            f"{counts['servers']} {servers_label}, Oracle DB {db_family_counts['Oracle']}, "
             f"PostgreSQL DB {db_family_counts['PostgreSQL']}, SQLServer DB {db_family_counts['SQLServer']}"
         ),
-        "hosts": f"{len(filtered_server_hosts)} Servers in current view",
+        "hosts": f"{len(filtered_server_hosts)} {servers_label} in current view",
         "databases": f"{len(database_assets)} DB assets in current view",
         "clusters": f"{len(clusters)} clusters in current view",
         **{
-            key: f"{len(display_hosts) if key == current_view else 0} records in current view"
+            key: f"{len(display_hosts) if key == current_view else 0} {records_label} in current view"
             for key in DB_TYPE_VIEWS
         },
     }
     if db_type_view:
         section_subtitles[current_view] = (
-            f"{len(type_database_assets)} databases, {len(type_server_assets)} Servers from Zabbix"
+            f"{len(type_database_assets)} databases, {len(type_server_assets)} {servers_label} from Zabbix"
         )
 
     return templates.TemplateResponse(

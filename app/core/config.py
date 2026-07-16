@@ -27,6 +27,9 @@ class Settings:
     app_name: str = getenv("APP_NAME", "DBA Inventory")
     app_env: str = getenv("APP_ENV", "local")
     app_timezone: str = getenv("APP_TIMEZONE", "Asia/Almaty")
+    session_secret: str = getenv("SESSION_SECRET", "change-me-admin-session-secret")
+    admin_username: str = getenv("ADMIN_USERNAME", "admin")
+    admin_password: str = getenv("ADMIN_PASSWORD", "admin")
     database_url: str = getenv(
         "DATABASE_URL",
         "postgresql+psycopg://dba_inventory:dba_inventory@localhost:5432/dba_inventory",

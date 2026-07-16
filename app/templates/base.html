@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Database Inventory{% endblock %}</title>
+  <title>{% block title %}{{ ui_text(request, "page.title", "Database Inventory") }}{% endblock %}</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link href="/static/css/styles.css" rel="stylesheet">
@@ -15,7 +15,7 @@
         <span class="brand-logo-wrap">
           <img class="brand-logo" src="/static/img/bnk_logo_246x164.png" alt="BNK Commercial Bank">
         </span>
-        <span>DATABASE INVENTORY</span>
+        <span>{{ ui_text(request, "brand.title", "DATABASE INVENTORY") }}</span>
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -24,19 +24,33 @@
         <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
           <li class="nav-item">
             <a class="nav-link external-nav-link" href="https://zabbix.bnkc.com/zabbix/zabbix.php?action=dashboard.view&dashboardid=1&from=now-1h&to=now" target="_blank" rel="noreferrer">
-              <i class="bi bi-activity"></i> ZABBIX
+              <i class="bi bi-activity"></i> {{ ui_text(request, "external.zabbix", "ZABBIX") }}
             </a>
           </li>
           <li class="nav-item">
             <a class="nav-link external-nav-link" href="http://powa.bnkc.com:8888/server/" target="_blank" rel="noreferrer">
-              <i class="bi bi-speedometer2"></i> PoWA
+              <i class="bi bi-speedometer2"></i> {{ ui_text(request, "external.powa", "PoWA") }}
             </a>
           </li>
           <li class="nav-item">
             <a class="nav-link external-nav-link" href="https://oem.bnkc.com:7803/em/faces/logon/core-uifwk-console-login" target="_blank" rel="noreferrer">
-              <i class="bi bi-box-arrow-up-right"></i> OEM
+              <i class="bi bi-box-arrow-up-right"></i> {{ ui_text(request, "external.oem", "OEM") }}
             </a>
           </li>
+          <li class="nav-item">
+            <a class="nav-link external-nav-link" href="/admin">
+              <i class="bi bi-sliders"></i> {{ ui_text(request, "nav.admin", "Admin") }}
+            </a>
+          </li>
+          {% if request.session.get("admin_user") %}
+            <li class="nav-item">
+              <form method="post" action="/admin/logout" class="d-inline">
+                <button class="nav-link external-nav-link border-0 bg-transparent" type="submit">
+                  <i class="bi bi-box-arrow-right"></i> {{ ui_text(request, "nav.logout", "Logout") }}
+                </button>
+              </form>
+            </li>
+          {% endif %}
         </ul>
       </div>
     </div>

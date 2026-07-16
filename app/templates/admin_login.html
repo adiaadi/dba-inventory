@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ ui_text(request, "admin.login_title", "Admin Login") }}{% endblock %}
+
+{% block content %}
+<div class="admin-auth-shell">
+  <section class="admin-auth-card">
+    <div class="admin-auth-icon">
+      <i class="bi bi-shield-lock"></i>
+    </div>
+    <h1>{{ ui_text(request, "admin.login_title", "Admin Login") }}</h1>
+    <p>Sign in as admin to edit portal labels and physical server support dates.</p>
+    {% if error %}
+      <div class="alert alert-danger py-2" role="alert">Invalid admin login or password.</div>
+    {% endif %}
+    <form method="post" action="/admin/login">
+      <label class="form-label">
+        Login
+        <input class="form-control" name="username" autocomplete="username" value="admin" required>
+      </label>
+      <label class="form-label">
+        Password
+        <input class="form-control" type="password" name="password" autocomplete="current-password" required>
+      </label>
+      <button class="btn btn-primary w-100" type="submit">
+        <i class="bi bi-box-arrow-in-right"></i> Login
+      </button>
+    </form>
+  </section>
+</div>
+{% endblock %}

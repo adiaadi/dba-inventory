@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}{{ ui_text(request, "admin.support_title", "Physical Servers Support") }}{% endblock %}
+
+{% block content %}
+<div class="admin-shell">
+  <header class="admin-header">
+    <div>
+      <h1>{{ ui_text(request, "admin.support_title", "Physical Servers Support") }}</h1>
+      <p>Edit vendor support end dates for physical servers. The server list uses the same Zabbix-derived platform rules as the dashboard.</p>
+    </div>
+    <div class="admin-actions">
+      <a class="btn btn-outline-secondary btn-sm" href="/admin/texts">
+        <i class="bi bi-fonts"></i> {{ ui_text(request, "admin.texts_title", "Editable Texts") }}
+      </a>
+    </div>
+  </header>
+
+  {% if saved %}
+    <div class="alert alert-success py-2" role="alert">Support dates saved.</div>
+  {% endif %}
+
+  <nav class="admin-tabs">
+    <a href="/admin/texts"><i class="bi bi-fonts"></i> Texts</a>
+    <a class="active" href="/admin/support"><i class="bi bi-calendar-check"></i> Support Dates</a>
+  </nav>
+
+  <form method="post" action="/admin/support">
+    <section class="admin-panel">
+      <div class="admin-panel-head">
+        <h2>{{ ui_text(request, "panel.physical_support", "Physical Servers Support") }}</h2>
+        <span>{{ rows|length }} {{ ui_text(request, "label.physical_servers", "physical servers") }}</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm align-middle table-hover overview-table">
+          <thead>
+            <tr>
+              <th>{{ ui_text(request, "label.server", "Server") }}</th>
+              <th>{{ ui_text(request, "label.model", "Model") }}</th>
+              <th>{{ ui_text(request, "label.vendor", "Vendor") }}</th>
+              <th>{{ ui_text(request, "label.datacenter", "Datacenter") }}</th>
+              <th>{{ ui_text(request, "label.support_end", "Support end") }}</th>
+              <th>{{ ui_text(request, "label.status", "Status") }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+              {% set host = row.host %}
+              <tr>
+                <td>
+                  <input type="hidden" name="host_ids" value="{{ host.id }}">
+                  <a class="table-link" href="/hosts/{{ host.id }}">{{ host.hostname }}</a>
+                  <div class="text-muted small">{{ host.ip_address or host.fqdn or "-" }}</div>
+                </td>
+                <td>{{ row.model }}</td>
+                <td>{{ row.vendor }}</td>
+                <td>{{ row.datacenter }}</td>
+                <td>
+                  <input class="form-control form-control-sm admin-date-input" type="date" name="support_end_date_{{ host.id }}" value="{{ host.support_end_date or '' }}">
+                </td>
+                <td><span class="badge text-bg-light border">{{ row.support_status }}</span></td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="6" class="empty-state">{{ ui_text(request, "empty.no_physical_servers", "No physical servers found.") }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <div class="admin-save-bar">
+      <button class="btn btn-primary" type="submit">
+        <i class="bi bi-save"></i> {{ ui_text(request, "action.save", "Save") }}
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

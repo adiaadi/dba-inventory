@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Database Inventory{% endblock %}
+{% block title %}{{ ui_text(request, "page.title", "Database Inventory") }}{% endblock %}
 
 {% block content %}
 <div class="overview-shell">
@@ -9,7 +9,7 @@
     </div>
 
     <div class="overview-nav">
-      <div class="sidebar-caption">Page Navigator</div>
+      <div class="sidebar-caption">{{ ui_text(request, "sidebar.page_navigator", "Page Navigator") }}</div>
       {% for tab in section_tabs %}
         <a class="overview-nav-item {% if current_view == tab.key %}active{% endif %}" href="/?view={{ tab.key }}">
           {{ tab.label }}
@@ -20,28 +20,28 @@
     <form class="overview-filters" action="/" method="get">
       <input type="hidden" name="view" value="{{ current_view }}">
       <input type="hidden" name="asset_view" value="{{ current_asset_view }}">
-      <div class="sidebar-caption">Filters</div>
+      <div class="sidebar-caption">{{ ui_text(request, "sidebar.filters", "Filters") }}</div>
       <label>
-        Environment
+        {{ ui_text(request, "filter.environment", "Environment") }}
         <select class="form-select form-select-sm" name="environment">
-          <option value="">All</option>
+          <option value="">{{ ui_text(request, "filter.all", "All") }}</option>
           {% for value in filter_options.environments %}
             <option value="{{ value }}" {% if (filters.environment or '')|upper == value|upper %}selected{% endif %}>{{ value|upper }}</option>
           {% endfor %}
         </select>
       </label>
       <label>
-        DB Type
+        {{ ui_text(request, "filter.db_type", "DB Type") }}
         <select class="form-select form-select-sm" name="db_type">
-          <option value="">All</option>
+          <option value="">{{ ui_text(request, "filter.all", "All") }}</option>
           {% for value in filter_options.db_types %}
             <option value="{{ value }}" {% if filters.db_type == value %}selected{% endif %}>{{ value }}</option>
           {% endfor %}
         </select>
       </label>
       <div class="overview-filter-actions">
-        <button class="btn btn-primary btn-sm" type="submit">Apply</button>
-        <a class="btn btn-outline-secondary btn-sm" href="/?view={{ current_view }}">Reset</a>
+        <button class="btn btn-primary btn-sm" type="submit">{{ ui_text(request, "filter.apply", "Apply") }}</button>
+        <a class="btn btn-outline-secondary btn-sm" href="/?view={{ current_view }}">{{ ui_text(request, "filter.reset", "Reset") }}</a>
       </div>
     </form>
   </aside>
@@ -72,21 +72,21 @@
           <input type="hidden" name="environment" value="{{ filters.environment or '' }}">
           <input type="hidden" name="refresh" value="1">
           <button class="btn btn-outline-secondary btn-sm" type="submit">
-            <i class="bi bi-arrow-repeat"></i> Refresh Zabbix
+            <i class="bi bi-arrow-repeat"></i> {{ ui_text(request, "action.refresh_zabbix", "Refresh Zabbix") }}
           </button>
         </form>
         {% if current_view == "hosts" or db_type_view %}
-          <a class="btn btn-success btn-sm" href="/exports/hosts.xlsx"><i class="bi bi-file-earmark-excel"></i> Export Servers</a>
+          <a class="btn btn-success btn-sm" href="/exports/hosts.xlsx"><i class="bi bi-file-earmark-excel"></i> {{ ui_text(request, "action.export_servers", "Export Servers") }}</a>
         {% elif current_view == "databases" %}
-          <a class="btn btn-success btn-sm" href="/exports/databases.xlsx"><i class="bi bi-file-earmark-excel"></i> Export DBs</a>
+          <a class="btn btn-success btn-sm" href="/exports/databases.xlsx"><i class="bi bi-file-earmark-excel"></i> {{ ui_text(request, "action.export_dbs", "Export DBs") }}</a>
         {% else %}
-          <a class="btn btn-outline-secondary btn-sm" href="/?view=hosts">Explore Servers</a>
+          <a class="btn btn-outline-secondary btn-sm" href="/?view=hosts">{{ ui_text(request, "action.explore_servers", "Explore Servers") }}</a>
         {% endif %}
       </div>
     </header>
 
     {% if last_sync_at %}
-      <div class="text-muted small mb-2">Last Zabbix sync: {{ last_sync_at|date_time }}</div>
+      <div class="text-muted small mb-2">{{ ui_text(request, "label.last_zabbix_sync", "Last Zabbix sync") }}: {{ last_sync_at|date_time }}</div>
     {% endif %}
 
     {% if zabbix_refresh_error %}
@@ -104,12 +104,12 @@
     {% if db_type_view %}
       <section class="overview-kpis overview-kpis-dbms">
         <a class="overview-kpi {% if current_asset_view == 'databases' %}active{% endif %}" href="/?view={{ current_view }}&asset_view=databases">
-          <span class="kpi-title">Databases</span>
+          <span class="kpi-title">{{ ui_text(request, "label.databases", "Databases") }}</span>
           <span class="kpi-value">{{ type_database_assets|length }}</span>
           <i class="bi bi-database-check"></i>
         </a>
         <a class="overview-kpi {% if current_asset_view == 'servers' %}active{% endif %}" href="/?view={{ current_view }}&asset_view=servers">
-          <span class="kpi-title">Servers</span>
+          <span class="kpi-title">{{ ui_text(request, "label.servers", "Servers") }}</span>
           <span class="kpi-value">{{ type_server_assets|length }}</span>
           <i class="bi bi-hdd-network"></i>
         </a>
@@ -130,7 +130,7 @@
         <div class="inventory-summary-card">
           <div class="inventory-summary-head">
             <div>
-              <span>Databases</span>
+              <span>{{ ui_text(request, "label.databases", "Databases") }}</span>
               <strong>{{ counts.databases }}</strong>
             </div>
             <i class="bi bi-database-check"></i>
@@ -143,20 +143,20 @@
             >
               <div class="inventory-kpi-center">
                 <strong>{{ counts.databases }}</strong>
-                <span>DB assets</span>
+                <span>{{ ui_text(request, "label.db_assets", "DB assets") }}</span>
               </div>
             </div>
             <div class="inventory-summary-list">
               <div>
-                <span><i class="summary-dot dot-oracle"></i>Oracle</span>
+                <span><i class="summary-dot dot-oracle"></i>{{ ui_text(request, "label.oracle", "Oracle") }}</span>
                 <strong>{{ db_family_counts.Oracle }}</strong>
               </div>
               <div>
-                <span><i class="summary-dot dot-postgresql"></i>PostgreSQL</span>
+                <span><i class="summary-dot dot-postgresql"></i>{{ ui_text(request, "label.postgresql", "PostgreSQL") }}</span>
                 <strong>{{ db_family_counts.PostgreSQL }}</strong>
               </div>
               <div>
-                <span><i class="summary-dot dot-sqlserver"></i>SQLServer</span>
+                <span><i class="summary-dot dot-sqlserver"></i>{{ ui_text(request, "label.sqlserver", "SQLServer") }}</span>
                 <strong>{{ db_family_counts.SQLServer }}</strong>
               </div>
             </div>
@@ -165,7 +165,7 @@
         <div class="inventory-summary-card">
           <div class="inventory-summary-head">
             <div>
-              <span>Servers</span>
+              <span>{{ ui_text(request, "label.servers", "Servers") }}</span>
               <strong>{{ counts.servers }}</strong>
             </div>
             <i class="bi bi-hdd-network"></i>
@@ -178,25 +178,25 @@
             >
               <div class="inventory-kpi-center">
                 <strong>{{ counts.servers }}</strong>
-                <span>Servers</span>
+                <span>{{ ui_text(request, "label.servers", "Servers") }}</span>
               </div>
             </div>
             <div class="inventory-summary-list">
               <div>
-                <span><i class="summary-dot dot-total"></i>Total</span>
+                <span><i class="summary-dot dot-total"></i>{{ ui_text(request, "label.total", "Total") }}</span>
                 <strong>{{ counts.servers }}</strong>
               </div>
               <div>
-                <span><i class="summary-dot dot-virtual"></i>Virtual</span>
+                <span><i class="summary-dot dot-virtual"></i>{{ ui_text(request, "label.virtual", "Virtual") }}</span>
                 <strong>{{ platform_counts.Virtual }}</strong>
               </div>
               <div>
-                <span><i class="summary-dot dot-physical"></i>Physical</span>
+                <span><i class="summary-dot dot-physical"></i>{{ ui_text(request, "label.physical", "Physical") }}</span>
                 <strong>{{ platform_counts.Physical }}</strong>
               </div>
               {% if unknown_servers %}
                 <div>
-                  <span><i class="summary-dot dot-unknown"></i>Unknown</span>
+                  <span><i class="summary-dot dot-unknown"></i>{{ ui_text(request, "label.unknown", "Unknown") }}</span>
                   <strong>{{ unknown_servers }}</strong>
                 </div>
               {% endif %}
@@ -216,28 +216,28 @@
       <div class="executive-grid">
         <section class="overview-panel executive-panel executive-panel-span-2">
           <div class="overview-section-heading">
-            <h2>Database Estate</h2>
-            <span>from Zabbix database assets</span>
+            <h2>{{ ui_text(request, "panel.database_estate", "Database Estate") }}</h2>
+            <span>{{ ui_text(request, "panel.database_estate_note", "from Zabbix database assets") }}</span>
           </div>
           <div class="executive-card-grid">
             <div class="executive-card executive-card-logo">
               <img src="/static/img/oracle.png" alt="Oracle">
               <div>
-                <span>Oracle Databases</span>
+                <span>{{ ui_text(request, "label.oracle_databases", "Oracle Databases") }}</span>
                 <strong>{{ db_family_counts.Oracle }}</strong>
               </div>
             </div>
             <div class="executive-card executive-card-logo">
               <img src="/static/img/postgresql.png" alt="PostgreSQL">
               <div>
-                <span>PostgreSQL Databases</span>
+                <span>{{ ui_text(request, "label.postgresql_databases", "PostgreSQL Databases") }}</span>
                 <strong>{{ db_family_counts.PostgreSQL }}</strong>
               </div>
             </div>
             <div class="executive-card executive-card-logo">
               <img src="/static/img/sqlserver.png" alt="SQL Server">
               <div>
-                <span>SQLServer Databases</span>
+                <span>{{ ui_text(request, "label.sqlserver_databases", "SQLServer Databases") }}</span>
                 <strong>{{ db_family_counts.SQLServer }}</strong>
               </div>
             </div>
@@ -246,8 +246,8 @@
 
         <section class="overview-panel executive-panel">
           <div class="overview-section-heading">
-            <h2>Datacenter Footprint</h2>
-            <span>MAIN / DR sites</span>
+            <h2>{{ ui_text(request, "panel.datacenter_footprint", "Datacenter Footprint") }}</h2>
+            <span>{{ ui_text(request, "panel.datacenter_note", "MAIN / DR sites") }}</span>
           </div>
           <div class="datacenter-map">
             <div class="datacenter-node datacenter-node-main">
@@ -280,8 +280,8 @@
 
         <section class="overview-panel executive-panel">
           <div class="overview-section-heading">
-            <h2>Infrastructure Mix</h2>
-            <span>Virtual / Physical</span>
+            <h2>{{ ui_text(request, "panel.infrastructure_mix", "Infrastructure Mix") }}</h2>
+            <span>{{ ui_text(request, "panel.infrastructure_note", "Virtual / Physical") }}</span>
           </div>
           <div class="health-list">
             {% for row in platform_summary %}
@@ -305,8 +305,8 @@
 
         <section class="overview-panel executive-panel">
           <div class="overview-section-heading">
-            <h2>Monitoring Health</h2>
-            <span>{{ counts.servers }} Servers</span>
+            <h2>{{ ui_text(request, "panel.monitoring_health", "Monitoring Health") }}</h2>
+            <span>{{ counts.servers }} {{ ui_text(request, "label.servers", "Servers") }}</span>
           </div>
           <div class="health-list">
             {% for row in monitoring_summary %}
@@ -323,8 +323,8 @@
 
         <section class="overview-panel executive-panel executive-panel-span-3 database-size-panel">
           <div class="overview-section-heading">
-            <h2>Database Size</h2>
-            <span>3D view - PostgreSQL / SQLServer primary only</span>
+            <h2>{{ ui_text(request, "panel.database_size", "Database Size") }}</h2>
+            <span>{{ ui_text(request, "panel.database_size_note", "3D view - PostgreSQL / SQLServer primary only") }}</span>
           </div>
           <div class="db-size-3d-grid">
             {% for section in database_size_sections %}
@@ -353,7 +353,7 @@
                 {% else %}
                   <div class="db-size-empty-3d">
                     <i class="bi bi-bar-chart"></i>
-                    <span>No size data from Zabbix</span>
+                    <span>{{ ui_text(request, "empty.no_size_data", "No size data from Zabbix") }}</span>
                   </div>
                 {% endif %}
                 {% if section.rows|length > 7 %}
@@ -366,19 +366,23 @@
 
         <section class="overview-panel executive-panel executive-panel-span-2">
           <div class="overview-section-heading">
-            <h2>Physical Servers Support</h2>
-            <span>{{ physical_server_rows|length }} physical servers</span>
+            <h2>{{ ui_text(request, "panel.physical_support", "Physical Servers Support") }}</h2>
+            {% if request.session.get("admin_user") %}
+              <a class="btn btn-outline-secondary btn-sm" href="/admin/support"><i class="bi bi-pencil-square"></i> {{ ui_text(request, "nav.admin", "Admin") }}</a>
+            {% else %}
+              <span>{{ physical_server_rows|length }} {{ ui_text(request, "label.physical_servers", "physical servers") }}</span>
+            {% endif %}
           </div>
           <div class="table-responsive">
             <table class="table table-sm align-middle overview-table">
               <thead>
                 <tr>
-                  <th>Server</th>
-                  <th>Model</th>
-                  <th>Vendor</th>
-                  <th>Datacenter</th>
-                  <th>Support end</th>
-                  <th>Status</th>
+                  <th>{{ ui_text(request, "label.server", "Server") }}</th>
+                  <th>{{ ui_text(request, "label.model", "Model") }}</th>
+                  <th>{{ ui_text(request, "label.vendor", "Vendor") }}</th>
+                  <th>{{ ui_text(request, "label.datacenter", "Datacenter") }}</th>
+                  <th>{{ ui_text(request, "label.support_end", "Support end") }}</th>
+                  <th>{{ ui_text(request, "label.status", "Status") }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -393,15 +397,19 @@
                     <td>{{ row.vendor }}</td>
                     <td>{{ row.datacenter }}</td>
                     <td>
-                      <form class="support-date-form" method="post" action="/hosts/{{ host.id }}/support-end-date">
-                        <input class="form-control form-control-sm" type="date" name="support_end_date" value="{{ host.support_end_date or '' }}">
-                        <button class="btn btn-sm btn-outline-secondary" type="submit">Save</button>
-                      </form>
+                      {% if request.session.get("admin_user") %}
+                        <form class="support-date-form" method="post" action="/hosts/{{ host.id }}/support-end-date">
+                          <input class="form-control form-control-sm" type="date" name="support_end_date" value="{{ host.support_end_date or '' }}">
+                          <button class="btn btn-sm btn-outline-secondary" type="submit">{{ ui_text(request, "action.save", "Save") }}</button>
+                        </form>
+                      {% else %}
+                        {{ host.support_end_date or "-" }}
+                      {% endif %}
                     </td>
                     <td><span class="badge text-bg-light border">{{ row.support_status }}</span></td>
                   </tr>
                 {% else %}
-                  <tr><td colspan="6" class="empty-state">No physical servers found.</td></tr>
+                  <tr><td colspan="6" class="empty-state">{{ ui_text(request, "empty.no_physical_servers", "No physical servers found.") }}</td></tr>
                 {% endfor %}
               </tbody>
             </table>
@@ -410,8 +418,8 @@
 
         <section class="overview-panel executive-panel">
           <div class="overview-section-heading">
-            <h2>Open Problem Queue</h2>
-            <span>{{ top_hosts|length }} requires attention</span>
+            <h2>{{ ui_text(request, "panel.open_problem_queue", "Open Problem Queue") }}</h2>
+            <span>{{ top_hosts|length }} {{ ui_text(request, "label.requires_attention", "requires attention") }}</span>
           </div>
           <div class="health-list problem-list">
             {% for host in top_hosts[:6] %}
@@ -429,23 +437,23 @@
       <section class="overview-panel">
         <div class="overview-section-heading">
           {% if db_type_view %}
-            <h2>{{ db_type_view.label }} {% if current_asset_view == "databases" %}Databases{% else %}Servers{% endif %}</h2>
-            <span>{{ display_hosts|length }} records from Zabbix</span>
+            <h2>{{ db_type_view.label }} {% if current_asset_view == "databases" %}{{ ui_text(request, "label.databases", "Databases") }}{% else %}{{ ui_text(request, "label.servers", "Servers") }}{% endif %}</h2>
+            <span>{{ display_hosts|length }} {{ ui_text(request, "label.records_from_zabbix", "records from Zabbix") }}</span>
           {% else %}
-            <h2>Server Summary</h2>
+            <h2>{{ ui_text(request, "panel.server_summary", "Server Summary") }}</h2>
             <div class="overview-section-tools">
               <form class="server-summary-filter" action="/" method="get">
                 <input type="hidden" name="view" value="hosts">
                 <input type="hidden" name="asset_view" value="{{ current_asset_view }}">
                 <input type="hidden" name="environment" value="{{ filters.environment or '' }}">
-                <select class="form-select form-select-sm" name="db_type" aria-label="DB Type" onchange="this.form.submit()">
-                  <option value="">All</option>
+                <select class="form-select form-select-sm" name="db_type" aria-label="{{ ui_text(request, "filter.db_type", "DB Type") }}" onchange="this.form.submit()">
+                  <option value="">{{ ui_text(request, "filter.all", "All") }}</option>
                   {% for option in server_db_type_options %}
                     <option value="{{ option }}" {% if active_server_db_type == option %}selected{% endif %}>{{ option }}</option>
                   {% endfor %}
                 </select>
               </form>
-              <span>{{ display_hosts|length }} records</span>
+              <span>{{ display_hosts|length }} {{ ui_text(request, "label.records", "records") }}</span>
             </div>
           {% endif %}
         </div>
@@ -454,22 +462,22 @@
           <table class="table table-sm align-middle table-hover overview-table">
             <thead>
               <tr>
-                <th>{% if is_database_asset_view %}Instance Name{% else %}Server{% endif %}</th>
-                <th>IP</th>
+                <th>{% if is_database_asset_view %}{{ ui_text(request, "label.instance_name", "Instance Name") }}{% else %}{{ ui_text(request, "label.server", "Server") }}{% endif %}</th>
+                <th>{{ ui_text(request, "label.ip", "IP") }}</th>
                 {% if not is_database_asset_view %}
-                  <th>Environment</th>
+                  <th>{{ ui_text(request, "label.environment", "Environment") }}</th>
                 {% endif %}
-                <th>DB Type</th>
+                <th>{{ ui_text(request, "label.db_type", "DB Type") }}</th>
                 {% if not is_database_asset_view %}
-                  <th>Virtual</th>
-                  <th>Server model</th>
-                  <th>Server vendor</th>
-                  <th>Core</th>
-                  <th>RAM</th>
-                  <th>Operating system</th>
+                  <th>{{ ui_text(request, "label.virtual", "Virtual") }}</th>
+                  <th>{{ ui_text(request, "label.server_model", "Server model") }}</th>
+                  <th>{{ ui_text(request, "label.server_vendor", "Server vendor") }}</th>
+                  <th>{{ ui_text(request, "label.core", "Core") }}</th>
+                  <th>{{ ui_text(request, "label.ram", "RAM") }}</th>
+                  <th>{{ ui_text(request, "label.operating_system", "Operating system") }}</th>
                 {% endif %}
-                <th>Monitoring</th>
-                <th>Problems</th>
+                <th>{{ ui_text(request, "label.monitoring", "Monitoring") }}</th>
+                <th>{{ ui_text(request, "label.problems", "Problems") }}</th>
               </tr>
             </thead>
             <tbody>
@@ -502,7 +510,7 @@
               {% else %}
                 <tr>
                   <td colspan="{% if is_database_asset_view %}5{% else %}12{% endif %}" class="empty-state">
-                    {% if is_database_asset_view %}No instances found.{% else %}No servers found.{% endif %}
+                    {% if is_database_asset_view %}{{ ui_text(request, "empty.no_instances", "No instances found.") }}{% else %}{{ ui_text(request, "empty.no_servers", "No servers found.") }}{% endif %}
                   </td>
                 </tr>
               {% endfor %}
