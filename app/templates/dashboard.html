@@ -683,8 +683,8 @@
 <script>
   const dashboardData = {{ chart_data|tojson }};
   const palette = ["#e30613", "#111827", "#9ca3af", "#0f8b5f", "#f59e0b", "#64748b", "#2563eb", "#7c3aed", "#0ea5e9", "#14b8a6"];
-  const executiveDoughnutPalette = ["#0f8b5f", "#e30613", "#111827", "#7f8ea3"];
-  const osPalette = ["#0f8b5f", "#e30613", "#111827", "#7f8ea3", "#f59e0b", "#2563eb", "#7c3aed"];
+  const executiveDoughnutPalette = ["#e30613", "#111827", "#9ca3af", "#64748b"];
+  const osPalette = ["#e30613", "#111827", "#9ca3af", "#64748b", "#f59e0b", "#2563eb", "#7c3aed"];
   if (typeof Chart !== "undefined") {
     Chart.defaults.plugins.tooltip.backgroundColor = "#111827";
     Chart.defaults.plugins.tooltip.titleColor = "#ffffff";
