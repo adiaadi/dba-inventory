@@ -115,6 +115,17 @@
         </a>
       </section>
     {% elif current_view == "hosts" %}
+      {% set db_total = counts.databases or 0 %}
+      {% set db_oracle_pct = (db_family_counts.Oracle / db_total * 100) if db_total else 0 %}
+      {% set db_postgresql_pct = (db_family_counts.PostgreSQL / db_total * 100) if db_total else 0 %}
+      {% set db_postgresql_end = db_oracle_pct + db_postgresql_pct %}
+      {% set server_total = counts.servers or 0 %}
+      {% set virtual_servers = platform_counts.Virtual or 0 %}
+      {% set physical_servers = platform_counts.Physical or 0 %}
+      {% set unknown_servers = platform_counts.get("Unknown", 0) %}
+      {% set virtual_pct = (virtual_servers / server_total * 100) if server_total else 0 %}
+      {% set physical_pct = (physical_servers / server_total * 100) if server_total else 0 %}
+      {% set physical_end = virtual_pct + physical_pct %}
       <section class="inventory-summary-groups">
         <div class="inventory-summary-card">
           <div class="inventory-summary-head">
@@ -124,18 +135,30 @@
             </div>
             <i class="bi bi-database-check"></i>
           </div>
-          <div class="inventory-summary-list">
-            <div>
-              <span>Oracle</span>
-              <strong>{{ db_family_counts.Oracle }}</strong>
+          <div class="inventory-summary-body">
+            <div
+              class="inventory-kpi-donut inventory-kpi-donut-db"
+              style="--db-oracle-end: {{ '%.2f'|format(db_oracle_pct) }}%; --db-postgresql-end: {{ '%.2f'|format(db_postgresql_end) }}%;"
+              aria-label="Database KPI chart"
+            >
+              <div class="inventory-kpi-center">
+                <strong>{{ counts.databases }}</strong>
+                <span>DB assets</span>
+              </div>
             </div>
-            <div>
-              <span>PostgreSQL</span>
-              <strong>{{ db_family_counts.PostgreSQL }}</strong>
-            </div>
-            <div>
-              <span>SQLServer</span>
-              <strong>{{ db_family_counts.SQLServer }}</strong>
+            <div class="inventory-summary-list">
+              <div>
+                <span><i class="summary-dot dot-oracle"></i>Oracle</span>
+                <strong>{{ db_family_counts.Oracle }}</strong>
+              </div>
+              <div>
+                <span><i class="summary-dot dot-postgresql"></i>PostgreSQL</span>
+                <strong>{{ db_family_counts.PostgreSQL }}</strong>
+              </div>
+              <div>
+                <span><i class="summary-dot dot-sqlserver"></i>SQLServer</span>
+                <strong>{{ db_family_counts.SQLServer }}</strong>
+              </div>
             </div>
           </div>
         </div>
@@ -147,18 +170,36 @@
             </div>
             <i class="bi bi-hdd-network"></i>
           </div>
-          <div class="inventory-summary-list">
-            <div>
-              <span>Total</span>
-              <strong>{{ counts.servers }}</strong>
+          <div class="inventory-summary-body">
+            <div
+              class="inventory-kpi-donut inventory-kpi-donut-server"
+              style="--server-virtual-end: {{ '%.2f'|format(virtual_pct) }}%; --server-physical-end: {{ '%.2f'|format(physical_end) }}%;"
+              aria-label="Server KPI chart"
+            >
+              <div class="inventory-kpi-center">
+                <strong>{{ counts.servers }}</strong>
+                <span>Servers</span>
+              </div>
             </div>
-            <div>
-              <span>Virtual</span>
-              <strong>{{ platform_counts.Virtual }}</strong>
-            </div>
-            <div>
-              <span>Physical</span>
-              <strong>{{ platform_counts.Physical }}</strong>
+            <div class="inventory-summary-list">
+              <div>
+                <span><i class="summary-dot dot-total"></i>Total</span>
+                <strong>{{ counts.servers }}</strong>
+              </div>
+              <div>
+                <span><i class="summary-dot dot-virtual"></i>Virtual</span>
+                <strong>{{ platform_counts.Virtual }}</strong>
+              </div>
+              <div>
+                <span><i class="summary-dot dot-physical"></i>Physical</span>
+                <strong>{{ platform_counts.Physical }}</strong>
+              </div>
+              {% if unknown_servers %}
+                <div>
+                  <span><i class="summary-dot dot-unknown"></i>Unknown</span>
+                  <strong>{{ unknown_servers }}</strong>
+                </div>
+              {% endif %}
             </div>
           </div>
         </div>

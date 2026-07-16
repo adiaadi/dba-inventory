@@ -651,6 +651,81 @@ body {
   margin-top: 4px;
 }
 
+.inventory-summary-body {
+  align-items: center;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(108px, 132px) minmax(0, 1fr);
+}
+
+.inventory-kpi-donut {
+  align-items: center;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  box-shadow:
+    inset -10px -12px 20px rgba(15, 23, 42, 0.1),
+    inset 8px 10px 18px rgba(255, 255, 255, 0.84),
+    0 14px 24px rgba(15, 23, 42, 0.08);
+  display: flex;
+  justify-content: center;
+  min-width: 108px;
+  position: relative;
+}
+
+.inventory-kpi-donut::before {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(246, 248, 251, 0.96));
+  border: 1px solid rgba(223, 228, 236, 0.9);
+  border-radius: 50%;
+  content: "";
+  inset: 18%;
+  position: absolute;
+}
+
+.inventory-kpi-donut-db {
+  background:
+    conic-gradient(
+      var(--brand) 0 var(--db-oracle-end),
+      var(--brand-dark) var(--db-oracle-end) var(--db-postgresql-end),
+      #7a8798 var(--db-postgresql-end) 100%
+    );
+}
+
+.inventory-kpi-donut-server {
+  background:
+    conic-gradient(
+      var(--brand-dark) 0 var(--server-virtual-end),
+      var(--brand) var(--server-virtual-end) var(--server-physical-end),
+      #9aa6b2 var(--server-physical-end) 100%
+    );
+}
+
+.inventory-kpi-center {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1;
+  position: relative;
+  text-align: center;
+  z-index: 1;
+}
+
+.inventory-kpi-center strong {
+  color: var(--brand-dark);
+  display: block;
+  font-size: 1.7rem;
+  font-weight: 900;
+}
+
+.inventory-kpi-center span {
+  color: #667085;
+  display: block;
+  font-size: 0.66rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
 .inventory-summary-list {
   display: grid;
   gap: 7px;
@@ -668,8 +743,11 @@ body {
 }
 
 .inventory-summary-list span {
+  align-items: center;
   color: #344054;
+  display: inline-flex;
   font-size: 0.8rem;
+  gap: 7px;
   font-weight: 750;
 }
 
@@ -677,6 +755,29 @@ body {
   color: var(--brand-dark);
   font-size: 1rem;
   font-weight: 850;
+}
+
+.summary-dot {
+  border-radius: 999px;
+  display: inline-block;
+  height: 8px;
+  width: 8px;
+}
+
+.dot-oracle,
+.dot-physical {
+  background: var(--brand);
+}
+
+.dot-postgresql,
+.dot-total,
+.dot-virtual {
+  background: var(--brand-dark);
+}
+
+.dot-sqlserver,
+.dot-unknown {
+  background: #7a8798;
 }
 
 .overview-grid {
@@ -1623,6 +1724,16 @@ body {
   .db-size-3d-grid,
   .executive-split {
     grid-template-columns: 1fr;
+  }
+
+  .inventory-summary-body {
+    grid-template-columns: 1fr;
+  }
+
+  .inventory-kpi-donut {
+    justify-self: center;
+    max-width: 132px;
+    width: 52%;
   }
 
   .overview-panel-span-2,
