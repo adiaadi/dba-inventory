@@ -838,15 +838,27 @@
     datasetBackgroundColor: osPalette,
     datasetBorderColor: osPalette,
     datasetBorderWidth: 1,
+    layout: {
+      padding: { left: 6, right: 4 },
+    },
     plugins: { legend: { display: false } },
     scales: {
       x: {
         beginAtZero: true,
         grid: { color: "rgba(17, 24, 39, 0.08)" },
-        ticks: { precision: 0 },
+        ticks: {
+          color: "#475467",
+          font: { size: 13, weight: "650" },
+          precision: 0,
+        },
       },
       y: {
         grid: { display: false },
+        ticks: {
+          color: "#344054",
+          font: { size: 15, weight: "750" },
+          padding: 8,
+        },
       },
     },
   });
