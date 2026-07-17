@@ -390,13 +390,13 @@
                 <input type="hidden" name="asset_view" value="{{ current_asset_view }}">
                 <input type="hidden" name="environment" value="{{ filters.environment or '' }}">
                 <select class="form-select form-select-sm" name="db_type" aria-label="{{ ui_text(request, "filter.db_type", "DB Type") }}" onchange="this.form.submit()">
-                  <option value="">{{ ui_text(request, "filter.all", "All") }}</option>
+                  <option value="">Choose database type</option>
                   {% for option in server_db_type_options %}
                     <option value="{{ option }}" {% if active_server_db_type == option %}selected{% endif %}>{{ option }}</option>
                   {% endfor %}
                 </select>
                 <select class="form-select form-select-sm server-summary-filter-virtual" name="virtual" aria-label="{{ ui_text(request, "label.virtual", "Virtual") }}" onchange="this.form.submit()">
-                  <option value="">{{ ui_text(request, "filter.all", "All") }}</option>
+                  <option value="">Choose server type</option>
                   <option value="YES" {% if active_virtual_filter == "YES" %}selected{% endif %}>YES</option>
                   <option value="NO" {% if active_virtual_filter == "NO" %}selected{% endif %}>NO</option>
                 </select>
