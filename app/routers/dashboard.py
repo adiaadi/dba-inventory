@@ -1044,8 +1044,10 @@ def dashboard(
     records_label = ui_text_value(request, "label.records", "records")
     section_subtitles = {
         "overview": (
-            f"{counts['servers']} {servers_label}, Oracle {db_family_counts['Oracle']}, "
-            f"PostgreSQL {db_family_counts['PostgreSQL']}, SQLServer {db_family_counts['SQLServer']}"
+            f"{counts['servers']} {servers_label}\n"
+            f"Oracle {db_family_counts['Oracle']}\n"
+            f"PostgreSQL {db_family_counts['PostgreSQL']}\n"
+            f"SQLServer {db_family_counts['SQLServer']}"
         ),
         "hosts": f"{len(filtered_server_hosts)} {servers_label} in current view",
         "databases": f"{len(database_assets)} DB assets in current view",

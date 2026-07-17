@@ -461,6 +461,7 @@ body {
 
 .section-subtitle-strong {
   font-weight: 800;
+  white-space: pre-line;
 }
 
 .overview-heading > p {
