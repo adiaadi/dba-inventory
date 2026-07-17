@@ -1710,12 +1710,30 @@ body {
   margin: 0;
 }
 
+.server-summary-filter-field {
+  align-items: center;
+  display: inline-flex;
+  gap: 6px;
+  margin: 0;
+}
+
+.server-summary-filter-field span {
+  color: #98a2b3;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .server-summary-filter .form-select {
-  min-width: 168px;
+  min-width: 88px;
+}
+
+.server-summary-filter-field:first-child .form-select {
+  min-width: 118px;
 }
 
 .server-summary-filter .server-summary-filter-virtual {
-  min-width: 104px;
+  min-width: 84px;
 }
 
 .chart-box {
