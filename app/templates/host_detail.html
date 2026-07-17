@@ -28,9 +28,6 @@
         <div>
           <div class="fw-semibold">{{ host.hostname }}</div>
           <div class="text-muted small">{{ host.ip_address or host.fqdn or "-" }}</div>
-          <div class="mt-2">
-            <span class="badge text-bg-{{ host.monitoring_status|status_class }}">{{ host.monitoring_status }}</span>
-          </div>
         </div>
       </div>
     </div>
@@ -41,11 +38,6 @@
       <div>
         <h1>{{ host.hostname }}</h1>
         <p>{{ db_label }} / {{ host.environment|upper }} / {{ host.role }}</p>
-      </div>
-      <div class="server-status-pack">
-        <span class="badge text-bg-{{ host.monitoring_status|status_class }}">{{ host.monitoring_status }}</span>
-        <span class="badge text-bg-{{ host.zabbix_agent_availability|status_class }}">agent {{ host.zabbix_agent_availability }}</span>
-        <span class="problem-count {% if host.problem_count > 0 %}has-problems{% endif %}">{{ host.problem_count }}</span>
       </div>
     </header>
 
@@ -152,17 +144,8 @@
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script>
-  const hostProblemCount = {{ host.problem_count or 0 }};
   const labels = ["16:05", "16:13", "16:21", "16:30", "16:38", "16:46", "16:55"];
-  const baseSeries = [
-    18 + hostProblemCount,
-    22 + Math.ceil(hostProblemCount / 2),
-    19,
-    21 + hostProblemCount,
-    20,
-    19 + Math.ceil(hostProblemCount / 3),
-    21,
-  ];
+  const baseSeries = [18, 22, 19, 21, 20, 19, 21];
 
   function serverLineChart(id, label, values) {
     const element = document.getElementById(id);

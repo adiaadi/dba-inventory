@@ -430,8 +430,6 @@
                   <th>{{ ui_text(request, "label.ram", "RAM") }}</th>
                   <th>{{ ui_text(request, "label.operating_system", "Operating system") }}</th>
                 {% endif %}
-                <th>{{ ui_text(request, "label.monitoring", "Monitoring") }}</th>
-                <th>{{ ui_text(request, "label.problems", "Problems") }}</th>
               </tr>
             </thead>
             <tbody>
@@ -458,16 +456,10 @@
                     <td>{{ host_ram_labels.get(host.id) or "-" }}</td>
                     <td>{{ host_os_labels.get(host.id) or "-" }}</td>
                   {% endif %}
-                  <td><span class="badge text-bg-{{ host.monitoring_status|status_class }}">{{ host.monitoring_status }}</span></td>
-                  <td>
-                    <span class="problem-count {% if host.problem_count > 0 %}has-problems{% endif %}">
-                      {{ host.problem_count }}
-                    </span>
-                  </td>
                 </tr>
               {% else %}
                 <tr>
-                  <td colspan="{% if is_database_asset_view %}5{% else %}12{% endif %}" class="empty-state">
+                  <td colspan="{% if is_database_asset_view %}3{% else %}10{% endif %}" class="empty-state">
                     {% if is_database_asset_view %}{{ ui_text(request, "empty.no_instances", "No instances found.") }}{% else %}{{ ui_text(request, "empty.no_servers", "No servers found.") }}{% endif %}
                   </td>
                 </tr>
@@ -496,8 +488,6 @@
                   <th>DB Asset</th>
                   <th>Server</th>
                   <th>Environment</th>
-                  <th>Monitoring</th>
-                  <th>Problems</th>
                 </tr>
               </thead>
               <tbody>
@@ -516,15 +506,9 @@
                         {{ host.environment|upper }}
                       </span>
                     </td>
-                    <td><span class="badge text-bg-{{ host.monitoring_status|status_class }}">{{ host.monitoring_status }}</span></td>
-                    <td>
-                      <span class="problem-count {% if host.problem_count > 0 %}has-problems{% endif %}">
-                        {{ host.problem_count }}
-                      </span>
-                    </td>
                   </tr>
                 {% else %}
-                  <tr><td colspan="5" class="empty-state">No DB assets found.</td></tr>
+                  <tr><td colspan="3" class="empty-state">No DB assets found.</td></tr>
                 {% endfor %}
               </tbody>
             </table>

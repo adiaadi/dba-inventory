@@ -43,12 +43,11 @@ def export_hosts(
     db_type: str | None = None,
     environment: str | None = None,
     role: str | None = None,
-    monitoring_status: str | None = None,
     db: Session = Depends(get_db),
 ):
     maybe_refresh_zabbix_cache(db)
     stmt = select(Host).options(selectinload(Host.databases)).order_by(Host.hostname)
-    stmt = apply_host_filters(stmt, db_type, environment, role, monitoring_status)
+    stmt = apply_host_filters(stmt, db_type, environment, role)
     hosts = db.scalars(stmt).all()
 
     headers = [
@@ -65,10 +64,7 @@ def export_hosts(
         "zabbix_hostid",
         "zabbix_host_name",
         "zabbix_url",
-        "zabbix_agent_availability",
-        "problem_count",
         "zabbix_last_sync_at",
-        "monitoring_status",
     ]
     workbook = Workbook()
     ws = workbook.active
@@ -90,10 +86,7 @@ def export_hosts(
                 host.zabbix_hostid,
                 host.zabbix_host_name,
                 host.zabbix_url,
-                host.zabbix_agent_availability,
-                host.problem_count,
                 host.zabbix_last_sync_at,
-                host.monitoring_status,
             ]
         )
     apply_sheet_style(ws, headers)
@@ -105,7 +98,6 @@ def export_databases(
     db_type: str | None = None,
     environment: str | None = None,
     role: str | None = None,
-    monitoring_status: str | None = None,
     db: Session = Depends(get_db),
 ):
     maybe_refresh_zabbix_cache(db)
@@ -114,7 +106,7 @@ def export_databases(
         .options(selectinload(DatabaseInstance.host))
         .order_by(DatabaseInstance.db_type, DatabaseInstance.name)
     )
-    stmt = apply_database_filters(stmt, db_type, environment, role, monitoring_status)
+    stmt = apply_database_filters(stmt, db_type, environment, role)
     databases = db.scalars(stmt).all()
 
     headers = [
@@ -130,7 +122,6 @@ def export_databases(
         "powa_server_name",
         "powa_database_name",
         "last_snapshot",
-        "monitoring_status",
     ]
     workbook = Workbook()
     ws = workbook.active
@@ -151,7 +142,6 @@ def export_databases(
                 database.powa_server_name,
                 database.powa_database_name,
                 database.last_snapshot,
-                database.host.monitoring_status,
             ]
         )
     apply_sheet_style(ws, headers)
