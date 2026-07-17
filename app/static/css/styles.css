@@ -1728,7 +1728,11 @@ body {
   min-width: 88px;
 }
 
-.server-summary-filter-field:first-child .form-select {
+.server-summary-filter .server-summary-filter-environment {
+  min-width: 104px;
+}
+
+.server-summary-filter .server-summary-filter-db-type {
   min-width: 118px;
 }
 

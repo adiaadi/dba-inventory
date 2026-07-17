@@ -388,10 +388,18 @@
               <form class="server-summary-filter" action="/" method="get">
                 <input type="hidden" name="view" value="hosts">
                 <input type="hidden" name="asset_view" value="{{ current_asset_view }}">
-                <input type="hidden" name="environment" value="{{ filters.environment or '' }}">
+                <label class="server-summary-filter-field">
+                  <span>environment</span>
+                  <select class="form-select form-select-sm server-summary-filter-environment" name="environment" aria-label="{{ ui_text(request, "filter.environment", "Environment") }}" onchange="this.form.submit()">
+                    <option value="">{{ ui_text(request, "filter.all", "All") }}</option>
+                    {% for value in filter_options.environments %}
+                      <option value="{{ value }}" {% if (filters.environment or '')|upper == value|upper %}selected{% endif %}>{{ value|upper }}</option>
+                    {% endfor %}
+                  </select>
+                </label>
                 <label class="server-summary-filter-field">
                   <span>database type</span>
-                  <select class="form-select form-select-sm" name="db_type" aria-label="{{ ui_text(request, "filter.db_type", "DB Type") }}" onchange="this.form.submit()">
+                  <select class="form-select form-select-sm server-summary-filter-db-type" name="db_type" aria-label="{{ ui_text(request, "filter.db_type", "DB Type") }}" onchange="this.form.submit()">
                     <option value="">{{ ui_text(request, "filter.all", "All") }}</option>
                     {% for option in server_db_type_options %}
                       <option value="{{ option }}" {% if active_server_db_type == option %}selected{% endif %}>{{ option }}</option>
