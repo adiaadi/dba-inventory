@@ -1044,23 +1044,23 @@ def dashboard(
     records_label = ui_text_value(request, "label.records", "records")
     section_subtitles = {
         "overview": (
-            f"{counts['servers']} {servers_label}\n"
+            f"{servers_label.upper()} {counts['servers']}\n"
             f"Oracle {db_family_counts['Oracle']}\n"
             f"PostgreSQL {db_family_counts['PostgreSQL']}\n"
             f"SQLServer {db_family_counts['SQLServer']}"
         ),
-        "hosts": f"{len(filtered_server_hosts)} {servers_label}",
-        "databases": f"{len(database_assets)} DB assets in current view",
-        "clusters": f"{len(clusters)} clusters in current view",
+        "hosts": f"{servers_label.upper()} {len(filtered_server_hosts)}",
+        "databases": f"DB assets {len(database_assets)} in current view",
+        "clusters": f"clusters {len(clusters)} in current view",
         **{
-            key: f"{len(display_hosts) if key == current_view else 0} {records_label} in current view"
+            key: f"{records_label} {len(display_hosts) if key == current_view else 0} in current view"
             for key in DB_TYPE_VIEWS
         },
     }
     if db_type_view:
         section_subtitles[current_view] = (
-            f"{len(type_database_assets)} databases\n"
-            f"{len(type_server_assets)} {servers_label}"
+            f"databases {len(type_database_assets)}\n"
+            f"{servers_label.upper()} {len(type_server_assets)}"
         )
 
     return templates.TemplateResponse(

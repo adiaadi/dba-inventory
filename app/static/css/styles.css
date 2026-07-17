@@ -495,11 +495,13 @@ body {
 }
 
 .section-subtitle-strong {
-  font-weight: 800;
+  font-weight: 700;
+  line-height: 1.45;
   white-space: pre-line;
 }
 
 .section-subtitle-multiline {
+  line-height: 1.45;
   white-space: pre-line;
 }
 
