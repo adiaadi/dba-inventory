@@ -117,6 +117,27 @@ DATABASE_VERSION_EXCLUDE_MARKERS = (
     "python",
 )
 
+DATABASE_PRODUCT_TAG_NAMES = (
+    "product",
+    "db_product",
+    "database_product",
+    "database product",
+    "oracle_product",
+)
+
+DATABASE_PRODUCT_ITEM_MARKERS = (
+    "product",
+    "oracle.product",
+    "db.product",
+)
+
+DATABASE_PRODUCT_EXCLUDE_MARKERS = (
+    "sys/class/dmi",
+    "product_name",
+    "server model",
+    "hardware",
+)
+
 REPLICA_MARKERS = (
     "standby",
     "replica",
@@ -637,6 +658,38 @@ def format_database_version_label(value: str | None, family: str | None) -> str 
     return clean_item_text(label, max_length=80)
 
 
+def database_product_label(host: Host, db_family: str | None = None) -> str | None:
+    family = normalized_db_type(db_family or host.db_type) or normalized_db_type(host_search_text(host))
+    for tag_name in DATABASE_PRODUCT_TAG_NAMES:
+        tag_value = first_tag_value(host, (tag_name,))
+        label = clean_item_text(tag_value, max_length=100)
+        if label:
+            return label
+
+    candidates: list[tuple[int, str]] = []
+    for key, value in imported_zabbix_items(host).items():
+        key_text = key.lower()
+        if not any(marker in key_text for marker in DATABASE_PRODUCT_ITEM_MARKERS):
+            continue
+        if any(marker in key_text for marker in DATABASE_PRODUCT_EXCLUDE_MARKERS):
+            continue
+        label = clean_item_text(value, max_length=100)
+        if not label:
+            continue
+        score = 0
+        if "oracle.product" in key_text:
+            score += 30
+        if family == "Oracle" and "oracle" in key_text:
+            score += 10
+        if "database" in key_text or "db" in key_text:
+            score += 2
+        candidates.append((score, label))
+
+    if not candidates:
+        return None
+    return max(candidates, key=lambda item: item[0])[1]
+
+
 def database_version_label(host: Host, db_family: str | None = None) -> str | None:
     family = normalized_db_type(db_family or host.db_type) or normalized_db_type(host_search_text(host))
     for tag_name in DATABASE_VERSION_TAG_NAMES:
@@ -665,6 +718,8 @@ def database_version_label(host: Host, db_family: str | None = None) -> str | No
             score += 10
         if family == "Oracle" and "oracle" in key_text:
             score += 10
+        if family == "Oracle" and "oracle.version" in key_text:
+            score += 30
         if family == "SQLServer" and any(marker in key_text for marker in ("sqlserver", "sql server", "mssql")):
             score += 10
         if "database" in key_text or "db" in key_text:
@@ -938,6 +993,10 @@ def dashboard(
         for host in all_hosts
     }
     host_database_version_labels = database_version_labels_with_server_fallbacks(all_hosts, host_db_labels)
+    host_database_product_labels = {
+        host.id: database_product_label(host, host_db_labels.get(host.id))
+        for host in all_hosts
+    }
     host_asset_kinds = {host.id: detected_zabbix_asset_kind(host) for host in all_hosts}
     host_os_labels = {host.id: operating_system_label(host) for host in all_hosts}
     host_model_labels = {host.id: server_model_label(host) for host in all_hosts}
@@ -1273,6 +1332,7 @@ def dashboard(
             "host_virtual_labels": host_virtual_labels,
             "host_os_labels": host_os_labels,
             "host_database_version_labels": host_database_version_labels,
+            "host_database_product_labels": host_database_product_labels,
             "host_model_labels": host_model_labels,
             "host_vendor_labels": host_vendor_labels,
             "host_core_labels": host_core_labels,

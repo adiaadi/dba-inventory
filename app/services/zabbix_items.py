@@ -29,10 +29,18 @@ ZABBIX_DATABASE_VERSION_ITEM_SEARCH_TERMS = (
     "sqlserver.version",
 )
 
+ZABBIX_DATABASE_PRODUCT_ITEM_SEARCH_TERMS = (
+    "Product",
+    "product",
+    "db.product",
+    "oracle.product",
+)
+
 ZABBIX_DATABASE_ITEM_SEARCH_TERMS = (
     "Database",
     "database",
     *ZABBIX_DATABASE_VERSION_ITEM_SEARCH_TERMS,
+    *ZABBIX_DATABASE_PRODUCT_ITEM_SEARCH_TERMS,
     "DB size",
     "db size",
     "database size",

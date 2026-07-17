@@ -426,6 +426,7 @@
         </div>
         <div class="table-responsive">
           {% set is_database_asset_view = db_type_view and current_asset_view == "databases" %}
+          {% set show_oracle_product_columns = is_database_asset_view and db_type_view.label == "Oracle" %}
           <table class="table table-sm align-middle table-hover overview-table">
             <thead>
               <tr>
@@ -436,6 +437,9 @@
                 {% endif %}
                 <th>{{ ui_text(request, "label.db_type", "DB Type") }}</th>
                 {% if is_database_asset_view %}
+                  {% if show_oracle_product_columns %}
+                    <th>{{ ui_text(request, "label.product", "Product") }}</th>
+                  {% endif %}
                   <th>{{ ui_text(request, "label.version", "Version") }}</th>
                 {% endif %}
                 {% if not is_database_asset_view %}
@@ -465,6 +469,9 @@
                   {% endif %}
                   <td>{{ host_db_labels.get(host.id) or host.db_type or (instance_db_types|join(", ")) or "-" }}</td>
                   {% if is_database_asset_view %}
+                    {% if show_oracle_product_columns %}
+                      <td>{{ host_database_product_labels.get(host.id) or "-" }}</td>
+                    {% endif %}
                     <td>{{ host_database_version_labels.get(host.id) or "-" }}</td>
                   {% endif %}
                   {% if not is_database_asset_view %}
@@ -478,7 +485,7 @@
                 </tr>
               {% else %}
                 <tr>
-                  <td colspan="{% if is_database_asset_view %}4{% else %}10{% endif %}" class="empty-state">
+                  <td colspan="{% if show_oracle_product_columns %}5{% elif is_database_asset_view %}4{% else %}10{% endif %}" class="empty-state">
                     {% if is_database_asset_view %}{{ ui_text(request, "empty.no_instances", "No instances found.") }}{% else %}{{ ui_text(request, "empty.no_servers", "No servers found.") }}{% endif %}
                   </td>
                 </tr>
