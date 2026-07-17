@@ -437,7 +437,11 @@
                   </td>
                   <td>{{ host.ip_address or "-" }}</td>
                   {% if not is_database_asset_view %}
-                    <td><span class="pill">{{ host.environment|upper }}</span></td>
+                    <td>
+                      <span class="pill env-pill env-{{ (host.environment or 'unknown')|lower|replace(' ', '-') }}">
+                        {{ host.environment|upper }}
+                      </span>
+                    </td>
                   {% endif %}
                   <td>{{ host_db_labels.get(host.id) or host.db_type or (instance_db_types|join(", ")) or "-" }}</td>
                   {% if not is_database_asset_view %}
@@ -501,7 +505,11 @@
                       <a class="table-link" href="/hosts/{{ host.id }}">{{ host.hostname }}</a>
                       <div class="text-muted small">{{ host.ip_address or host.fqdn or "-" }}</div>
                     </td>
-                    <td><span class="pill">{{ host.environment|upper }}</span></td>
+                    <td>
+                      <span class="pill env-pill env-{{ (host.environment or 'unknown')|lower|replace(' ', '-') }}">
+                        {{ host.environment|upper }}
+                      </span>
+                    </td>
                     <td><span class="badge text-bg-{{ host.monitoring_status|status_class }}">{{ host.monitoring_status }}</span></td>
                     <td>
                       <span class="problem-count {% if host.problem_count > 0 %}has-problems{% endif %}">
@@ -581,7 +589,11 @@
                     <div class="text-muted small">{{ cluster.description or "-" }}</div>
                   </td>
                   <td>{{ cluster.cluster_type }}</td>
-                  <td><span class="pill">{{ cluster.environment|upper }}</span></td>
+                  <td>
+                    <span class="pill env-pill env-{{ (cluster.environment or 'unknown')|lower|replace(' ', '-') }}">
+                      {{ cluster.environment|upper }}
+                    </span>
+                  </td>
                   <td>{{ cluster.primary_node or "-" }}</td>
                   <td><span class="badge text-bg-{{ cluster.status|status_class }}">{{ cluster.status }}</span></td>
                   <td>

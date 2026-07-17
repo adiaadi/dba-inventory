@@ -277,6 +277,41 @@ body {
   padding: 3px 9px;
 }
 
+.env-pill {
+  justify-content: center;
+  min-width: 74px;
+}
+
+.env-prod {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #991b1b;
+}
+
+.env-standby {
+  background: #fef3c7;
+  border-color: #fbbf24;
+  color: #92400e;
+}
+
+.env-dev {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
+.env-test {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #166534;
+}
+
+.env-unknown {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
 .member-list {
   display: grid;
   gap: 6px;
