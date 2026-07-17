@@ -464,6 +464,10 @@ body {
   white-space: pre-line;
 }
 
+.section-subtitle-multiline {
+  white-space: pre-line;
+}
+
 .overview-heading > p {
   color: #5b6778;
   margin: 0;

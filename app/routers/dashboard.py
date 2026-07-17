@@ -1059,7 +1059,8 @@ def dashboard(
     }
     if db_type_view:
         section_subtitles[current_view] = (
-            f"{len(type_database_assets)} databases, {len(type_server_assets)} {servers_label} from Zabbix"
+            f"{len(type_database_assets)} databases\n"
+            f"{len(type_server_assets)} {servers_label}"
         )
 
     return templates.TemplateResponse(
