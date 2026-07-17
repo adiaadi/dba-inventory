@@ -262,7 +262,12 @@
                     {% for item in section.rows[:7] %}
                       <div class="db-size-3d-row">
                         <div class="db-size-3d-label">
-                          <span>{{ item.name }}</span>
+                          <span>
+                            {{ item.name }}
+                            {% if item.version and item.version != "-" %}
+                              <small>v{{ item.version }}</small>
+                            {% endif %}
+                          </span>
                           <strong>{{ item.size }}</strong>
                         </div>
                         <div class="db-size-3d-track">
@@ -430,6 +435,9 @@
                   <th>{{ ui_text(request, "label.environment", "Environment") }}</th>
                 {% endif %}
                 <th>{{ ui_text(request, "label.db_type", "DB Type") }}</th>
+                {% if is_database_asset_view %}
+                  <th>{{ ui_text(request, "label.version", "Version") }}</th>
+                {% endif %}
                 {% if not is_database_asset_view %}
                   <th>{{ ui_text(request, "label.virtual", "Virtual") }}</th>
                   <th>{{ ui_text(request, "label.server_model", "Server model") }}</th>
@@ -456,6 +464,9 @@
                     </td>
                   {% endif %}
                   <td>{{ host_db_labels.get(host.id) or host.db_type or (instance_db_types|join(", ")) or "-" }}</td>
+                  {% if is_database_asset_view %}
+                    <td>{{ host_database_version_labels.get(host.id) or "-" }}</td>
+                  {% endif %}
                   {% if not is_database_asset_view %}
                     <td>{{ host_virtual_labels.get(host.id) or "NO" }}</td>
                     <td>{{ host_model_labels.get(host.id) or "-" }}</td>
@@ -467,7 +478,7 @@
                 </tr>
               {% else %}
                 <tr>
-                  <td colspan="{% if is_database_asset_view %}3{% else %}10{% endif %}" class="empty-state">
+                  <td colspan="{% if is_database_asset_view %}4{% else %}10{% endif %}" class="empty-state">
                     {% if is_database_asset_view %}{{ ui_text(request, "empty.no_instances", "No instances found.") }}{% else %}{{ ui_text(request, "empty.no_servers", "No servers found.") }}{% endif %}
                   </td>
                 </tr>
@@ -496,6 +507,7 @@
                   <th>DB Asset</th>
                   <th>Server</th>
                   <th>Environment</th>
+                  <th>{{ ui_text(request, "label.version", "Version") }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -514,9 +526,10 @@
                         {{ host.environment|upper }}
                       </span>
                     </td>
+                    <td>{{ host_database_version_labels.get(host.id) or "-" }}</td>
                   </tr>
                 {% else %}
-                  <tr><td colspan="3" class="empty-state">No DB assets found.</td></tr>
+                  <tr><td colspan="4" class="empty-state">No DB assets found.</td></tr>
                 {% endfor %}
               </tbody>
             </table>

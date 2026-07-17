@@ -21,13 +21,21 @@ ZABBIX_DETAIL_ITEM_KEYS = (
 ZABBIX_DATABASE_ITEM_SEARCH_TERMS = (
     "Database",
     "database",
+    "Version",
+    "version",
+    "release",
+    "db.version",
     "DB size",
     "db size",
     "database size",
     "db.size",
     "pgsql.db.size",
+    "pgsql.version",
     "oracle.db",
+    "oracle.version",
     "mssql",
+    "mssql.version",
+    "sqlserver.version",
 )
 
 ZABBIX_ITEMS_NOTE_MARKER = "Zabbix items:"

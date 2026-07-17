@@ -80,6 +80,7 @@ DEFAULT_UI_TEXTS = [
     {"key": "label.server", "category": "Table", "label": "Server column", "default": "Server"},
     {"key": "label.instance_name", "category": "Table", "label": "Instance name column", "default": "Instance Name"},
     {"key": "label.ip", "category": "Table", "label": "IP column", "default": "IP"},
+    {"key": "label.version", "category": "Table", "label": "Version column", "default": "Version"},
     {"key": "label.environment", "category": "Table", "label": "Environment column", "default": "Environment"},
     {"key": "label.server_model", "category": "Table", "label": "Server model column", "default": "Server model"},
     {"key": "label.server_vendor", "category": "Table", "label": "Server vendor column", "default": "Server vendor"},

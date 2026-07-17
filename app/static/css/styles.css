@@ -1538,6 +1538,16 @@ body {
   white-space: nowrap;
 }
 
+.db-size-3d-label small {
+  color: #667085;
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .db-size-3d-label strong {
   color: var(--ink);
   font-weight: 850;

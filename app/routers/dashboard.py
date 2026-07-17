@@ -17,6 +17,7 @@ from app.routers.common import (
     get_filter_options,
 )
 from app.services.zabbix_items import (
+    clean_item_text,
     operating_system_item_label,
     parse_zabbix_item_values,
     server_model_item_label,
@@ -83,6 +84,36 @@ DATABASE_SIZE_EXCLUDE_MARKERS = (
     "vfs.fs",
     "disk",
     "tablespace",
+)
+
+DATABASE_VERSION_TAG_NAMES = (
+    "version",
+    "db_version",
+    "database_version",
+    "database version",
+    "oracle_version",
+    "postgresql_version",
+    "postgres_version",
+    "sqlserver_version",
+    "mssql_version",
+)
+
+DATABASE_VERSION_ITEM_MARKERS = (
+    "version",
+    "release",
+)
+
+DATABASE_VERSION_EXCLUDE_MARKERS = (
+    "operating system",
+    "system.sw.os",
+    "kernel",
+    "linux",
+    "ubuntu",
+    "windows os",
+    "agent",
+    "zabbix",
+    "java",
+    "python",
 )
 
 REPLICA_MARKERS = (
@@ -563,6 +594,63 @@ def database_size_label(host: Host) -> str:
     return database_size_value(host)[1]
 
 
+def format_postgresql_version_number(value: str) -> str | None:
+    if not value.isdigit() or len(value) < 5:
+        return None
+    number = int(value)
+    major = number // 10000
+    minor = number % 10000
+    if major >= 10:
+        return f"{major}.{minor}" if minor else str(major)
+    if len(value) == 5:
+        major = number // 10000
+        minor = (number // 100) % 100
+        patch = number % 100
+        return ".".join(str(part) for part in (major, minor, patch) if part)
+    return None
+
+
+def database_version_label(host: Host, db_family: str | None = None) -> str | None:
+    for tag_name in DATABASE_VERSION_TAG_NAMES:
+        tag_value = first_tag_value(host, (tag_name,))
+        label = clean_item_text(tag_value, max_length=80)
+        if label:
+            return label
+
+    for database in host.databases:
+        label = clean_item_text(database.version, max_length=80)
+        if label:
+            return label
+
+    candidates: list[tuple[int, str]] = []
+    family = normalized_db_type(db_family or host.db_type) or normalized_db_type(host_search_text(host))
+    for key, value in imported_zabbix_items(host).items():
+        key_text = key.lower()
+        if not any(marker in key_text for marker in DATABASE_VERSION_ITEM_MARKERS):
+            continue
+        if any(marker in key_text for marker in DATABASE_VERSION_EXCLUDE_MARKERS):
+            continue
+        label = clean_item_text(value, max_length=80)
+        if not label:
+            continue
+        if family == "PostgreSQL":
+            label = format_postgresql_version_number(label) or label
+        score = 0
+        if family == "PostgreSQL" and ("postgres" in key_text or "pgsql" in key_text):
+            score += 10
+        if family == "Oracle" and "oracle" in key_text:
+            score += 10
+        if family == "SQLServer" and any(marker in key_text for marker in ("sqlserver", "sql server", "mssql")):
+            score += 10
+        if "database" in key_text or "db" in key_text:
+            score += 2
+        candidates.append((score, label))
+
+    if not candidates:
+        return None
+    return max(candidates, key=lambda item: item[0])[1]
+
+
 def database_role_text(host: Host) -> str:
     tags = imported_zabbix_tags(host)
     values = [
@@ -755,6 +843,10 @@ def dashboard(
         host.id: detected_db_type_by_zabbix_rules(host) or detected_db_type(host)
         for host in all_hosts
     }
+    host_database_version_labels = {
+        host.id: database_version_label(host, host_db_labels.get(host.id))
+        for host in all_hosts
+    }
     host_asset_kinds = {host.id: detected_zabbix_asset_kind(host) for host in all_hosts}
     host_os_labels = {host.id: operating_system_label(host) for host in all_hosts}
     host_model_labels = {host.id: server_model_label(host) for host in all_hosts}
@@ -889,6 +981,7 @@ def dashboard(
                     "name": host.zabbix_host_name or host.hostname,
                     "server": host.hostname,
                     "ip": host.ip_address or "-",
+                    "version": host_database_version_labels.get(host.id) or "-",
                     "size": size_label,
                     "size_bytes": size_bytes or 0,
                     "monitoring": host.monitoring_status,
@@ -1088,6 +1181,7 @@ def dashboard(
             "host_asset_kinds": host_asset_kinds,
             "host_virtual_labels": host_virtual_labels,
             "host_os_labels": host_os_labels,
+            "host_database_version_labels": host_database_version_labels,
             "host_model_labels": host_model_labels,
             "host_vendor_labels": host_vendor_labels,
             "host_core_labels": host_core_labels,
