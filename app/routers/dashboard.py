@@ -611,31 +611,55 @@ def format_postgresql_version_number(value: str) -> str | None:
     return None
 
 
+def format_sqlserver_version_text(value: str) -> str | None:
+    text = clean_item_text(value)
+    if not text:
+        return None
+    product_match = re.match(
+        r"(?i)^(Microsoft\s+SQL\s+Server\s+\d{4}(?:\s+\([^)]*\))?)",
+        text,
+    )
+    if product_match:
+        return product_match.group(1)
+
+    shortened = re.split(r"\s+\(KB\d+\)|\s+-\s+", text, maxsplit=1)[0]
+    return clean_item_text(shortened, max_length=80)
+
+
+def format_database_version_label(value: str | None, family: str | None) -> str | None:
+    label = clean_item_text(value)
+    if not label:
+        return None
+    if family == "PostgreSQL":
+        label = format_postgresql_version_number(label) or label
+    elif family == "SQLServer":
+        label = format_sqlserver_version_text(label) or label
+    return clean_item_text(label, max_length=80)
+
+
 def database_version_label(host: Host, db_family: str | None = None) -> str | None:
+    family = normalized_db_type(db_family or host.db_type) or normalized_db_type(host_search_text(host))
     for tag_name in DATABASE_VERSION_TAG_NAMES:
         tag_value = first_tag_value(host, (tag_name,))
-        label = clean_item_text(tag_value, max_length=80)
+        label = format_database_version_label(tag_value, family)
         if label:
             return label
 
     for database in host.databases:
-        label = clean_item_text(database.version, max_length=80)
+        label = format_database_version_label(database.version, family)
         if label:
             return label
 
     candidates: list[tuple[int, str]] = []
-    family = normalized_db_type(db_family or host.db_type) or normalized_db_type(host_search_text(host))
     for key, value in imported_zabbix_items(host).items():
         key_text = key.lower()
         if not any(marker in key_text for marker in DATABASE_VERSION_ITEM_MARKERS):
             continue
         if any(marker in key_text for marker in DATABASE_VERSION_EXCLUDE_MARKERS):
             continue
-        label = clean_item_text(value, max_length=80)
+        label = format_database_version_label(value, family)
         if not label:
             continue
-        if family == "PostgreSQL":
-            label = format_postgresql_version_number(label) or label
         score = 0
         if family == "PostgreSQL" and ("postgres" in key_text or "pgsql" in key_text):
             score += 10
