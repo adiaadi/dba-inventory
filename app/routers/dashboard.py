@@ -632,6 +632,16 @@ def format_postgresql_version_number(value: str) -> str | None:
     return None
 
 
+def format_postgresql_version_text(value: str) -> str | None:
+    text = clean_item_text(value)
+    if not text:
+        return None
+    version_match = re.match(r"(?i)^(PostgreSQL\s+\d+(?:\.\d+)*)", text)
+    if version_match:
+        return version_match.group(1)
+    return format_postgresql_version_number(text) or clean_item_text(text, max_length=80)
+
+
 def format_sqlserver_version_text(value: str) -> str | None:
     text = clean_item_text(value)
     if not text:
@@ -652,7 +662,7 @@ def format_database_version_label(value: str | None, family: str | None) -> str 
     if not label:
         return None
     if family == "PostgreSQL":
-        label = format_postgresql_version_number(label) or label
+        label = format_postgresql_version_text(label) or label
     elif family == "SQLServer":
         label = format_sqlserver_version_text(label) or label
     return clean_item_text(label, max_length=80)
@@ -716,6 +726,8 @@ def database_version_label(host: Host, db_family: str | None = None) -> str | No
         score = 0
         if family == "PostgreSQL" and ("postgres" in key_text or "pgsql" in key_text):
             score += 10
+        if family == "PostgreSQL" and "pgsql.version" in key_text:
+            score += 30
         if family == "Oracle" and "oracle" in key_text:
             score += 10
         if family == "Oracle" and "oracle.version" in key_text:
