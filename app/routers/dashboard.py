@@ -1,5 +1,6 @@
 from collections import Counter
 from datetime import UTC, date, datetime
+import re
 from urllib.parse import parse_qs
 
 from fastapi import APIRouter, Depends, Request
@@ -651,6 +652,75 @@ def database_version_label(host: Host, db_family: str | None = None) -> str | No
     return max(candidates, key=lambda item: item[0])[1]
 
 
+def host_identity_values(host: Host) -> list[str]:
+    values = [
+        host.hostname,
+        host.fqdn,
+        host.zabbix_host_name,
+    ]
+    extracted: list[str] = []
+    for value in values:
+        if not value:
+            continue
+        extracted.append(value)
+        extracted.extend(re.findall(r"\(([^)]+)\)", value))
+    return extracted
+
+
+def normalized_host_alias(value: str | None) -> str | None:
+    if not value:
+        return None
+    text = value.strip().lower().replace("_", "-")
+    text = re.sub(r"\s+", "-", text)
+    text = text.split(".", 1)[0]
+    text = text.strip("-")
+    return text or None
+
+
+def host_aliases(host: Host, include_database_prefix_variants: bool = False) -> set[str]:
+    aliases: set[str] = set()
+    for value in host_identity_values(host):
+        alias = normalized_host_alias(value)
+        if not alias:
+            continue
+        aliases.add(alias)
+        if include_database_prefix_variants:
+            for prefix in ("pg-", "postgres-", "postgresql-"):
+                if alias.startswith(prefix) and len(alias) > len(prefix):
+                    aliases.add(alias[len(prefix) :])
+    return aliases
+
+
+def database_version_labels_with_server_fallbacks(
+    hosts: list[Host],
+    host_db_labels: dict[int, str | None],
+) -> dict[int, str | None]:
+    direct_versions = {
+        host.id: database_version_label(host, host_db_labels.get(host.id))
+        for host in hosts
+    }
+    server_versions_by_alias: dict[str, str] = {}
+    for host in hosts:
+        if not is_zabbix_server_asset(host):
+            continue
+        version = direct_versions.get(host.id)
+        if not version:
+            continue
+        for alias in host_aliases(host):
+            server_versions_by_alias.setdefault(alias, version)
+
+    versions = dict(direct_versions)
+    for host in hosts:
+        if versions.get(host.id) or not is_zabbix_database_asset(host):
+            continue
+        for alias in host_aliases(host, include_database_prefix_variants=True):
+            version = server_versions_by_alias.get(alias)
+            if version:
+                versions[host.id] = version
+                break
+    return versions
+
+
 def database_role_text(host: Host) -> str:
     tags = imported_zabbix_tags(host)
     values = [
@@ -843,10 +913,7 @@ def dashboard(
         host.id: detected_db_type_by_zabbix_rules(host) or detected_db_type(host)
         for host in all_hosts
     }
-    host_database_version_labels = {
-        host.id: database_version_label(host, host_db_labels.get(host.id))
-        for host in all_hosts
-    }
+    host_database_version_labels = database_version_labels_with_server_fallbacks(all_hosts, host_db_labels)
     host_asset_kinds = {host.id: detected_zabbix_asset_kind(host) for host in all_hosts}
     host_os_labels = {host.id: operating_system_label(host) for host in all_hosts}
     host_model_labels = {host.id: server_model_label(host) for host in all_hosts}

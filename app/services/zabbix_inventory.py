@@ -10,6 +10,7 @@ from app.models import Host
 from app.services.zabbix import ZabbixClient
 from app.services.zabbix_items import (
     ZABBIX_DATABASE_ITEM_SEARCH_TERMS,
+    ZABBIX_DATABASE_VERSION_ITEM_SEARCH_TERMS,
     ZABBIX_DETAIL_ITEM_KEYS,
     operating_system_item_label,
     serialize_zabbix_item_values,
@@ -160,6 +161,8 @@ def upsert_host(db, zabbix_host: dict, client: ZabbixClient) -> tuple[Host, bool
     item_values = client.get_latest_item_values(hostid, ZABBIX_DETAIL_ITEM_KEYS)
     if role == "database":
         item_values.update(client.get_latest_item_values_by_search(hostid, ZABBIX_DATABASE_ITEM_SEARCH_TERMS))
+    elif db_type:
+        item_values.update(client.get_latest_item_values_by_search(hostid, ZABBIX_DATABASE_VERSION_ITEM_SEARCH_TERMS, limit=20))
     state = client.host_state_from_host(zabbix_host)
 
     host = db.scalar(select(Host).where(Host.zabbix_hostid == hostid))
