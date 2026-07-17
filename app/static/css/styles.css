@@ -1662,23 +1662,18 @@ body {
 }
 
 .server-summary-filter {
+  align-items: center;
+  display: flex;
+  gap: 8px;
   margin: 0;
+}
+
+.server-summary-filter .form-select {
   min-width: 168px;
 }
 
-.column-filter-form {
-  align-items: center;
-  display: inline-grid;
-  gap: 4px;
-  grid-template-columns: auto minmax(72px, 84px);
-  margin: 0;
-}
-
-.column-filter-form .form-select {
-  font-size: 0.72rem;
-  min-height: 28px;
-  padding-bottom: 2px;
-  padding-top: 2px;
+.server-summary-filter .server-summary-filter-virtual {
+  min-width: 104px;
 }
 
 .chart-box {
