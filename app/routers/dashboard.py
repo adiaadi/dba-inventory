@@ -1049,7 +1049,7 @@ def dashboard(
             f"PostgreSQL {db_family_counts['PostgreSQL']}\n"
             f"SQLServer {db_family_counts['SQLServer']}"
         ),
-        "hosts": f"{len(filtered_server_hosts)} {servers_label} in current view",
+        "hosts": f"{len(filtered_server_hosts)} {servers_label}",
         "databases": f"{len(database_assets)} DB assets in current view",
         "clusters": f"{len(clusters)} clusters in current view",
         **{
