@@ -412,7 +412,7 @@
                   </select>
                 </label>
                 <label class="server-summary-filter-field">
-                  <span>server type</span>
+                  <span>virtual</span>
                   <select class="form-select form-select-sm server-summary-filter-virtual" name="virtual" aria-label="{{ ui_text(request, "label.virtual", "Virtual") }}" onchange="this.form.submit()">
                     <option value="">{{ ui_text(request, "filter.all", "All") }}</option>
                     <option value="YES" {% if active_virtual_filter == "YES" %}selected{% endif %}>YES</option>
