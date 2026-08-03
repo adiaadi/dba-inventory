@@ -5,7 +5,7 @@
 <div class="server-workbench">
   <aside class="server-tree">
     <div class="tree-toolbar">
-      <a class="btn btn-sm btn-outline-primary" href="/?view=hosts"><i class="bi bi-arrow-left"></i> Servers</a>
+      <a class="btn btn-sm btn-outline-primary" href="/?view=hosts"><i class="bi bi-arrow-left"></i> Back</a>
     </div>
 
     <div class="tree-root">
@@ -31,6 +31,16 @@
         </div>
       </div>
     </div>
+
+    <div class="tree-list-title">System Info</div>
+    <dl class="tree-system-info">
+      {% for row in system_info_rows %}
+        <div>
+          <dt>{{ row.label }}</dt>
+          <dd title="{{ row.value }}">{{ row.value }}</dd>
+        </div>
+      {% endfor %}
+    </dl>
   </aside>
 
   <section class="server-main">

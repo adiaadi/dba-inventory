@@ -2431,6 +2431,41 @@ body {
   margin-top: 2px;
 }
 
+.tree-system-info {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0 10px 12px;
+}
+
+.tree-system-info div {
+  border-bottom: 1px solid #d8dee8;
+  display: grid;
+  gap: 4px;
+  grid-template-columns: minmax(112px, 1fr) minmax(0, 1fr);
+  min-height: 30px;
+  padding: 7px 0;
+}
+
+.tree-system-info dt {
+  color: #003f70;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.tree-system-info dd {
+  color: #344054;
+  font-size: 0.78rem;
+  line-height: 1.2;
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .tree-host {
   font-size: 0.86rem;
   padding: 2px 0;

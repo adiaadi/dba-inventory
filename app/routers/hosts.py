@@ -35,6 +35,14 @@ COMPONENT_LABELS = {
     "storage": "Storage",
 }
 CHART_COLORS = ("#e30613", "#111827", "#64748b", "#2563eb", "#16a34a", "#f59e0b")
+SYSTEM_INFO_ITEMS = (
+    ("system.boottime", "System boot time"),
+    ("system.uname", "System description"),
+    ("system.localtime", "System local time"),
+    ("system.hostname", "System name"),
+    ("system.uptime", "System uptime"),
+    ("agent.ping", "Zabbix agent ping"),
+)
 
 
 def metric_float(value: Any) -> float | None:
@@ -65,6 +73,42 @@ def metric_time_label(clock: int, timezone_name: str) -> str:
     except ZoneInfoNotFoundError:
         tzinfo = timezone.utc
     return datetime.fromtimestamp(clock, tzinfo).strftime("%H:%M")
+
+
+def datetime_label_from_epoch(value: Any, timezone_name: str) -> str:
+    timestamp = metric_float(value)
+    if timestamp is None:
+        return str(value) if value not in (None, "") else "-"
+    try:
+        tzinfo = ZoneInfo(timezone_name)
+    except ZoneInfoNotFoundError:
+        tzinfo = timezone.utc
+    return datetime.fromtimestamp(int(timestamp), tzinfo).strftime("%Y-%m-%d %I:%M:%S %p")
+
+
+def uptime_label(value: Any) -> str:
+    seconds = metric_float(value)
+    if seconds is None:
+        return str(value) if value not in (None, "") else "-"
+    total_seconds = int(seconds)
+    days, remainder = divmod(total_seconds, 86400)
+    hours, remainder = divmod(remainder, 3600)
+    minutes, seconds_left = divmod(remainder, 60)
+    if days:
+        return f"{days} days, {hours:02d}:{minutes:02d}:{seconds_left:02d}"
+    return f"{hours:02d}:{minutes:02d}:{seconds_left:02d}"
+
+
+def system_info_value_label(key: str, value: Any, timezone_name: str) -> str:
+    if value in (None, ""):
+        return "-"
+    if key in {"system.boottime", "system.localtime"}:
+        return datetime_label_from_epoch(value, timezone_name)
+    if key == "system.uptime":
+        return uptime_label(value)
+    if key == "agent.ping":
+        return "Up (1)" if str(value) == "1" else f"Down ({value})"
+    return str(value)
 
 
 def item_display_name(item: dict[str, Any]) -> str:
@@ -233,6 +277,33 @@ def load_zabbix_metric_view(
         return [], [], f"Cannot load Zabbix metrics: {exc}"
 
 
+def load_zabbix_system_info(host: Host) -> list[dict[str, str]]:
+    settings = get_settings()
+    values: dict[str, Any] = {}
+    if host.zabbix_hostid and settings.zabbix_url and settings.zabbix_api_token:
+        try:
+            client = ZabbixClient(
+                settings.zabbix_url,
+                settings.zabbix_api_token,
+                verify_ssl=settings.zabbix_verify_ssl,
+                ca_file=settings.zabbix_ca_file,
+            )
+            values = client.get_latest_item_values(
+                host.zabbix_hostid,
+                tuple(key for key, _ in SYSTEM_INFO_ITEMS),
+            )
+        except (ZabbixApiError, ValueError):
+            values = {}
+
+    return [
+        {
+            "label": label,
+            "value": system_info_value_label(key, values.get(key), settings.app_timezone),
+        }
+        for key, label in SYSTEM_INFO_ITEMS
+    ]
+
+
 @router.get("", response_class=HTMLResponse)
 def hosts(
     request: Request,
@@ -279,6 +350,7 @@ def host_detail(
     host_tabs = HOST_TABS
     active_tab = tab if tab in {slug for slug, _ in host_tabs} else "performance-summary"
     metric_charts, metric_rows, zabbix_metrics_error = load_zabbix_metric_view(host, active_tab)
+    system_info_rows = load_zabbix_system_info(host)
 
     return templates.TemplateResponse(
         request,
@@ -290,6 +362,7 @@ def host_detail(
             "db_label": db_label,
             "metric_charts": metric_charts,
             "metric_rows": metric_rows,
+            "system_info_rows": system_info_rows,
             "host_tabs": host_tabs,
             "active_tab": active_tab,
             "zabbix_metrics_error": zabbix_metrics_error,
