@@ -569,8 +569,25 @@ body {
 }
 
 .overview-actions {
+  align-items: flex-end;
   display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.overview-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
   gap: 18px;
+  justify-content: flex-end;
+}
+
+.overview-sync-time {
+  color: #5b6778;
+  font-size: 0.78rem;
+  line-height: 1.2;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .overview-actions .btn {
@@ -2745,6 +2762,16 @@ body {
   .overview-actions {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .overview-action-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .overview-sync-time {
+    text-align: left;
+    white-space: normal;
   }
 
   .overview-sidebar,

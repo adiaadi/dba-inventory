@@ -68,30 +68,31 @@
         {% endif %}
       </div>
       <div class="overview-actions">
-        <form action="/" method="get" class="d-inline">
-          <input type="hidden" name="view" value="{{ current_view }}">
-          <input type="hidden" name="asset_view" value="{{ current_asset_view }}">
-          <input type="hidden" name="db_type" value="{{ filters.db_type or '' }}">
-          <input type="hidden" name="environment" value="{{ filters.environment or '' }}">
-          <input type="hidden" name="virtual" value="{{ active_virtual_filter or '' }}">
-          <input type="hidden" name="refresh" value="1">
-          <button class="btn btn-outline-secondary btn-sm" type="submit">
-            <i class="bi bi-arrow-repeat"></i> {{ ui_text(request, "action.refresh_zabbix", "Refresh Zabbix") }}
-          </button>
-        </form>
-        {% if current_view == "hosts" or db_type_view %}
-          <a class="btn btn-success btn-sm" href="/exports/hosts.xlsx"><i class="bi bi-file-earmark-excel"></i> {{ ui_text(request, "action.export_servers", "Export Servers") }}</a>
-        {% elif current_view == "databases" %}
-          <a class="btn btn-success btn-sm" href="/exports/databases.xlsx"><i class="bi bi-file-earmark-excel"></i> {{ ui_text(request, "action.export_dbs", "Export DBs") }}</a>
-        {% else %}
-          <a class="btn btn-outline-secondary btn-sm" href="/?view=hosts">{{ ui_text(request, "action.explore_servers", "Explore Servers") }}</a>
+        {% if last_sync_at %}
+          <div class="overview-sync-time">{{ ui_text(request, "label.last_zabbix_sync", "Last Zabbix sync") }}: {{ last_sync_at|date_time }}</div>
         {% endif %}
+        <div class="overview-action-buttons">
+          <form action="/" method="get" class="d-inline">
+            <input type="hidden" name="view" value="{{ current_view }}">
+            <input type="hidden" name="asset_view" value="{{ current_asset_view }}">
+            <input type="hidden" name="db_type" value="{{ filters.db_type or '' }}">
+            <input type="hidden" name="environment" value="{{ filters.environment or '' }}">
+            <input type="hidden" name="virtual" value="{{ active_virtual_filter or '' }}">
+            <input type="hidden" name="refresh" value="1">
+            <button class="btn btn-outline-secondary btn-sm" type="submit">
+              <i class="bi bi-arrow-repeat"></i> {{ ui_text(request, "action.refresh_zabbix", "Refresh Zabbix") }}
+            </button>
+          </form>
+          {% if current_view == "hosts" or db_type_view %}
+            <a class="btn btn-success btn-sm" href="/exports/hosts.xlsx"><i class="bi bi-file-earmark-excel"></i> {{ ui_text(request, "action.export_servers", "Export Servers") }}</a>
+          {% elif current_view == "databases" %}
+            <a class="btn btn-success btn-sm" href="/exports/databases.xlsx"><i class="bi bi-file-earmark-excel"></i> {{ ui_text(request, "action.export_dbs", "Export DBs") }}</a>
+          {% else %}
+            <a class="btn btn-outline-secondary btn-sm" href="/?view=hosts">{{ ui_text(request, "action.explore_servers", "Explore Servers") }}</a>
+          {% endif %}
+        </div>
       </div>
     </header>
-
-    {% if last_sync_at %}
-      <div class="text-muted small mb-2">{{ ui_text(request, "label.last_zabbix_sync", "Last Zabbix sync") }}: {{ last_sync_at|date_time }}</div>
-    {% endif %}
 
     {% if zabbix_refresh_error %}
       <div class="alert alert-warning py-2 mb-3" role="alert">
