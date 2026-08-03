@@ -2524,6 +2524,17 @@ body {
   flex: 1;
 }
 
+.server-metric-alert {
+  align-items: center;
+  background: #fff7ed;
+  border-bottom: 1px solid #fed7aa;
+  color: #9a3412;
+  display: flex;
+  font-size: 0.84rem;
+  gap: 8px;
+  padding: 8px 12px;
+}
+
 .server-chart-stack {
   display: grid;
 }
@@ -2555,6 +2566,27 @@ body {
 .server-chart-canvas {
   height: 148px;
   padding: 0 16px 6px;
+}
+
+.server-chart-empty {
+  min-height: 190px;
+}
+
+.server-chart-empty-body {
+  align-items: center;
+  color: #667085;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9rem;
+  gap: 8px;
+  justify-content: center;
+  min-height: 150px;
+  text-align: center;
+}
+
+.server-chart-empty-body i {
+  color: var(--brand);
+  font-size: 1.5rem;
 }
 
 .server-metrics-table {

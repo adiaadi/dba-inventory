@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import ssl
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -245,6 +246,94 @@ class ZabbixClient:
                     if label:
                         item_values[str(label)] = str(value)
         return item_values
+
+    def _call_item_get(self, params: dict[str, Any]) -> list[dict[str, Any]]:
+        params_with_tags = {
+            **params,
+            "selectTags": ["tag", "value"],
+            "selectInheritedTags": ["tag", "value"],
+        }
+        try:
+            return self._call("item.get", params_with_tags)
+        except ZabbixApiError as exc:
+            if "selectInheritedTags" not in str(exc):
+                raise
+            params_without_inherited_tags = {
+                **params,
+                "selectTags": ["tag", "value"],
+            }
+            return self._call("item.get", params_without_inherited_tags)
+
+    def get_numeric_items_by_tag(
+        self,
+        hostid: str,
+        tag_name: str,
+        tag_value: str,
+    ) -> list[dict[str, Any]]:
+        items = self._call_item_get(
+            {
+                "output": ["itemid", "name", "key_", "value_type", "units", "lastvalue"],
+                "hostids": [str(hostid)],
+                "filter": {"status": "0"},
+                "sortfield": "name",
+            }
+        )
+        tag_name_normalized = tag_name.strip().lower()
+        tag_value_normalized = tag_value.strip().lower()
+        numeric_value_types = {"0", "3"}
+        matched_items: list[dict[str, Any]] = []
+        for item in items or []:
+            if str(item.get("value_type")) not in numeric_value_types:
+                continue
+            item_tags = [
+                *(item.get("tags") or []),
+                *(item.get("inheritedTags") or []),
+            ]
+            if any(
+                str(tag.get("tag") or "").strip().lower() == tag_name_normalized
+                and str(tag.get("value") or "").strip().lower() == tag_value_normalized
+                for tag in item_tags
+            ):
+                matched_items.append(item)
+        return matched_items
+
+    def get_item_history(
+        self,
+        itemid: str,
+        value_type: str | int,
+        time_from: int | None = None,
+        time_till: int | None = None,
+        limit: int = 240,
+    ) -> list[dict[str, Any]]:
+        params: dict[str, Any] = {
+            "output": "extend",
+            "history": int(value_type),
+            "itemids": [str(itemid)],
+            "sortfield": "clock",
+            "sortorder": "ASC",
+            "limit": limit,
+        }
+        if time_from is not None:
+            params["time_from"] = int(time_from)
+        if time_till is not None:
+            params["time_till"] = int(time_till)
+        return self._call("history.get", params) or []
+
+    def get_recent_item_history(
+        self,
+        itemid: str,
+        value_type: str | int,
+        seconds: int = 3600,
+        limit: int = 240,
+    ) -> list[dict[str, Any]]:
+        now = int(time.time())
+        return self.get_item_history(
+            itemid,
+            value_type,
+            time_from=now - seconds,
+            time_till=now,
+            limit=limit,
+        )
 
     def get_hostid_by_hostname(self, hostname: str) -> str | None:
         host = self.get_host_by_hostname(hostname)

@@ -60,30 +60,32 @@
       <span class="server-command-note">{{ host.zabbix_last_sync_at|date_time }}</span>
     </div>
 
+    {% if zabbix_metrics_error %}
+      <div class="server-metric-alert">
+        <i class="bi bi-info-circle"></i>
+        <span>{{ zabbix_metrics_error }}</span>
+      </div>
+    {% endif %}
+
     <div class="server-chart-stack">
-      <article class="server-chart-panel">
-        <div class="server-chart-header">
-          <span>SQL Statistics\Batch Requests/sec</span>
-          <button class="btn btn-sm btn-link" type="button"><i class="bi bi-x-lg"></i></button>
-        </div>
-        <div class="server-chart-canvas"><canvas id="batchChart"></canvas></div>
-      </article>
-
-      <article class="server-chart-panel">
-        <div class="server-chart-header">
-          <span>SQL Statistics\SQL Compilations/sec</span>
-          <button class="btn btn-sm btn-link" type="button"><i class="bi bi-x-lg"></i></button>
-        </div>
-        <div class="server-chart-canvas"><canvas id="compileChart"></canvas></div>
-      </article>
-
-      <article class="server-chart-panel">
-        <div class="server-chart-header">
-          <span>SQL Statistics\SQL Re-Compilations/sec</span>
-          <button class="btn btn-sm btn-link" type="button"><i class="bi bi-x-lg"></i></button>
-        </div>
-        <div class="server-chart-canvas"><canvas id="recompileChart"></canvas></div>
-      </article>
+      {% for chart in metric_charts %}
+        <article class="server-chart-panel">
+          <div class="server-chart-header">
+            <span>{{ chart.title }}</span>
+          </div>
+          <div class="server-chart-canvas"><canvas id="{{ chart.id }}"></canvas></div>
+        </article>
+      {% else %}
+        <article class="server-chart-panel server-chart-empty">
+          <div class="server-chart-header">
+            <span>No Zabbix metrics found for this tab</span>
+          </div>
+          <div class="server-chart-empty-body">
+            <i class="bi bi-activity"></i>
+            <span>Expected Zabbix item tag: component = {{ active_tab if active_tab != "performance-summary" else "cpu / memory / network" }}</span>
+          </div>
+        </article>
+      {% endfor %}
     </div>
 
     <div class="server-metrics-table table-responsive">
@@ -118,20 +120,9 @@
               <td><a href="#">Edit</a></td>
               <td><a href="#">View</a></td>
             </tr>
-          {% endfor %}
-          {% for database in host.databases %}
+          {% else %}
             <tr>
-              <td><a href="#">Database</a></td>
-              <td><a href="#">{{ database.name }}</a></td>
-              <td>{{ database.service_name or database.port or "-" }}</td>
-              <td class="metric-cell metric-cell-{{ database.status|status_class }}">{{ database.status }}</td>
-              <td>-</td>
-              <td>-</td>
-              <td>{{ database.version or "-" }}</td>
-              <td>1</td>
-              <td class="metric-cell metric-cell-{{ database.status|status_class }}">{{ database.status }}</td>
-              <td><a href="#">Edit</a></td>
-              <td><a href="#">View</a></td>
+              <td colspan="11" class="empty-state">No numeric Zabbix metrics found for this tab.</td>
             </tr>
           {% endfor %}
         </tbody>
@@ -144,11 +135,10 @@
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script>
-  const labels = ["16:05", "16:13", "16:21", "16:30", "16:38", "16:46", "16:55"];
-  const baseSeries = [18, 22, 19, 21, 20, 19, 21];
+  const metricCharts = {{ metric_charts|tojson }};
 
-  function serverLineChart(id, label, values) {
-    const element = document.getElementById(id);
+  function serverLineChart(chart) {
+    const element = document.getElementById(chart.id);
     if (!element || typeof Chart === "undefined") {
       return;
     }
@@ -156,22 +146,31 @@
     new Chart(element, {
       type: "line",
       data: {
-        labels,
-        datasets: [{
-          label,
-          data: values,
-          borderColor: "#e30613",
-          backgroundColor: "rgba(227, 6, 19, 0.14)",
+        labels: chart.labels,
+        datasets: chart.datasets.map((dataset) => ({
+          ...dataset,
           borderWidth: 2,
           pointRadius: 2,
           tension: 0.22,
-          fill: true,
-        }],
+          spanGaps: true,
+        })),
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: true, labels: { boxWidth: 10 } } },
+        interaction: { intersect: false, mode: "index" },
+        plugins: {
+          legend: { display: true, labels: { boxWidth: 10, usePointStyle: true } },
+          tooltip: {
+            backgroundColor: "#111827",
+            borderColor: "#e30613",
+            borderWidth: 1,
+            titleColor: "#fff",
+            bodyColor: "#fff",
+            displayColors: true,
+            opacity: 1,
+          },
+        },
         scales: {
           x: { grid: { color: "#edf1f6" } },
           y: { beginAtZero: true, grid: { color: "#edf1f6" } },
@@ -180,8 +179,6 @@
     });
   }
 
-  serverLineChart("batchChart", "SQL Statistics\\Batch Requests/sec", baseSeries);
-  serverLineChart("compileChart", "SQL Statistics\\SQL Compilations/sec", baseSeries.map((value) => Math.max(0, Math.round(value * 0.62))));
-  serverLineChart("recompileChart", "SQL Statistics\\SQL Re-Compilations/sec", baseSeries.map((value) => Number((value / 35).toFixed(2))));
+  metricCharts.forEach(serverLineChart);
 </script>
 {% endblock %}
