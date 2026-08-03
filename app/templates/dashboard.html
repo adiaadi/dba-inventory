@@ -9,7 +9,6 @@
     </div>
 
     <div class="overview-nav">
-      <div class="sidebar-caption">{{ ui_text(request, "sidebar.page_navigator", "Page Navigator") }}</div>
       {% for tab in section_tabs %}
         <a class="overview-nav-item {% if current_view == tab.key %}active{% endif %}" href="/?view={{ tab.key }}">
           <i class="bi {{ tab.icon }}"></i>
