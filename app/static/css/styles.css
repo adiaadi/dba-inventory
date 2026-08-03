@@ -386,7 +386,7 @@ body {
   box-shadow: 0 18px 40px rgba(17, 24, 39, 0.08);
   display: grid;
   gap: 14px;
-  grid-template-columns: 126px minmax(0, 1fr);
+  grid-template-columns: 156px minmax(0, 1fr);
   min-height: calc(100vh - 114px);
   padding: 14px;
 }
@@ -450,16 +450,17 @@ body {
   color: var(--brand-dark);
   display: flex;
   font-family: var(--display-font);
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   font-weight: 850;
-  gap: 8px;
+  gap: 7px;
   justify-content: flex-start;
-  letter-spacing: 0.015em;
+  letter-spacing: 0.01em;
   min-height: 38px;
-  padding: 0 10px;
+  padding: 0 9px;
   text-decoration: none;
   text-transform: uppercase;
   transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease, box-shadow 140ms ease;
+  white-space: nowrap;
 }
 
 .overview-nav-item i {
@@ -471,7 +472,8 @@ body {
 
 .overview-nav-item span {
   min-width: 0;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .overview-nav-item.active,
