@@ -242,6 +242,33 @@
           </div>
         </section>
 
+        <section class="overview-panel executive-panel executive-panel-span-3 environment-estate-panel">
+          <div class="overview-section-heading">
+            <h2>{{ ui_text(request, "panel.environment_estate", "Environment Estate") }}</h2>
+            <span>{{ ui_text(request, "panel.environment_estate_note", "PROD / TEST / DEV") }}</span>
+          </div>
+          <div class="environment-estate-grid">
+            {% for item in environment_estate %}
+              <div class="environment-estate-card environment-estate-{{ item.label|lower }}">
+                <div class="environment-estate-head">
+                  <span>{{ item.label }}</span>
+                  <strong>{{ item.total }}</strong>
+                </div>
+                <div class="environment-estate-lines">
+                  <div>
+                    <span><i class="bi bi-hdd-network"></i>{{ ui_text(request, "label.servers", "Servers") }}</span>
+                    <strong>{{ item.servers }}</strong>
+                  </div>
+                  <div>
+                    <span><i class="bi bi-database"></i>{{ ui_text(request, "label.databases", "Databases") }}</span>
+                    <strong>{{ item.databases }}</strong>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </section>
+
         <section class="overview-panel executive-panel executive-panel-span-3 database-size-panel">
           <div class="overview-section-heading">
             <h2>{{ ui_text(request, "panel.database_size", "Database Size") }}</h2>

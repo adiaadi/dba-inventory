@@ -59,6 +59,7 @@ DB_TYPE_VIEWS = {
 }
 
 DB_FAMILIES = ("Oracle", "PostgreSQL", "SQLServer")
+EXECUTIVE_ENVIRONMENTS = ("PROD", "TEST", "DEV")
 
 DATABASE_SIZE_TAG_NAMES = (
     "db_size",
@@ -1319,6 +1320,31 @@ def dashboard(
     environment_counter = Counter((host.environment or "UNKNOWN").upper() for host in server_hosts)
     environment_counts = sorted(environment_counter.items())
     environment_labels = sorted(environment_counter.keys())
+    environment_estate = []
+    for environment_label in EXECUTIVE_ENVIRONMENTS:
+        environment_server_hosts = unique_hosts(
+            [
+                host
+                for host in server_hosts
+                if (host.environment or "").strip().upper() == environment_label
+            ]
+        )
+        environment_database_hosts = unique_hosts(
+            [
+                host
+                for host in all_hosts
+                if is_zabbix_database_asset(host)
+                and (host.environment or "").strip().upper() == environment_label
+            ]
+        )
+        environment_estate.append(
+            {
+                "label": environment_label,
+                "servers": len(environment_server_hosts),
+                "databases": len(environment_database_hosts),
+                "total": len(environment_server_hosts) + len(environment_database_hosts),
+            }
+        )
     db_family_palette = {
         "Oracle": "#e30613",
         "PostgreSQL": "#111827",
@@ -1641,6 +1667,7 @@ def dashboard(
             "monitoring_summary": monitoring_summary,
             "db_type_counts": db_type_counts,
             "environment_counts": environment_counts,
+            "environment_estate": environment_estate,
             "platform_summary": platform_summary,
             "capacity_by_db": capacity_by_db,
             "database_size_sections": database_size_sections,
