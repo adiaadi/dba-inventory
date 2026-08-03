@@ -1592,6 +1592,29 @@ def dashboard(
             ]
         display_hosts = type_database_assets if current_asset_view == "databases" else type_server_assets
 
+    type_database_environment_summary = [
+        {
+            "label": environment_label,
+            "count": sum(
+                1
+                for host in type_database_assets
+                if (host.environment or "").strip().upper() == environment_label
+            ),
+        }
+        for environment_label in ("PROD", "DEV", "TEST")
+    ]
+    type_server_platform_summary = [
+        {
+            "label": platform_label,
+            "count": sum(
+                1
+                for host in type_server_assets
+                if host_platform_labels.get(host.id) == platform_label
+            ),
+        }
+        for platform_label in ("Virtual", "Physical")
+    ]
+
     database_assets = unique_hosts([
         host
         for host in type_base_hosts
@@ -1648,6 +1671,10 @@ def dashboard(
         "platformValues": list(visible_platform_counts.values()),
         "osLabels": [label for label, _ in os_family_counts],
         "osValues": [count for _, count in os_family_counts],
+        "typeDatabaseEnvironmentLabels": [row["label"] for row in type_database_environment_summary],
+        "typeDatabaseEnvironmentValues": [row["count"] for row in type_database_environment_summary],
+        "typeServerPlatformLabels": [row["label"] for row in type_server_platform_summary],
+        "typeServerPlatformValues": [row["count"] for row in type_server_platform_summary],
     }
     section_tabs = [
         {"key": "overview", "label": ui_text_value(request, "nav.overview", "Overview"), "icon": "bi-grid-1x2"},
@@ -1729,6 +1756,8 @@ def dashboard(
             "server_assets": server_assets,
             "type_database_assets": type_database_assets,
             "type_server_assets": type_server_assets,
+            "type_database_environment_summary": type_database_environment_summary,
+            "type_server_platform_summary": type_server_platform_summary,
             "monitoring_counts": monitoring_counts,
             "monitoring_summary": monitoring_summary,
             "db_type_counts": db_type_counts,
