@@ -1021,6 +1021,49 @@ body {
   position: absolute;
 }
 
+.portal-login-db-logos {
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 16px;
+  box-shadow: 0 18px 42px rgba(17, 24, 39, 0.18);
+  display: grid;
+  gap: 8px;
+  left: 28px;
+  padding: 12px;
+  position: absolute;
+  top: 28px;
+  width: 176px;
+  z-index: 1;
+}
+
+.portal-login-db-logo {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(225, 229, 236, 0.9);
+  border-radius: 10px;
+  display: flex;
+  gap: 10px;
+  min-height: 44px;
+  padding: 7px 9px;
+}
+
+.portal-login-db-logo img {
+  height: 30px;
+  object-fit: contain;
+  width: 30px;
+}
+
+.portal-login-db-logo-oracle img {
+  width: 42px;
+}
+
+.portal-login-db-logo span {
+  color: var(--brand-dark);
+  font-size: 0.83rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
 @media (max-width: 991.98px) {
   .portal-login-shell {
     grid-template-columns: 1fr;
@@ -1052,6 +1095,11 @@ body {
 
   .portal-login-hero {
     min-height: 280px;
+  }
+
+  .portal-login-db-logos {
+    left: 16px;
+    top: 16px;
   }
 }
 
