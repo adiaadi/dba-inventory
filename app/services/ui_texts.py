@@ -18,7 +18,6 @@ DEFAULT_UI_TEXTS = [
     {"key": "nav.admin", "category": "Navigation", "label": "Admin nav item", "default": "Admin"},
     {"key": "nav.logout", "category": "Navigation", "label": "Logout button", "default": "Logout"},
     {"key": "auth.login_title", "category": "Auth", "label": "Portal login title", "default": "DATABASE INVENTORY"},
-    {"key": "auth.login_hint", "category": "Auth", "label": "Portal login hint", "default": "Secure access to servers and DBMS inventory."},
     {"key": "auth.invalid_login", "category": "Auth", "label": "Portal login error", "default": "Invalid login or password."},
     {"key": "sidebar.page_navigator", "category": "Sidebar", "label": "Page navigator caption", "default": "Page Navigator"},
     {"key": "sidebar.filters", "category": "Sidebar", "label": "Filters caption", "default": "Filters"},

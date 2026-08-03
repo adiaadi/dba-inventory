@@ -12,14 +12,9 @@
   <main class="portal-login-shell">
     <section class="portal-login-panel">
       <div class="portal-login-panel-inner">
-        <div class="portal-login-topline">
-          <img class="portal-login-logo" src="/static/img/bnk_logo_246x164.png" alt="BNK Commercial Bank">
-          <span>RU <i class="bi bi-chevron-down"></i></span>
-        </div>
+        <img class="portal-login-logo" src="/static/img/bnk_logo_246x164.png" alt="BNK Commercial Bank">
         <div class="portal-login-copy">
-          <span class="portal-login-kicker">Secure access</span>
           <h1>{{ ui_text(request, "auth.login_title", "DATABASE INVENTORY") }}</h1>
-          <p>{{ ui_text(request, "auth.login_hint", "Secure access to servers and DBMS inventory.") }}</p>
         </div>
         {% if error %}
           <div class="alert alert-danger py-2" role="alert">
@@ -45,10 +40,6 @@
     </section>
     <section class="portal-login-hero" aria-label="Database infrastructure illustration">
       <img src="/static/img/login-infrastructure-hero.png" alt="">
-      <div class="portal-login-hero-overlay">
-        <span>DBA Inventory</span>
-        <strong>Hardware & DBMS Estate</strong>
-      </div>
     </section>
   </main>
 </body>
