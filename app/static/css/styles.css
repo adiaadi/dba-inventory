@@ -1536,11 +1536,11 @@ body {
 }
 
 .summary-side-stack .datacenter-map {
-  grid-template-columns: minmax(0, 1fr) 38px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr);
 }
 
 .summary-side-stack .datacenter-node {
-  min-height: 210px;
+  min-height: 238px;
 }
 
 .executive-split {
@@ -1561,23 +1561,48 @@ body {
 
 .datacenter-map {
   align-items: stretch;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.92) 0%, rgba(247, 249, 252, 0.82) 45%, rgba(227, 6, 19, 0.07) 100%),
+    url("/static/img/login-infrastructure-hero.png") center / cover;
+  border: 1px solid #dfe5ee;
+  border-radius: 10px;
   display: grid;
   gap: 10px;
   grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr);
+  overflow: hidden;
+  padding: 12px;
+  position: relative;
+}
+
+.datacenter-map::before {
+  background:
+    linear-gradient(90deg, rgba(15, 23, 42, 0.05) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.05) 1px, transparent 1px);
+  background-size: 28px 28px;
+  content: "";
+  inset: 0;
+  opacity: 0.32;
+  pointer-events: none;
+  position: absolute;
 }
 
 .datacenter-node {
   background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98)),
-    radial-gradient(circle at top right, rgba(227, 6, 19, 0.08), transparent 38%);
+    linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.82)),
+    radial-gradient(circle at top right, rgba(227, 6, 19, 0.1), transparent 42%);
+  backdrop-filter: blur(5px);
   border: 1px solid #dfe5ee;
   border-radius: 10px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 12px 30px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92);
   display: grid;
   gap: 8px;
   min-height: 128px;
   min-width: 0;
   padding: 14px;
+  position: relative;
+  z-index: 1;
 }
 
 .datacenter-node-head {
@@ -1601,9 +1626,122 @@ body {
   width: 30px;
 }
 
+.datacenter-scene {
+  align-items: end;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(238, 242, 247, 0.72)),
+    linear-gradient(90deg, rgba(227, 6, 19, 0.08), transparent 45%, rgba(15, 23, 42, 0.08));
+  border: 1px solid rgba(208, 215, 225, 0.9);
+  border-radius: 9px;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  min-height: 96px;
+  overflow: hidden;
+  padding: 12px 10px 10px;
+  position: relative;
+}
+
+.datacenter-scene::before {
+  background:
+    linear-gradient(120deg, transparent 0 46%, rgba(255, 255, 255, 0.55) 47% 49%, transparent 50%),
+    radial-gradient(circle at 75% 20%, rgba(227, 6, 19, 0.16), transparent 22%);
+  content: "";
+  inset: 0;
+  position: absolute;
+}
+
+.datacenter-building {
+  align-self: end;
+  background:
+    linear-gradient(180deg, #ffffff, #e9eef6),
+    repeating-linear-gradient(90deg, transparent 0 7px, rgba(227, 6, 19, 0.55) 7px 9px);
+  border: 1px solid rgba(189, 199, 213, 0.95);
+  border-bottom: 4px solid #111827;
+  border-radius: 7px 7px 3px 3px;
+  box-shadow: 0 10px 18px rgba(15, 23, 42, 0.14);
+  display: grid;
+  gap: 4px;
+  height: 76px;
+  min-width: 58px;
+  padding: 10px 9px;
+  position: relative;
+  width: 45%;
+  z-index: 1;
+}
+
+.datacenter-building::after {
+  background: #111827;
+  border-radius: 2px 2px 0 0;
+  bottom: 0;
+  content: "";
+  height: 18px;
+  left: 50%;
+  position: absolute;
+  transform: translateX(-50%);
+  width: 16px;
+}
+
+.datacenter-building span {
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(227, 6, 19, 0.75) 0,
+    rgba(227, 6, 19, 0.75) 5px,
+    rgba(255, 255, 255, 0.45) 5px,
+    rgba(255, 255, 255, 0.45) 11px
+  );
+  border-radius: 999px;
+  display: block;
+  height: 5px;
+}
+
+.datacenter-building-dr span {
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(15, 23, 42, 0.78) 0,
+    rgba(15, 23, 42, 0.78) 5px,
+    rgba(255, 255, 255, 0.45) 5px,
+    rgba(255, 255, 255, 0.45) 11px
+  );
+}
+
+.datacenter-server-rack {
+  align-self: end;
+  background: linear-gradient(180deg, #182233, #0f172a);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 7px;
+  box-shadow:
+    0 10px 18px rgba(15, 23, 42, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  display: grid;
+  gap: 5px;
+  height: 82px;
+  min-width: 54px;
+  padding: 9px 8px;
+  position: relative;
+  width: 40%;
+  z-index: 1;
+}
+
+.datacenter-server-rack span {
+  background:
+    radial-gradient(circle at 92% 50%, var(--brand) 0 2px, transparent 3px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0.2));
+  border-radius: 999px;
+  display: block;
+  height: 7px;
+}
+
+.datacenter-node-metric {
+  align-items: baseline;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
 .datacenter-node strong {
   color: var(--brand-dark);
-  font-size: 2.2rem;
+  font-size: 2.1rem;
   line-height: 0.95;
 }
 
@@ -1618,35 +1756,15 @@ body {
   text-transform: uppercase;
 }
 
-.datacenter-racks {
-  display: grid;
-  gap: 4px;
-  margin-top: 2px;
-}
-
-.datacenter-racks span {
-  background: linear-gradient(90deg, var(--brand), #111827);
-  border-radius: 999px;
-  display: block;
-  height: 6px;
-}
-
-.datacenter-racks span:nth-child(2) {
-  opacity: 0.75;
-  width: 78%;
-}
-
-.datacenter-racks span:nth-child(3) {
-  opacity: 0.55;
-  width: 56%;
-}
-
 .datacenter-link {
   align-items: center;
   display: flex;
+  flex-direction: column;
+  gap: 6px;
   justify-content: center;
   min-width: 0;
   position: relative;
+  z-index: 1;
 }
 
 .datacenter-link::before,
@@ -1667,6 +1785,22 @@ body {
   right: 4px;
 }
 
+.datacenter-link i {
+  align-items: center;
+  background: var(--brand);
+  border: 3px solid rgba(255, 255, 255, 0.78);
+  border-radius: 999px;
+  box-shadow: 0 8px 18px rgba(227, 6, 19, 0.2);
+  color: #fff;
+  display: inline-flex;
+  font-size: 0.88rem;
+  height: 34px;
+  justify-content: center;
+  position: relative;
+  width: 34px;
+  z-index: 1;
+}
+
 .datacenter-link span {
   background: repeating-linear-gradient(
     90deg,
@@ -1677,7 +1811,22 @@ body {
   );
   display: block;
   height: 2px;
+  position: absolute;
   width: 100%;
+}
+
+.datacenter-link small {
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid #dfe5ee;
+  border-radius: 999px;
+  color: #667085;
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0;
+  line-height: 1;
+  padding: 5px 7px;
+  position: relative;
+  z-index: 1;
 }
 
 .db-size-grid {
@@ -2824,7 +2973,7 @@ body {
   }
 
   .datacenter-link {
-    height: 28px;
+    height: 74px;
   }
 
   .datacenter-link::before,
@@ -2852,6 +3001,10 @@ body {
     );
     height: 100%;
     width: 2px;
+  }
+
+  .datacenter-link small {
+    margin-top: 2px;
   }
 
   .support-date-form {
