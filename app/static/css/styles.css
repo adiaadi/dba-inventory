@@ -1022,46 +1022,86 @@ body {
 }
 
 .portal-login-db-logos {
-  background: rgba(255, 255, 255, 0.86);
-  border: 1px solid rgba(255, 255, 255, 0.72);
-  border-radius: 16px;
-  box-shadow: 0 18px 42px rgba(17, 24, 39, 0.18);
+  backdrop-filter: blur(16px) saturate(140%);
+  background:
+    linear-gradient(135deg, rgba(17, 24, 39, 0.48), rgba(255, 255, 255, 0.12)),
+    linear-gradient(90deg, rgba(227, 6, 19, 0.28), transparent 58%);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 18px;
+  box-shadow:
+    0 24px 58px rgba(17, 24, 39, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
   display: grid;
-  gap: 8px;
-  left: 28px;
-  padding: 12px;
+  gap: 2px;
+  left: clamp(28px, 5vw, 72px);
+  padding: 14px 16px 14px 18px;
   position: absolute;
-  top: 28px;
-  width: 176px;
+  bottom: clamp(28px, 5vh, 64px);
+  width: 210px;
   z-index: 1;
+}
+
+.portal-login-db-logos::before {
+  background: linear-gradient(180deg, transparent, rgba(227, 6, 19, 0.95), transparent);
+  bottom: 22px;
+  content: "";
+  left: 35px;
+  position: absolute;
+  top: 22px;
+  width: 1px;
 }
 
 .portal-login-db-logo {
   align-items: center;
-  background: rgba(255, 255, 255, 0.78);
-  border: 1px solid rgba(225, 229, 236, 0.9);
-  border-radius: 10px;
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
   display: flex;
-  gap: 10px;
-  min-height: 44px;
-  padding: 7px 9px;
+  gap: 12px;
+  min-height: 50px;
+  padding: 8px 0 8px 2px;
+  position: relative;
+}
+
+.portal-login-db-logo:last-child {
+  border-bottom: 0;
+}
+
+.portal-login-db-logo::before {
+  background: var(--brand);
+  border: 2px solid rgba(255, 255, 255, 0.86);
+  border-radius: 999px;
+  box-shadow: 0 0 18px rgba(227, 6, 19, 0.65);
+  content: "";
+  height: 8px;
+  left: 13px;
+  position: absolute;
+  top: calc(50% - 4px);
+  width: 8px;
 }
 
 .portal-login-db-logo img {
-  height: 30px;
+  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.22);
+  height: 34px;
   object-fit: contain;
-  width: 30px;
+  padding: 4px;
+  width: 34px;
+  z-index: 1;
 }
 
 .portal-login-db-logo-oracle img {
-  width: 42px;
+  padding: 5px 3px;
+  width: 48px;
 }
 
 .portal-login-db-logo span {
-  color: var(--brand-dark);
-  font-size: 0.83rem;
+  color: #ffffff;
+  font-size: 0.88rem;
   font-weight: 900;
   line-height: 1;
+  text-shadow: 0 2px 10px rgba(17, 24, 39, 0.42);
 }
 
 @media (max-width: 991.98px) {
@@ -1099,7 +1139,8 @@ body {
 
   .portal-login-db-logos {
     left: 16px;
-    top: 16px;
+    bottom: 16px;
+    width: 196px;
   }
 }
 
