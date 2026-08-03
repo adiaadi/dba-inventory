@@ -261,7 +261,7 @@
                   {% for environment_group in section.environment_groups %}
                     <details class="db-environment-node">
                       <summary>
-                        <span class="db-environment-name {% if environment_group.environment == 'PROD' %}db-environment-name-primary{% endif %}">
+                        <span class="pill env-pill db-environment-name env-{{ environment_group.environment|lower }}">
                           {{ environment_group.label }}
                         </span>
                         <span class="db-environment-size">{{ environment_group.total_size }}</span>

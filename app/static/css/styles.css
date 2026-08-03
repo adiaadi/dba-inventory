@@ -1550,18 +1550,10 @@ body {
 }
 
 .db-environment-name {
-  color: var(--ink);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 900;
   letter-spacing: 0;
   text-transform: uppercase;
-}
-
-.db-environment-name-primary {
-  background: rgba(227, 6, 19, 0.08);
-  border-radius: 999px;
-  color: var(--brand);
-  padding: 3px 8px;
 }
 
 .db-environment-size {

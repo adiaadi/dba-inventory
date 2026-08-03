@@ -1472,7 +1472,7 @@ def dashboard(
             environment_groups.append(
                 {
                     "environment": environment_label,
-                    "label": "PRIMARY PROD" if environment_label == "PROD" else environment_label,
+                    "label": environment_label,
                     "rows": rows,
                     "clusters": clusters,
                     "total_size": format_size_bytes(total_size) if total_size else "-",
