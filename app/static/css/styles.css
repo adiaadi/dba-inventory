@@ -1572,19 +1572,8 @@ body {
 .db-cluster-server strong {
   color: var(--ink);
   display: block;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 850;
-  line-height: 1.15;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.db-cluster-server small {
-  color: #667085;
-  display: block;
-  font-size: 0.68rem;
-  font-weight: 700;
   line-height: 1.15;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1594,7 +1583,7 @@ body {
 .db-cluster-size {
   color: var(--ink);
   flex: 0 0 auto;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 850;
   margin-left: auto;
   white-space: nowrap;
