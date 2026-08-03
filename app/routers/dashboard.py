@@ -171,20 +171,42 @@ DATABASE_PRODUCT_TAG_NAMES = (
     "database_product",
     "database product",
     "oracle_product",
+    "postgresql_product",
+    "postgres_product",
+    "pgsql_product",
+    "sqlserver_product",
+    "mssql_product",
 )
 
 DATABASE_PRODUCT_ITEM_MARKERS = (
     "product",
     "oracle.product",
+    "postgresql.product",
+    "postgres.product",
+    "pgsql.product",
+    "sqlserver.product",
+    "sql server product",
+    "mssql.product",
     "db.product",
 )
 
 DATABASE_PRODUCT_EXCLUDE_MARKERS = (
+    "operating system",
+    "system.sw.os",
     "sys/class/dmi",
+    "sys_vendor",
     "product_name",
+    "product name",
     "server model",
+    "server vendor",
     "hardware",
 )
+
+DATABASE_PRODUCT_FALLBACKS = {
+    "Oracle": "Oracle Database",
+    "PostgreSQL": "PostgreSQL",
+    "SQLServer": "Microsoft SQL Server",
+}
 
 REPLICA_MARKERS = (
     "standby",
@@ -943,14 +965,30 @@ def database_product_label(host: Host, db_family: str | None = None) -> str | No
         score = 0
         if "oracle.product" in key_text:
             score += 30
+        if family == "PostgreSQL" and any(
+            marker in key_text
+            for marker in ("postgresql.product", "postgres.product", "pgsql.product")
+        ):
+            score += 30
+        if family == "SQLServer" and any(
+            marker in key_text
+            for marker in ("sqlserver.product", "sql server product", "mssql.product")
+        ):
+            score += 30
         if family == "Oracle" and "oracle" in key_text:
+            score += 10
+        if family == "PostgreSQL" and ("postgres" in key_text or "pgsql" in key_text):
+            score += 10
+        if family == "SQLServer" and any(
+            marker in key_text for marker in ("sqlserver", "sql server", "mssql")
+        ):
             score += 10
         if "database" in key_text or "db" in key_text:
             score += 2
         candidates.append((score, label))
 
     if not candidates:
-        return None
+        return DATABASE_PRODUCT_FALLBACKS.get(family)
     return max(candidates, key=lambda item: item[0])[1]
 
 

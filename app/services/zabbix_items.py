@@ -34,6 +34,12 @@ ZABBIX_DATABASE_PRODUCT_ITEM_SEARCH_TERMS = (
     "product",
     "db.product",
     "oracle.product",
+    "postgresql.product",
+    "postgres.product",
+    "pgsql.product",
+    "sqlserver.product",
+    "sql server product",
+    "mssql.product",
 )
 
 ZABBIX_DATABASE_ITEM_SEARCH_TERMS = (
