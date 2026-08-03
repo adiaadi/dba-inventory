@@ -60,11 +60,11 @@ def serialize_zabbix_item_values(item_values: dict[str, str]) -> str:
 def parse_zabbix_item_values(notes: str | None) -> dict[str, str]:
     if not notes or ZABBIX_ITEMS_NOTE_MARKER not in notes:
         return {}
-    item_text = notes.split(ZABBIX_ITEMS_NOTE_MARKER, 1)[1].split(";", 1)[0].strip()
+    item_text = notes.split(ZABBIX_ITEMS_NOTE_MARKER, 1)[1].strip()
     if not item_text:
         return {}
     try:
-        parsed = json.loads(item_text)
+        parsed, _ = json.JSONDecoder().raw_decode(item_text)
     except json.JSONDecodeError:
         return {}
     if not isinstance(parsed, dict):
