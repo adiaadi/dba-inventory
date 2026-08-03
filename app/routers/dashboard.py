@@ -747,6 +747,11 @@ def is_database_list_item(key_text: str) -> bool:
 
 def database_name_from_size_item_label(label: str) -> str | None:
     label_without_key = label.split("(", 1)[0].strip()
+    normalized_label = label.lower()
+    normalized_name = label_without_key.lower()
+    if normalized_name in {"get database size", "get db size"} or "get_db_size" in normalized_label:
+        return None
+
     patterns = (
         r"(?i)^database\s+size\s*[:\-]\s*(?P<name>.+)$",
         r"(?i)^db\s+size\s*[:\-]\s*(?P<name>.+)$",
