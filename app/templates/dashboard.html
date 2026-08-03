@@ -61,7 +61,9 @@
         {% else %}
           <div>
             <h1>{{ section_title }}</h1>
-            <p class="{% if current_view in ['overview', 'hosts'] %}section-subtitle-strong{% endif %}">{{ section_subtitle }}</p>
+            {% if current_view != "overview" %}
+              <p class="{% if current_view == 'hosts' %}section-subtitle-strong{% endif %}">{{ section_subtitle }}</p>
+            {% endif %}
           </div>
         {% endif %}
       </div>
