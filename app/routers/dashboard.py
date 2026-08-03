@@ -1618,6 +1618,9 @@ def dashboard(
         {"key": "postgresql", "label": ui_text_value(request, "nav.postgresql", "PostgreSQL"), "icon": "bi-database-fill"},
         {"key": "sqlserver", "label": ui_text_value(request, "nav.sqlserver", "SQLServer"), "icon": "bi-server"},
     ]
+    for tab in section_tabs:
+        if tab["key"] == "sqlserver" and tab["label"].replace(" ", "").lower() == "sqlserver":
+            tab["label"] = "SQL Server"
     section_titles = {
         "overview": ui_text_value(request, "section.overview.title", "SUMMARY OVERVIEW"),
         "hosts": ui_text_value(request, "section.hosts.title", "SERVERS OVERVIEW"),

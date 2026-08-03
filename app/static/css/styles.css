@@ -11,6 +11,7 @@
   --green: #12805c;
   --amber: #b76e00;
   --violet: #6d5bd0;
+  --display-font: "Segoe UI Variable Display", "Segoe UI Variable", Inter, "Segoe UI", Roboto, Arial, sans-serif;
 }
 
 body {
@@ -442,16 +443,35 @@ body {
 }
 
 .overview-nav-item {
+  align-items: center;
   background: #f4f6f9;
   border: 1px solid #dde3eb;
   border-radius: 8px;
   color: var(--brand-dark);
-  display: block;
-  font-size: 0.73rem;
-  font-weight: 700;
-  padding: 9px 8px;
-  text-align: center;
+  display: flex;
+  font-family: var(--display-font);
+  font-size: 0.76rem;
+  font-weight: 850;
+  gap: 8px;
+  justify-content: flex-start;
+  letter-spacing: 0.015em;
+  min-height: 38px;
+  padding: 0 10px;
   text-decoration: none;
+  text-transform: uppercase;
+  transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease, box-shadow 140ms ease;
+}
+
+.overview-nav-item i {
+  color: var(--brand);
+  font-size: 0.95rem;
+  line-height: 1;
+  width: 16px;
+}
+
+.overview-nav-item span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .overview-nav-item.active,
@@ -460,6 +480,11 @@ body {
   border-color: var(--brand);
   color: #fff;
   box-shadow: 0 0 0 1px rgba(227, 6, 19, 0.18);
+}
+
+.overview-nav-item.active i,
+.overview-nav-item:hover i {
+  color: #fff;
 }
 
 .overview-filters label {
@@ -529,8 +554,9 @@ body {
 
 .overview-header h1 {
   color: var(--brand-dark);
+  font-family: var(--display-font);
   font-size: 1.34rem;
-  font-weight: 800;
+  font-weight: 900;
   letter-spacing: 0;
   margin: 0;
 }
@@ -566,12 +592,15 @@ body {
   color: #475467;
   display: inline-flex;
   flex: 0 0 auto;
-  font-size: 0.86rem;
-  font-weight: 750;
+  font-family: var(--display-font);
+  font-size: 0.78rem;
+  font-weight: 850;
   gap: 7px;
+  letter-spacing: 0.015em;
   min-height: 34px;
   padding: 0 12px;
   text-decoration: none;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
@@ -629,6 +658,14 @@ body {
   color: var(--brand-dark);
   font-size: 0.84rem;
   font-weight: 700;
+}
+
+.overview-kpis-dbms .kpi-title {
+  font-family: var(--display-font);
+  font-size: 0.78rem;
+  font-weight: 850;
+  letter-spacing: 0.015em;
+  text-transform: uppercase;
 }
 
 .kpi-value {
