@@ -242,37 +242,10 @@
           </div>
         </section>
 
-        <section class="overview-panel executive-panel executive-panel-span-3 environment-estate-panel">
-          <div class="overview-section-heading">
-            <h2>{{ ui_text(request, "panel.environment_estate", "Environment Estate") }}</h2>
-            <span>{{ ui_text(request, "panel.environment_estate_note", "PROD / TEST / DEV") }}</span>
-          </div>
-          <div class="environment-estate-grid">
-            {% for item in environment_estate %}
-              <div class="environment-estate-card environment-estate-{{ item.label|lower }}">
-                <div class="environment-estate-head">
-                  <span>{{ item.label }}</span>
-                  <strong>{{ item.total }}</strong>
-                </div>
-                <div class="environment-estate-lines">
-                  <div>
-                    <span><i class="bi bi-hdd-network"></i>{{ ui_text(request, "label.servers", "Servers") }}</span>
-                    <strong>{{ item.servers }}</strong>
-                  </div>
-                  <div>
-                    <span><i class="bi bi-database"></i>{{ ui_text(request, "label.databases", "Databases") }}</span>
-                    <strong>{{ item.databases }}</strong>
-                  </div>
-                </div>
-              </div>
-            {% endfor %}
-          </div>
-        </section>
-
         <section class="overview-panel executive-panel executive-panel-span-3 database-size-panel">
           <div class="overview-section-heading">
             <h2>{{ ui_text(request, "panel.database_size", "Database Size") }}</h2>
-            <span>{{ ui_text(request, "panel.database_size_note", "Primary PROD only") }}</span>
+            <span>{{ ui_text(request, "panel.database_size_environment_note", "PROD / TEST / DEV") }}</span>
           </div>
           <div class="db-size-3d-grid">
             {% for section in database_size_sections %}
@@ -284,49 +257,61 @@
                   </strong>
                   <span>{{ section.total_size }}{% if section.scope_label %}<em>{{ section.scope_label }}</em>{% endif %}</span>
                 </div>
-                {% if section.clusters %}
-                  <div class="db-cluster-tree">
-                    {% for cluster in section.clusters %}
-                      <details class="db-cluster-node">
-                        <summary>
-                          <span class="db-cluster-server">
-                            <i class="bi bi-hdd-network"></i>
-                            <span>
-                              <strong>{{ cluster.server|upper }}</strong>
-                            </span>
-                          </span>
-                          <span class="db-cluster-size">{{ cluster.total_size }}</span>
-                        </summary>
-                        <div class="db-cluster-databases">
-                          {% for item in cluster.rows %}
-                            <div class="db-cluster-database-row">
-                              <div class="db-cluster-database-label">
-                                <i class="bi bi-database"></i>
-                                <span>
-                                  {{ item.name }}
+                <div class="db-environment-tree">
+                  {% for environment_group in section.environment_groups %}
+                    <details class="db-environment-node">
+                      <summary>
+                        <span class="db-environment-name {% if environment_group.environment == 'PROD' %}db-environment-name-primary{% endif %}">
+                          {{ environment_group.label }}
+                        </span>
+                        <span class="db-environment-size">{{ environment_group.total_size }}</span>
+                      </summary>
+                      {% if environment_group.clusters %}
+                        <div class="db-cluster-tree">
+                          {% for cluster in environment_group.clusters %}
+                            <details class="db-cluster-node">
+                              <summary>
+                                <span class="db-cluster-server">
+                                  <i class="bi bi-hdd-network"></i>
+                                  <span>
+                                    <strong>{{ cluster.server|upper }}</strong>
+                                  </span>
                                 </span>
+                                <span class="db-cluster-size">{{ cluster.total_size }}</span>
+                              </summary>
+                              <div class="db-cluster-databases">
+                                {% for item in cluster.rows %}
+                                  <div class="db-cluster-database-row">
+                                    <div class="db-cluster-database-label">
+                                      <i class="bi bi-database"></i>
+                                      <span>
+                                        {{ item.name }}
+                                      </span>
+                                    </div>
+                                    <span class="db-cluster-database-size">{{ item.size }}</span>
+                                    <div class="db-size-3d-track">
+                                      {% if item.percent > 0 %}
+                                        <span class="db-size-3d-bar" style="width: {{ item.percent }}%"></span>
+                                      {% else %}
+                                        <span class="db-size-empty-bar"></span>
+                                      {% endif %}
+                                    </div>
+                                  </div>
+                                {% endfor %}
                               </div>
-                              <span class="db-cluster-database-size">{{ item.size }}</span>
-                              <div class="db-size-3d-track">
-                                {% if item.percent > 0 %}
-                                  <span class="db-size-3d-bar" style="width: {{ item.percent }}%"></span>
-                                {% else %}
-                                  <span class="db-size-empty-bar"></span>
-                                {% endif %}
-                              </div>
-                            </div>
+                            </details>
                           {% endfor %}
                         </div>
-                      </details>
-                    {% endfor %}
-                  </div>
-                {% else %}
-                  <div class="db-size-empty-3d">
-                    <i class="bi bi-bar-chart"></i>
-                    <span>{{ ui_text(request, "empty.no_size_data", "No size data from Zabbix") }}</span>
-                  </div>
-                {% endif %}
-                <div class="db-size-footnote">{{ section.rows|length }} databases · {{ section.clusters|length }} servers</div>
+                      {% else %}
+                        <div class="db-size-empty-3d">
+                          <i class="bi bi-bar-chart"></i>
+                          <span>{{ ui_text(request, "empty.no_size_data", "No size data from Zabbix") }}</span>
+                        </div>
+                      {% endif %}
+                      <div class="db-size-footnote">{{ environment_group.rows|length }} databases &middot; {{ environment_group.clusters|length }} servers</div>
+                    </details>
+                  {% endfor %}
+                </div>
               </div>
             {% endfor %}
           </div>

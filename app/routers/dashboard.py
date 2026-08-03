@@ -59,7 +59,7 @@ DB_TYPE_VIEWS = {
 }
 
 DB_FAMILIES = ("Oracle", "PostgreSQL", "SQLServer")
-EXECUTIVE_ENVIRONMENTS = ("PROD", "TEST", "DEV")
+DATABASE_SIZE_ENVIRONMENTS = ("PROD", "TEST", "DEV")
 
 DATABASE_SIZE_TAG_NAMES = (
     "db_size",
@@ -1055,10 +1055,6 @@ def is_primary_database_asset(host: Host) -> bool:
     return not any(marker in role_text for marker in REPLICA_MARKERS)
 
 
-def is_prod_database_asset(host: Host) -> bool:
-    return (host.environment or "").strip().lower() == "prod"
-
-
 def datacenter_label(host: Host) -> str:
     tag_value = first_tag_value(host, ("datacenter", "data_center", "dc"))
     if tag_value:
@@ -1320,31 +1316,6 @@ def dashboard(
     environment_counter = Counter((host.environment or "UNKNOWN").upper() for host in server_hosts)
     environment_counts = sorted(environment_counter.items())
     environment_labels = sorted(environment_counter.keys())
-    environment_estate = []
-    for environment_label in EXECUTIVE_ENVIRONMENTS:
-        environment_server_hosts = unique_hosts(
-            [
-                host
-                for host in server_hosts
-                if (host.environment or "").strip().upper() == environment_label
-            ]
-        )
-        environment_database_hosts = unique_hosts(
-            [
-                host
-                for host in all_hosts
-                if is_zabbix_database_asset(host)
-                and (host.environment or "").strip().upper() == environment_label
-            ]
-        )
-        environment_estate.append(
-            {
-                "label": environment_label,
-                "servers": len(environment_server_hosts),
-                "databases": len(environment_database_hosts),
-                "total": len(environment_server_hosts) + len(environment_database_hosts),
-            }
-        )
     db_family_palette = {
         "Oracle": "#e30613",
         "PostgreSQL": "#111827",
@@ -1391,84 +1362,111 @@ def dashboard(
         family_database_hosts = unique_hosts(
             [host for host in all_hosts if is_family_database_asset(host, family)]
         )
-        family_database_hosts = [
-            host
-            for host in family_database_hosts
-            if is_primary_database_asset(host) and is_prod_database_asset(host)
-        ]
-        rows = []
-        for host in family_database_hosts:
-            server_label = database_asset_server_label(host, family)
-            server_alias = normalized_host_alias(server_label)
-            server_host = server_hosts_by_alias.get(server_alias or "")
-            host_rows = database_size_rows_for_host(
-                host,
-                family,
-                host_database_version_labels.get(host.id),
-            )
-            for row in host_rows:
-                row.update(
+        environment_groups = []
+        section_rows = []
+        section_clusters = []
+        section_total_size = 0
+        for environment_label in DATABASE_SIZE_ENVIRONMENTS:
+            environment_hosts = [
+                host
+                for host in family_database_hosts
+                if (host.environment or "").strip().upper() == environment_label
+            ]
+            if environment_label == "PROD":
+                environment_hosts = [
+                    host
+                    for host in environment_hosts
+                    if is_primary_database_asset(host)
+                ]
+
+            rows = []
+            for host in environment_hosts:
+                server_label = database_asset_server_label(host, family)
+                server_alias = normalized_host_alias(server_label)
+                server_host = server_hosts_by_alias.get(server_alias or "")
+                host_rows = database_size_rows_for_host(
+                    host,
+                    family,
+                    host_database_version_labels.get(host.id),
+                )
+                for row in host_rows:
+                    row.update(
+                        {
+                            "server": server_host.hostname if server_host else server_label,
+                            "server_ip": (server_host.ip_address if server_host else host.ip_address) or "-",
+                            "ip": host.ip_address or "-",
+                            "monitoring": host.monitoring_status,
+                            "problem_count": host.problem_count or 0,
+                        }
+                    )
+                    rows.append(row)
+            rows.sort(key=lambda row: row["size_bytes"], reverse=True)
+            max_size = max((row["size_bytes"] for row in rows), default=0)
+            for row in rows:
+                row["percent"] = round((row["size_bytes"] / max_size) * 100, 1) if max_size else 0
+
+            clusters_by_server: dict[str, dict] = {}
+            for row in rows:
+                server = row["server"] or "-"
+                key = normalized_host_alias(server) or server.lower()
+                cluster = clusters_by_server.setdefault(
+                    key,
                     {
-                        "server": server_host.hostname if server_host else server_label,
-                        "server_ip": (server_host.ip_address if server_host else host.ip_address) or "-",
-                        "ip": host.ip_address or "-",
-                        "monitoring": host.monitoring_status,
-                        "problem_count": host.problem_count or 0,
-                    }
+                        "server": server,
+                        "ip": row["server_ip"],
+                        "rows": [],
+                        "row_size_total": 0,
+                        "host_totals": {},
+                        "total_size_bytes": 0,
+                    },
                 )
-                rows.append(row)
-        rows.sort(key=lambda row: row["size_bytes"], reverse=True)
-        max_size = max((row["size_bytes"] for row in rows), default=0)
-        for row in rows:
-            row["percent"] = round((row["size_bytes"] / max_size) * 100, 1) if max_size else 0
+                if cluster["ip"] == "-" and row["server_ip"] != "-":
+                    cluster["ip"] = row["server_ip"]
+                cluster["rows"].append(row)
+                cluster["row_size_total"] += row["size_bytes"]
+                if row["host_total_size_bytes"]:
+                    previous_total = cluster["host_totals"].get(row["host_id"], 0)
+                    cluster["host_totals"][row["host_id"]] = max(
+                        previous_total,
+                        row["host_total_size_bytes"],
+                    )
 
-        clusters_by_server: dict[str, dict] = {}
-        for row in rows:
-            server = row["server"] or "-"
-            key = normalized_host_alias(server) or server.lower()
-            cluster = clusters_by_server.setdefault(
-                key,
+            clusters = list(clusters_by_server.values())
+            for cluster in clusters:
+                cluster["rows"].sort(key=lambda row: (-row["size_bytes"], row["name"]))
+                host_total_size = sum(cluster["host_totals"].values())
+                cluster["total_size_bytes"] = max(cluster["row_size_total"], host_total_size)
+                cluster["total_size"] = (
+                    format_size_bytes(cluster["total_size_bytes"])
+                    if cluster["total_size_bytes"]
+                    else "-"
+                )
+                cluster["has_size_data"] = cluster["total_size_bytes"] > 0
+            clusters.sort(key=lambda cluster: (-cluster["total_size_bytes"], cluster["server"]))
+            total_size = sum(cluster["total_size_bytes"] for cluster in clusters)
+            section_total_size += total_size
+            section_rows.extend(rows)
+            section_clusters.extend(clusters)
+            environment_groups.append(
                 {
-                    "server": server,
-                    "ip": row["server_ip"],
-                    "rows": [],
-                    "row_size_total": 0,
-                    "host_totals": {},
-                    "total_size_bytes": 0,
-                },
+                    "environment": environment_label,
+                    "label": "PRIMARY PROD" if environment_label == "PROD" else environment_label,
+                    "rows": rows,
+                    "clusters": clusters,
+                    "total_size": format_size_bytes(total_size) if total_size else "-",
+                    "total_size_bytes": total_size,
+                    "has_size_data": total_size > 0,
+                }
             )
-            if cluster["ip"] == "-" and row["server_ip"] != "-":
-                cluster["ip"] = row["server_ip"]
-            cluster["rows"].append(row)
-            cluster["row_size_total"] += row["size_bytes"]
-            if row["host_total_size_bytes"]:
-                previous_total = cluster["host_totals"].get(row["host_id"], 0)
-                cluster["host_totals"][row["host_id"]] = max(
-                    previous_total,
-                    row["host_total_size_bytes"],
-                )
-
-        clusters = list(clusters_by_server.values())
-        for cluster in clusters:
-            cluster["rows"].sort(key=lambda row: (-row["size_bytes"], row["name"]))
-            host_total_size = sum(cluster["host_totals"].values())
-            cluster["total_size_bytes"] = max(cluster["row_size_total"], host_total_size)
-            cluster["total_size"] = (
-                format_size_bytes(cluster["total_size_bytes"])
-                if cluster["total_size_bytes"]
-                else "-"
-            )
-            cluster["has_size_data"] = cluster["total_size_bytes"] > 0
-        clusters.sort(key=lambda cluster: (-cluster["total_size_bytes"], cluster["server"]))
-        total_size = sum(cluster["total_size_bytes"] for cluster in clusters)
         database_size_sections.append(
             {
                 "label": "SQL Server" if family == "SQLServer" else family,
-                "scope_label": "primary prod",
-                "rows": rows,
-                "clusters": clusters,
-                "total_size": format_size_bytes(total_size) if total_size else "-",
-                "has_size_data": total_size > 0,
+                "scope_label": "",
+                "rows": section_rows,
+                "clusters": section_clusters,
+                "environment_groups": environment_groups,
+                "total_size": format_size_bytes(section_total_size) if section_total_size else "-",
+                "has_size_data": section_total_size > 0,
             }
         )
     datacenter_counts = {
@@ -1667,7 +1665,6 @@ def dashboard(
             "monitoring_summary": monitoring_summary,
             "db_type_counts": db_type_counts,
             "environment_counts": environment_counts,
-            "environment_estate": environment_estate,
             "platform_summary": platform_summary,
             "capacity_by_db": capacity_by_db,
             "database_size_sections": database_size_sections,

@@ -1271,107 +1271,6 @@ body {
   width: 100% !important;
 }
 
-.environment-estate-panel {
-  min-height: 152px;
-}
-
-.environment-estate-grid {
-  display: grid;
-  gap: 12px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.environment-estate-card {
-  --env-accent: var(--brand);
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98)),
-    radial-gradient(circle at top right, color-mix(in srgb, var(--env-accent) 12%, transparent), transparent 45%);
-  border: 1px solid #dfe5ee;
-  border-radius: 10px;
-  display: grid;
-  gap: 12px;
-  min-height: 98px;
-  padding: 14px;
-  position: relative;
-  overflow: hidden;
-}
-
-.environment-estate-card::before {
-  background: var(--env-accent);
-  border-radius: 999px;
-  content: "";
-  height: 4px;
-  left: 14px;
-  position: absolute;
-  right: 14px;
-  top: 0;
-}
-
-.environment-estate-prod {
-  --env-accent: var(--brand);
-}
-
-.environment-estate-test {
-  --env-accent: #111827;
-}
-
-.environment-estate-dev {
-  --env-accent: #64748b;
-}
-
-.environment-estate-head,
-.environment-estate-lines div {
-  align-items: center;
-  display: flex;
-  justify-content: space-between;
-}
-
-.environment-estate-head span {
-  color: var(--env-accent);
-  font-size: 0.9rem;
-  font-weight: 950;
-  letter-spacing: 0;
-}
-
-.environment-estate-head strong {
-  color: var(--brand-dark);
-  font-size: 2rem;
-  font-weight: 950;
-  line-height: 1;
-}
-
-.environment-estate-lines {
-  display: grid;
-  gap: 8px;
-}
-
-.environment-estate-lines div {
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid #edf1f6;
-  border-radius: 8px;
-  padding: 8px 10px;
-}
-
-.environment-estate-lines span {
-  align-items: center;
-  color: #344054;
-  display: inline-flex;
-  font-size: 0.78rem;
-  font-weight: 850;
-  gap: 7px;
-}
-
-.environment-estate-lines i {
-  color: var(--env-accent);
-  font-size: 0.95rem;
-}
-
-.environment-estate-lines strong {
-  color: var(--brand-dark);
-  font-size: 0.94rem;
-  font-weight: 950;
-}
-
 .summary-support-panel {
   grid-column: span 2;
 }
@@ -1608,6 +1507,85 @@ body {
 
 .db-size-3d-card .db-size-title {
   margin-bottom: 12px;
+}
+
+.db-environment-tree {
+  display: grid;
+  gap: 8px;
+}
+
+.db-environment-node {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid #edf1f6;
+  border-radius: 8px;
+  min-width: 0;
+}
+
+.db-environment-node > summary {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  list-style: none;
+  min-width: 0;
+  padding: 9px 10px;
+}
+
+.db-environment-node > summary::-webkit-details-marker {
+  display: none;
+}
+
+.db-environment-node > summary::after {
+  color: #667085;
+  content: "\F282";
+  flex: 0 0 auto;
+  font-family: "bootstrap-icons";
+  font-size: 0.75rem;
+  transition: transform 0.16s ease;
+}
+
+.db-environment-node[open] > summary::after {
+  transform: rotate(180deg);
+}
+
+.db-environment-name {
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.db-environment-name-primary {
+  background: rgba(227, 6, 19, 0.08);
+  border-radius: 999px;
+  color: var(--brand);
+  padding: 3px 8px;
+}
+
+.db-environment-size {
+  color: var(--ink);
+  flex: 0 0 auto;
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.db-environment-node > .db-cluster-tree {
+  border-top: 1px solid #edf1f6;
+  max-height: 310px;
+  padding: 8px;
+}
+
+.db-environment-node > .db-size-empty-3d {
+  margin: 8px;
+  min-height: 92px;
+}
+
+.db-environment-node > .db-size-footnote {
+  margin: 0 10px 9px;
 }
 
 .db-cluster-tree {
@@ -2428,7 +2406,6 @@ body {
   .inventory-summary-groups,
   .overview-grid,
   .executive-grid,
-  .environment-estate-grid,
   .db-size-grid,
   .db-size-3d-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2485,7 +2462,6 @@ body {
   .overview-grid,
   .executive-grid,
   .executive-card-grid,
-  .environment-estate-grid,
   .admin-text-grid,
   .db-size-grid,
   .db-size-3d-grid,
