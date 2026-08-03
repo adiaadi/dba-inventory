@@ -1687,7 +1687,7 @@ def dashboard(
     }
     if db_type_view:
         section_subtitles[current_view] = (
-            f"databases {len(type_database_assets)}\n"
+            f"DATABASES {len(type_database_assets)}\n"
             f"{servers_label.upper()} {len(type_server_assets)}"
         )
 

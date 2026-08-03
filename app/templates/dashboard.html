@@ -109,12 +109,12 @@
     {% if db_type_view %}
       <section class="overview-kpis overview-kpis-dbms">
         <a class="overview-kpi {% if current_asset_view == 'databases' %}active{% endif %}" href="/?view={{ current_view }}&asset_view=databases">
-          <span class="kpi-title">{{ ui_text(request, "label.databases", "Databases") }}</span>
+          <span class="kpi-title">{{ ui_text(request, "label.databases", "Databases")|upper }}</span>
           <span class="kpi-value">{{ type_database_assets|length }}</span>
           <i class="bi bi-database-check"></i>
         </a>
         <a class="overview-kpi {% if current_asset_view == 'servers' %}active{% endif %}" href="/?view={{ current_view }}&asset_view=servers">
-          <span class="kpi-title">{{ ui_text(request, "label.servers", "Servers") }}</span>
+          <span class="kpi-title">{{ ui_text(request, "label.servers", "Servers")|upper }}</span>
           <span class="kpi-value">{{ type_server_assets|length }}</span>
           <i class="bi bi-hdd-network"></i>
         </a>
@@ -126,7 +126,7 @@
         <div class="inventory-summary-card">
           <div class="inventory-summary-head">
             <div>
-              <span>{{ ui_text(request, "label.databases", "Databases") }}</span>
+              <span>{{ ui_text(request, "label.databases", "Databases")|upper }}</span>
               <strong>{{ counts.databases }}</strong>
             </div>
             <i class="bi bi-database-check"></i>
@@ -158,7 +158,7 @@
         <div class="inventory-summary-card">
           <div class="inventory-summary-head">
             <div>
-              <span>{{ ui_text(request, "label.servers", "Servers") }}</span>
+              <span>{{ ui_text(request, "label.servers", "Servers")|upper }}</span>
               <strong>{{ counts.servers }}</strong>
             </div>
             <i class="bi bi-hdd-network"></i>
@@ -168,7 +168,7 @@
               <canvas id="inventoryServerEstateChart"></canvas>
               <div class="inventory-kpi-center">
                 <strong>{{ counts.servers }}</strong>
-                <span>{{ ui_text(request, "label.servers", "Servers") }}</span>
+                <span>{{ ui_text(request, "label.servers", "Servers")|upper }}</span>
               </div>
             </div>
             <div class="inventory-summary-list">
@@ -225,7 +225,7 @@
               <canvas id="executiveServerEstateChart"></canvas>
               <div class="executive-chart-center">
                 <strong>{{ counts.servers }}</strong>
-                <span>{{ ui_text(request, "label.servers", "Servers") }}</span>
+                <span>{{ ui_text(request, "label.servers", "Servers")|upper }}</span>
               </div>
             </div>
             <div class="executive-chart-legend">
@@ -414,7 +414,7 @@
       <section class="overview-panel">
         <div class="overview-section-heading">
           {% if db_type_view %}
-            <h2>{{ db_type_view.label }} {% if current_asset_view == "databases" %}{{ ui_text(request, "label.databases", "Databases") }}{% else %}{{ ui_text(request, "label.servers", "Servers") }}{% endif %}</h2>
+            <h2>{{ db_type_view.label }} {% if current_asset_view == "databases" %}{{ ui_text(request, "label.databases", "Databases")|upper }}{% else %}{{ ui_text(request, "label.servers", "Servers")|upper }}{% endif %}</h2>
             <span>{{ display_hosts|length }} {{ ui_text(request, "label.records_from_zabbix", "records from Zabbix") }}</span>
           {% else %}
             <h2>{{ ui_text(request, "panel.server_summary", "Server Summary") }}</h2>
