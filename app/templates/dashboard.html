@@ -749,7 +749,8 @@
     const total = values.reduce((sum, value) => sum + Number(value || 0), 0);
     const value = Number(context.raw || 0);
     const percent = total ? ((value / total) * 100).toFixed(1).replace(".0", "") : "0";
-    return `${percent}%`;
+    const label = context.label || "";
+    return label ? `${label}: ${percent}%` : `${percent}%`;
   }
 
   function makeDatasetChart(id, type, labels, datasets, options = {}) {
