@@ -1635,10 +1635,10 @@ body {
   line-height: 1.12;
 }
 
-.db-cluster-database-row > strong {
-  color: var(--ink);
+.db-cluster-database-size {
+  color: #344054;
   font-size: 0.76rem;
-  font-weight: 850;
+  font-weight: 500;
   white-space: nowrap;
 }
 

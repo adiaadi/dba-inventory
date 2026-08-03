@@ -260,7 +260,7 @@
                 {% if section.clusters %}
                   <div class="db-cluster-tree">
                     {% for cluster in section.clusters %}
-                      <details class="db-cluster-node" {% if loop.first %}open{% endif %}>
+                      <details class="db-cluster-node">
                         <summary>
                           <span class="db-cluster-server">
                             <i class="bi bi-hdd-network"></i>
@@ -279,7 +279,7 @@
                                   {{ item.name }}
                                 </span>
                               </div>
-                              <strong>{{ item.size }}</strong>
+                              <span class="db-cluster-database-size">{{ item.size }}</span>
                               <div class="db-size-3d-track">
                                 {% if item.percent > 0 %}
                                   <span class="db-size-3d-bar" style="width: {{ item.percent }}%"></span>
