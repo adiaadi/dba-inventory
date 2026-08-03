@@ -257,23 +257,44 @@
                   </strong>
                   <span>{{ section.total_size }}{% if section.primary_only %}<em>primary</em>{% endif %}</span>
                 </div>
-                {% if section.has_size_data %}
-                  <div class="db-size-3d-chart">
-                    {% for item in section.rows[:7] %}
-                      <div class="db-size-3d-row">
-                        <div class="db-size-3d-label">
-                          <span>
-                            {{ item.name }}
-                            {% if item.version and item.version != "-" %}
-                              <small>v{{ item.version }}</small>
-                            {% endif %}
+                {% if section.clusters %}
+                  <div class="db-cluster-tree">
+                    {% for cluster in section.clusters %}
+                      <details class="db-cluster-node" {% if loop.first %}open{% endif %}>
+                        <summary>
+                          <span class="db-cluster-server">
+                            <i class="bi bi-hdd-network"></i>
+                            <span>
+                              <strong>{{ cluster.server|upper }}</strong>
+                              <small>{{ cluster.rows|length }} databases{% if cluster.ip and cluster.ip != "-" %} · {{ cluster.ip }}{% endif %}</small>
+                            </span>
                           </span>
-                          <strong>{{ item.size }}</strong>
+                          <span class="db-cluster-size">{{ cluster.total_size }}</span>
+                        </summary>
+                        <div class="db-cluster-databases">
+                          {% for item in cluster.rows %}
+                            <div class="db-cluster-database-row">
+                              <div class="db-cluster-database-label">
+                                <i class="bi bi-database"></i>
+                                <span>
+                                  {{ item.name }}
+                                  {% if item.version and item.version != "-" %}
+                                    <small>v{{ item.version }}</small>
+                                  {% endif %}
+                                </span>
+                              </div>
+                              <strong>{{ item.size }}</strong>
+                              <div class="db-size-3d-track">
+                                {% if item.percent > 0 %}
+                                  <span class="db-size-3d-bar" style="width: {{ item.percent }}%"></span>
+                                {% else %}
+                                  <span class="db-size-empty-bar"></span>
+                                {% endif %}
+                              </div>
+                            </div>
+                          {% endfor %}
                         </div>
-                        <div class="db-size-3d-track">
-                          <span class="db-size-3d-bar" style="width: {{ item.percent }}%"></span>
-                        </div>
-                      </div>
+                      </details>
                     {% endfor %}
                   </div>
                 {% else %}
@@ -282,9 +303,7 @@
                     <span>{{ ui_text(request, "empty.no_size_data", "No size data from Zabbix") }}</span>
                   </div>
                 {% endif %}
-                {% if section.rows|length > 7 %}
-                  <div class="db-size-footnote">Top 7 of {{ section.rows|length }} databases</div>
-                {% endif %}
+                <div class="db-size-footnote">{{ section.rows|length }} databases · {{ section.clusters|length }} servers</div>
               </div>
             {% endfor %}
           </div>

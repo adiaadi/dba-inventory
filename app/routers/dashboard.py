@@ -616,6 +616,35 @@ def database_size_label(host: Host) -> str:
     return database_size_value(host)[1]
 
 
+def split_database_asset_label(host: Host) -> tuple[str, str | None]:
+    label = clean_item_text(host.zabbix_host_name or host.hostname, max_length=120) or host.hostname
+    match = re.match(r"^\s*(?P<database>.*?)\s*\((?P<server>[^)]+)\)\s*$", label)
+    if match:
+        database_name = clean_item_text(match.group("database"), max_length=80) or label
+        server_name = clean_item_text(match.group("server"), max_length=80)
+        return database_name, server_name
+    return label, None
+
+
+def database_asset_name(host: Host) -> str:
+    database_name, _ = split_database_asset_label(host)
+    return database_name
+
+
+def database_asset_server_label(host: Host, family: str) -> str:
+    _, server_name = split_database_asset_label(host)
+    if server_name:
+        return server_name
+
+    label = clean_item_text(host.hostname, max_length=120) or clean_item_text(host.zabbix_host_name, max_length=120) or "-"
+    if family == "PostgreSQL":
+        normalized = label.replace("_", "-")
+        for prefix in ("pg-", "postgres-", "postgresql-"):
+            if normalized.lower().startswith(prefix) and len(normalized) > len(prefix):
+                return normalized[len(prefix) :]
+    return label
+
+
 def format_postgresql_version_number(value: str) -> str | None:
     if not value.isdigit() or len(value) < 5:
         return None
@@ -1028,6 +1057,10 @@ def dashboard(
     host_core_labels = {host.id: server_core_label(host) for host in all_hosts}
     host_ram_labels = {host.id: server_ram_label(host) for host in all_hosts}
     server_hosts = unique_hosts([host for host in all_hosts if is_zabbix_server_asset(host)])
+    server_hosts_by_alias: dict[str, Host] = {}
+    for host in server_hosts:
+        for alias in host_aliases(host):
+            server_hosts_by_alias.setdefault(alias, host)
     db_family_counts = {
         family: len(unique_hosts([host for host in all_hosts if is_family_database_asset(host, family)]))
         for family in DB_FAMILIES
@@ -1138,10 +1171,14 @@ def dashboard(
         rows = []
         for host in family_database_hosts:
             size_bytes, size_label = database_size_value(host)
+            server_label = database_asset_server_label(host, family)
+            server_alias = normalized_host_alias(server_label)
+            server_host = server_hosts_by_alias.get(server_alias or "")
             rows.append(
                 {
-                    "name": host.zabbix_host_name or host.hostname,
-                    "server": host.hostname,
+                    "name": database_asset_name(host),
+                    "server": server_host.hostname if server_host else server_label,
+                    "server_ip": (server_host.ip_address if server_host else host.ip_address) or "-",
                     "ip": host.ip_address or "-",
                     "version": host_database_version_labels.get(host.id) or "-",
                     "size": size_label,
@@ -1155,11 +1192,41 @@ def dashboard(
         total_size = sum(row["size_bytes"] for row in rows)
         for row in rows:
             row["percent"] = round((row["size_bytes"] / max_size) * 100, 1) if max_size else 0
+
+        clusters_by_server: dict[str, dict] = {}
+        for row in rows:
+            server = row["server"] or "-"
+            key = normalized_host_alias(server) or server.lower()
+            cluster = clusters_by_server.setdefault(
+                key,
+                {
+                    "server": server,
+                    "ip": row["server_ip"],
+                    "rows": [],
+                    "total_size_bytes": 0,
+                },
+            )
+            if cluster["ip"] == "-" and row["server_ip"] != "-":
+                cluster["ip"] = row["server_ip"]
+            cluster["rows"].append(row)
+            cluster["total_size_bytes"] += row["size_bytes"]
+
+        clusters = list(clusters_by_server.values())
+        for cluster in clusters:
+            cluster["rows"].sort(key=lambda row: (-row["size_bytes"], row["name"]))
+            cluster["total_size"] = (
+                format_size_bytes(cluster["total_size_bytes"])
+                if cluster["total_size_bytes"]
+                else "-"
+            )
+            cluster["has_size_data"] = cluster["total_size_bytes"] > 0
+        clusters.sort(key=lambda cluster: (-cluster["total_size_bytes"], cluster["server"]))
         database_size_sections.append(
             {
                 "label": "SQL Server" if family == "SQLServer" else family,
                 "primary_only": family in {"PostgreSQL", "SQLServer"},
                 "rows": rows,
+                "clusters": clusters,
                 "total_size": format_size_bytes(total_size) if total_size else "-",
                 "has_size_data": max_size > 0,
             }
