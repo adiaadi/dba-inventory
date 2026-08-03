@@ -52,7 +52,7 @@ DEFAULT_UI_TEXTS = [
     {"key": "panel.infrastructure_note", "category": "Panels", "label": "Infrastructure mix note", "default": "Virtual / Physical"},
     {"key": "panel.monitoring_health", "category": "Panels", "label": "Monitoring health panel", "default": "Monitoring Health"},
     {"key": "panel.database_size", "category": "Panels", "label": "Database size panel", "default": "Database Size"},
-    {"key": "panel.database_size_note", "category": "Panels", "label": "Database size note", "default": "3D view - PostgreSQL / SQLServer primary only"},
+    {"key": "panel.database_size_note", "category": "Panels", "label": "Database size note", "default": "Primary PROD only"},
     {"key": "panel.physical_support", "category": "Panels", "label": "Physical support panel", "default": "Physical Servers Support"},
     {"key": "panel.open_problem_queue", "category": "Panels", "label": "Open problem queue panel", "default": "Open Problem Queue"},
     {"key": "panel.server_summary", "category": "Panels", "label": "Server summary panel", "default": "Server Summary"},

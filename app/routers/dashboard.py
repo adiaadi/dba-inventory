@@ -1054,6 +1054,10 @@ def is_primary_database_asset(host: Host) -> bool:
     return not any(marker in role_text for marker in REPLICA_MARKERS)
 
 
+def is_prod_database_asset(host: Host) -> bool:
+    return (host.environment or "").strip().lower() == "prod"
+
+
 def datacenter_label(host: Host) -> str:
     tag_value = first_tag_value(host, ("datacenter", "data_center", "dc"))
     if tag_value:
@@ -1361,10 +1365,11 @@ def dashboard(
         family_database_hosts = unique_hosts(
             [host for host in all_hosts if is_family_database_asset(host, family)]
         )
-        if family in {"PostgreSQL", "SQLServer"}:
-            family_database_hosts = [
-                host for host in family_database_hosts if is_primary_database_asset(host)
-            ]
+        family_database_hosts = [
+            host
+            for host in family_database_hosts
+            if is_primary_database_asset(host) and is_prod_database_asset(host)
+        ]
         rows = []
         for host in family_database_hosts:
             server_label = database_asset_server_label(host, family)
@@ -1433,7 +1438,7 @@ def dashboard(
         database_size_sections.append(
             {
                 "label": "SQL Server" if family == "SQLServer" else family,
-                "primary_only": family in {"PostgreSQL", "SQLServer"},
+                "scope_label": "primary prod",
                 "rows": rows,
                 "clusters": clusters,
                 "total_size": format_size_bytes(total_size) if total_size else "-",

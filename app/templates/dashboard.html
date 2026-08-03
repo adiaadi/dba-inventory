@@ -245,7 +245,7 @@
         <section class="overview-panel executive-panel executive-panel-span-3 database-size-panel">
           <div class="overview-section-heading">
             <h2>{{ ui_text(request, "panel.database_size", "Database Size") }}</h2>
-            <span>{{ ui_text(request, "panel.database_size_note", "3D view - PostgreSQL / SQLServer primary only") }}</span>
+            <span>{{ ui_text(request, "panel.database_size_note", "Primary PROD only") }}</span>
           </div>
           <div class="db-size-3d-grid">
             {% for section in database_size_sections %}
@@ -255,7 +255,7 @@
                     <img class="db-inline-logo" src="{{ db_logo_map.get(section.label, '/static/img/sqlserver.png') }}" alt="{{ section.label }}">
                     {{ section.label }}
                   </strong>
-                  <span>{{ section.total_size }}{% if section.primary_only %}<em>primary</em>{% endif %}</span>
+                  <span>{{ section.total_size }}{% if section.scope_label %}<em>{{ section.scope_label }}</em>{% endif %}</span>
                 </div>
                 {% if section.clusters %}
                   <div class="db-cluster-tree">
