@@ -23,6 +23,9 @@ services:
       APP_ENV: docker
       APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Almaty}
       SESSION_SECRET: ${SESSION_SECRET:-change-me-admin-session-secret}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
+      PORTAL_USERNAME: ${PORTAL_USERNAME:-}
+      PORTAL_PASSWORD: ${PORTAL_PASSWORD:-}
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
       ZABBIX_URL: ${ZABBIX_URL:-}

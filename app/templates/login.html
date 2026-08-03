@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{{ ui_text(request, "auth.login_title", "Portal Login") }}{% endblock %}
+
+{% block content %}
+<div class="admin-auth-shell">
+  <section class="admin-auth-card">
+    <div class="admin-auth-icon">
+      <i class="bi bi-shield-lock"></i>
+    </div>
+    <h1>{{ ui_text(request, "auth.login_title", "Portal Login") }}</h1>
+    <p>{{ ui_text(request, "auth.login_hint", "Sign in to access DATABASE INVENTORY.") }}</p>
+    {% if error %}
+      <div class="alert alert-danger py-2" role="alert">
+        {{ ui_text(request, "auth.invalid_login", "Invalid login or password.") }}
+      </div>
+    {% endif %}
+    <form method="post" action="/login">
+      <input type="hidden" name="next" value="{{ next_url }}">
+      <label class="form-label">
+        Login
+        <input class="form-control" name="username" autocomplete="username" required autofocus>
+      </label>
+      <label class="form-label">
+        Password
+        <input class="form-control" type="password" name="password" autocomplete="current-password" required>
+      </label>
+      <button class="btn btn-primary w-100" type="submit">
+        <i class="bi bi-box-arrow-in-right"></i> Login
+      </button>
+    </form>
+  </section>
+</div>
+{% endblock %}

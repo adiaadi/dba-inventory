@@ -11,7 +11,7 @@
 <body>
   <nav class="navbar navbar-expand-lg app-nav border-bottom sticky-top">
     <div class="container-fluid px-4">
-      <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="{{ '/' if request.session.get('portal_user') else '/login' }}">
         <span class="brand-logo-wrap">
           <img class="brand-logo" src="/static/img/bnk_logo_246x164.png" alt="BNK Commercial Bank">
         </span>
@@ -22,29 +22,29 @@
       </button>
       <div class="collapse navbar-collapse" id="mainNav">
         <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-          <li class="nav-item">
-            <a class="nav-link external-nav-link" href="https://zabbix.bnkc.com/zabbix/zabbix.php?action=dashboard.view&dashboardid=1&from=now-1h&to=now" target="_blank" rel="noreferrer">
-              <i class="bi bi-activity"></i> {{ ui_text(request, "external.zabbix", "ZABBIX") }}
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link external-nav-link" href="http://powa.bnkc.com:8888/server/" target="_blank" rel="noreferrer">
-              <i class="bi bi-speedometer2"></i> {{ ui_text(request, "external.powa", "PoWA") }}
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link external-nav-link" href="https://oem.bnkc.com:7803/em/faces/logon/core-uifwk-console-login" target="_blank" rel="noreferrer">
-              <i class="bi bi-box-arrow-up-right"></i> {{ ui_text(request, "external.oem", "OEM") }}
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link external-nav-link" href="/admin">
-              <i class="bi bi-sliders"></i> {{ ui_text(request, "nav.admin", "Admin") }}
-            </a>
-          </li>
-          {% if request.session.get("admin_user") %}
+          {% if request.session.get("portal_user") %}
             <li class="nav-item">
-              <form method="post" action="/admin/logout" class="d-inline">
+              <a class="nav-link external-nav-link" href="https://zabbix.bnkc.com/zabbix/zabbix.php?action=dashboard.view&dashboardid=1&from=now-1h&to=now" target="_blank" rel="noreferrer">
+                <i class="bi bi-activity"></i> {{ ui_text(request, "external.zabbix", "ZABBIX") }}
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link external-nav-link" href="http://powa.bnkc.com:8888/server/" target="_blank" rel="noreferrer">
+                <i class="bi bi-speedometer2"></i> {{ ui_text(request, "external.powa", "PoWA") }}
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link external-nav-link" href="https://oem.bnkc.com:7803/em/faces/logon/core-uifwk-console-login" target="_blank" rel="noreferrer">
+                <i class="bi bi-box-arrow-up-right"></i> {{ ui_text(request, "external.oem", "OEM") }}
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link external-nav-link" href="/admin">
+                <i class="bi bi-sliders"></i> {{ ui_text(request, "nav.admin", "Admin") }}
+              </a>
+            </li>
+            <li class="nav-item">
+              <form method="post" action="/logout" class="d-inline">
                 <button class="nav-link external-nav-link border-0 bg-transparent" type="submit">
                   <i class="bi bi-box-arrow-right"></i> {{ ui_text(request, "nav.logout", "Logout") }}
                 </button>
