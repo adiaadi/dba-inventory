@@ -661,6 +661,10 @@ def clean_database_name(value: str | None) -> str | None:
     text = value.strip().strip(",;|")
     text = re.sub(r"^[\-\*\u2022>]+\s*", "", text)
     text = text.strip().strip("\"'")
+    bracket_match = re.match(r"^\[(?P<name>[^\]]+)\]\s*:?\s*(database|db)?$", text, re.IGNORECASE)
+    if bracket_match:
+        text = bracket_match.group("name")
+    text = re.sub(r"\s*:\s*(database|db)\s*$", "", text, flags=re.IGNORECASE)
     text = clean_item_text(text, max_length=90)
     if not text:
         return None
