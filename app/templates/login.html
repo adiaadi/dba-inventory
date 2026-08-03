@@ -1,33 +1,55 @@
-{% extends "base.html" %}
-{% block title %}{{ ui_text(request, "auth.login_title", "Portal Login") }}{% endblock %}
-
-{% block content %}
-<div class="admin-auth-shell">
-  <section class="admin-auth-card">
-    <div class="admin-auth-icon">
-      <i class="bi bi-shield-lock"></i>
-    </div>
-    <h1>{{ ui_text(request, "auth.login_title", "Portal Login") }}</h1>
-    <p>{{ ui_text(request, "auth.login_hint", "Sign in to access DATABASE INVENTORY.") }}</p>
-    {% if error %}
-      <div class="alert alert-danger py-2" role="alert">
-        {{ ui_text(request, "auth.invalid_login", "Invalid login or password.") }}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ ui_text(request, "auth.login_title", "DATABASE INVENTORY") }}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="/static/css/styles.css" rel="stylesheet">
+</head>
+<body class="portal-login-body">
+  <main class="portal-login-shell">
+    <section class="portal-login-panel">
+      <div class="portal-login-panel-inner">
+        <div class="portal-login-topline">
+          <img class="portal-login-logo" src="/static/img/bnk_logo_246x164.png" alt="BNK Commercial Bank">
+          <span>RU <i class="bi bi-chevron-down"></i></span>
+        </div>
+        <div class="portal-login-copy">
+          <span class="portal-login-kicker">Secure access</span>
+          <h1>{{ ui_text(request, "auth.login_title", "DATABASE INVENTORY") }}</h1>
+          <p>{{ ui_text(request, "auth.login_hint", "Secure access to servers and DBMS inventory.") }}</p>
+        </div>
+        {% if error %}
+          <div class="alert alert-danger py-2" role="alert">
+            {{ ui_text(request, "auth.invalid_login", "Invalid login or password.") }}
+          </div>
+        {% endif %}
+        <form method="post" action="/login" class="portal-login-form">
+          <input type="hidden" name="next" value="{{ next_url }}">
+          <label class="form-label">
+            Login
+            <input class="form-control" name="username" autocomplete="username" required autofocus>
+          </label>
+          <label class="form-label">
+            Password
+            <input class="form-control" type="password" name="password" autocomplete="current-password" required>
+          </label>
+          <button class="btn btn-primary w-100" type="submit">
+            <i class="bi bi-box-arrow-in-right"></i> Login
+          </button>
+        </form>
+        <div class="portal-login-footer">&copy; 2026. BNK Commercial Bank</div>
       </div>
-    {% endif %}
-    <form method="post" action="/login">
-      <input type="hidden" name="next" value="{{ next_url }}">
-      <label class="form-label">
-        Login
-        <input class="form-control" name="username" autocomplete="username" required autofocus>
-      </label>
-      <label class="form-label">
-        Password
-        <input class="form-control" type="password" name="password" autocomplete="current-password" required>
-      </label>
-      <button class="btn btn-primary w-100" type="submit">
-        <i class="bi bi-box-arrow-in-right"></i> Login
-      </button>
-    </form>
-  </section>
-</div>
-{% endblock %}
+    </section>
+    <section class="portal-login-hero" aria-label="Database infrastructure illustration">
+      <img src="/static/img/login-infrastructure-hero.png" alt="">
+      <div class="portal-login-hero-overlay">
+        <span>DBA Inventory</span>
+        <strong>Hardware & DBMS Estate</strong>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
