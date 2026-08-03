@@ -1,5 +1,6 @@
 from collections import Counter
 from datetime import UTC, date, datetime
+import json
 import re
 from urllib.parse import parse_qs
 
@@ -86,6 +87,44 @@ DATABASE_SIZE_EXCLUDE_MARKERS = (
     "disk",
     "tablespace",
 )
+
+DATABASE_LIST_ITEM_MARKERS = (
+    "database list",
+    "databases list",
+    "list databases",
+    "db list",
+    "databases",
+    "database names",
+    "db names",
+    "pgsql.databases",
+    "postgresql.databases",
+    "oracle.databases",
+    "mssql.databases",
+    "sqlserver.databases",
+)
+
+DATABASE_LIST_ITEM_EXCLUDE_MARKERS = (
+    "version",
+    "release",
+    "product",
+    "size",
+    "tablespace",
+    "status",
+    "count",
+)
+
+DATABASE_NAME_EXCLUDE_VALUES = {
+    "database",
+    "databases",
+    "database name",
+    "datname",
+    "name",
+    "db",
+    "db name",
+    "null",
+    "none",
+    "unknown",
+}
 
 DATABASE_VERSION_TAG_NAMES = (
     "version",
@@ -616,6 +655,95 @@ def database_size_label(host: Host) -> str:
     return database_size_value(host)[1]
 
 
+def clean_database_name(value: str | None) -> str | None:
+    if not value:
+        return None
+    text = value.strip().strip(",;|")
+    text = re.sub(r"^[\-\*\u2022>]+\s*", "", text)
+    text = text.strip().strip("\"'")
+    text = clean_item_text(text, max_length=90)
+    if not text:
+        return None
+    if text.lower() in DATABASE_NAME_EXCLUDE_VALUES:
+        return None
+    return text
+
+
+def parse_database_name_list(value: str | None) -> list[str]:
+    if not value:
+        return []
+
+    parsed_names: list[str] = []
+    raw_value = value.strip()
+    try:
+        parsed_json = json.loads(raw_value)
+    except json.JSONDecodeError:
+        parsed_json = None
+
+    if isinstance(parsed_json, list):
+        parsed_names.extend(str(item) for item in parsed_json if item not in (None, ""))
+    elif isinstance(parsed_json, dict):
+        for key, item in parsed_json.items():
+            if isinstance(item, str):
+                parsed_names.append(item)
+            elif key not in (None, ""):
+                parsed_names.append(str(key))
+    else:
+        parsed_names.extend(
+            part
+            for part in re.split(r"[\r\n,;]+", raw_value)
+            if part.strip()
+        )
+
+    names: list[str] = []
+    seen: set[str] = set()
+    for value_part in parsed_names:
+        name = clean_database_name(value_part)
+        if not name:
+            continue
+        key = name.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        names.append(name)
+    has_list_separator = any(separator in raw_value for separator in ("\n", "\r", ",", ";"))
+    if len(names) == 1 and names[0].isdigit() and not has_list_separator:
+        return []
+    return names
+
+
+def is_database_list_item(key_text: str) -> bool:
+    return any(marker in key_text for marker in DATABASE_LIST_ITEM_MARKERS) and not any(
+        marker in key_text for marker in DATABASE_LIST_ITEM_EXCLUDE_MARKERS
+    )
+
+
+def database_name_from_size_item_label(label: str) -> str | None:
+    label_without_key = label.split("(", 1)[0].strip()
+    patterns = (
+        r"(?i)^database\s+size\s*[:\-]\s*(?P<name>.+)$",
+        r"(?i)^db\s+size\s*[:\-]\s*(?P<name>.+)$",
+        r"(?i)^database\s+(?P<name>.+?)\s+size$",
+        r"(?i)^db\s+(?P<name>.+?)\s+size$",
+        r"(?i)^(?P<name>.+?)\s+database\s+size$",
+        r"(?i)^(?P<name>.+?)\s+db\s+size$",
+    )
+    for pattern in patterns:
+        match = re.match(pattern, label_without_key)
+        if match:
+            name = clean_database_name(match.group("name"))
+            if name:
+                return name
+
+    key_match = re.search(
+        r"(?i)(?:db|database|pgsql|postgresql|oracle|mssql|sqlserver)[\w.\-]*size\[\s*\"?(?P<name>[^,\]\"']+)",
+        label,
+    )
+    if key_match:
+        return clean_database_name(key_match.group("name"))
+    return None
+
+
 def split_database_asset_label(host: Host) -> tuple[str, str | None]:
     label = clean_item_text(host.zabbix_host_name or host.hostname, max_length=120) or host.hostname
     match = re.match(r"^\s*(?P<database>.*?)\s*\((?P<server>[^)]+)\)\s*$", label)
@@ -643,6 +771,71 @@ def database_asset_server_label(host: Host, family: str) -> str:
             if normalized.lower().startswith(prefix) and len(normalized) > len(prefix):
                 return normalized[len(prefix) :]
     return label
+
+
+def database_size_rows_for_host(
+    host: Host,
+    family: str,
+    version_label: str | None,
+) -> list[dict]:
+    host_total_size_bytes, host_total_size_label = database_size_value(host)
+    rows_by_name: dict[str, dict] = {}
+
+    def upsert_row(name: str, size_bytes: float | None = None, size_label: str | None = None) -> None:
+        cleaned_name = clean_database_name(name)
+        if not cleaned_name:
+            return
+        key = cleaned_name.lower()
+        row = rows_by_name.setdefault(
+            key,
+            {
+                "host_id": host.id,
+                "name": cleaned_name,
+                "version": version_label or "-",
+                "size": "-",
+                "size_bytes": 0,
+                "host_total_size_bytes": host_total_size_bytes or 0,
+                "host_total_size": host_total_size_label,
+            },
+        )
+        if size_bytes and size_bytes > row["size_bytes"]:
+            row["size_bytes"] = size_bytes
+            row["size"] = size_label or format_size_bytes(size_bytes)
+
+    item_values = imported_zabbix_items(host)
+    for key, value in item_values.items():
+        key_text = key.lower()
+        if is_database_list_item(key_text):
+            for name in parse_database_name_list(value):
+                upsert_row(name)
+
+    generic_size_seen = False
+    for key, value in item_values.items():
+        key_text = key.lower()
+        if any(marker in key_text for marker in DATABASE_SIZE_EXCLUDE_MARKERS):
+            continue
+        if "size" not in key_text:
+            continue
+        if not any(marker in key_text for marker in DATABASE_SIZE_ITEM_MARKERS):
+            continue
+        parsed_size = parse_size_bytes(value)
+        if not parsed_size:
+            continue
+        database_name = database_name_from_size_item_label(key)
+        if database_name:
+            upsert_row(database_name, parsed_size, format_size_bytes(parsed_size))
+        else:
+            generic_size_seen = True
+
+    for database in host.databases:
+        upsert_row(database.name)
+
+    if not rows_by_name:
+        name = database_asset_name(host)
+        size_bytes = host_total_size_bytes if generic_size_seen or host_total_size_bytes else None
+        upsert_row(name, size_bytes, host_total_size_label)
+
+    return sorted(rows_by_name.values(), key=lambda row: (-row["size_bytes"], row["name"].lower()))
 
 
 def format_postgresql_version_number(value: str) -> str | None:
@@ -1170,26 +1363,27 @@ def dashboard(
             ]
         rows = []
         for host in family_database_hosts:
-            size_bytes, size_label = database_size_value(host)
             server_label = database_asset_server_label(host, family)
             server_alias = normalized_host_alias(server_label)
             server_host = server_hosts_by_alias.get(server_alias or "")
-            rows.append(
-                {
-                    "name": database_asset_name(host),
-                    "server": server_host.hostname if server_host else server_label,
-                    "server_ip": (server_host.ip_address if server_host else host.ip_address) or "-",
-                    "ip": host.ip_address or "-",
-                    "version": host_database_version_labels.get(host.id) or "-",
-                    "size": size_label,
-                    "size_bytes": size_bytes or 0,
-                    "monitoring": host.monitoring_status,
-                    "problem_count": host.problem_count or 0,
-                }
+            host_rows = database_size_rows_for_host(
+                host,
+                family,
+                host_database_version_labels.get(host.id),
             )
+            for row in host_rows:
+                row.update(
+                    {
+                        "server": server_host.hostname if server_host else server_label,
+                        "server_ip": (server_host.ip_address if server_host else host.ip_address) or "-",
+                        "ip": host.ip_address or "-",
+                        "monitoring": host.monitoring_status,
+                        "problem_count": host.problem_count or 0,
+                    }
+                )
+                rows.append(row)
         rows.sort(key=lambda row: row["size_bytes"], reverse=True)
         max_size = max((row["size_bytes"] for row in rows), default=0)
-        total_size = sum(row["size_bytes"] for row in rows)
         for row in rows:
             row["percent"] = round((row["size_bytes"] / max_size) * 100, 1) if max_size else 0
 
@@ -1203,17 +1397,27 @@ def dashboard(
                     "server": server,
                     "ip": row["server_ip"],
                     "rows": [],
+                    "row_size_total": 0,
+                    "host_totals": {},
                     "total_size_bytes": 0,
                 },
             )
             if cluster["ip"] == "-" and row["server_ip"] != "-":
                 cluster["ip"] = row["server_ip"]
             cluster["rows"].append(row)
-            cluster["total_size_bytes"] += row["size_bytes"]
+            cluster["row_size_total"] += row["size_bytes"]
+            if row["host_total_size_bytes"]:
+                previous_total = cluster["host_totals"].get(row["host_id"], 0)
+                cluster["host_totals"][row["host_id"]] = max(
+                    previous_total,
+                    row["host_total_size_bytes"],
+                )
 
         clusters = list(clusters_by_server.values())
         for cluster in clusters:
             cluster["rows"].sort(key=lambda row: (-row["size_bytes"], row["name"]))
+            host_total_size = sum(cluster["host_totals"].values())
+            cluster["total_size_bytes"] = max(cluster["row_size_total"], host_total_size)
             cluster["total_size"] = (
                 format_size_bytes(cluster["total_size_bytes"])
                 if cluster["total_size_bytes"]
@@ -1221,6 +1425,7 @@ def dashboard(
             )
             cluster["has_size_data"] = cluster["total_size_bytes"] > 0
         clusters.sort(key=lambda cluster: (-cluster["total_size_bytes"], cluster["server"]))
+        total_size = sum(cluster["total_size_bytes"] for cluster in clusters)
         database_size_sections.append(
             {
                 "label": "SQL Server" if family == "SQLServer" else family,
@@ -1228,7 +1433,7 @@ def dashboard(
                 "rows": rows,
                 "clusters": clusters,
                 "total_size": format_size_bytes(total_size) if total_size else "-",
-                "has_size_data": max_size > 0,
+                "has_size_data": total_size > 0,
             }
         )
     datacenter_counts = {

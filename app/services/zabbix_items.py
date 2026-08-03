@@ -39,6 +39,12 @@ ZABBIX_DATABASE_PRODUCT_ITEM_SEARCH_TERMS = (
 ZABBIX_DATABASE_ITEM_SEARCH_TERMS = (
     "Database",
     "database",
+    "Databases",
+    "databases",
+    "Database list",
+    "database list",
+    "DB list",
+    "db list",
     *ZABBIX_DATABASE_VERSION_ITEM_SEARCH_TERMS,
     *ZABBIX_DATABASE_PRODUCT_ITEM_SEARCH_TERMS,
     "DB size",
