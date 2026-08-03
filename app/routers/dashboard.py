@@ -73,11 +73,19 @@ DATABASE_SIZE_TAG_NAMES = (
 DATABASE_SIZE_ITEM_MARKERS = (
     "database size",
     "db size",
+    "get database size",
+    "get_db_size",
     "db.size",
     "pgsql.db.size",
     "oracle.db",
     "mssql",
     "sqlserver",
+)
+
+DATABASE_SIZE_GB_ITEM_MARKERS = (
+    "get database size",
+    "get_db_size",
+    "total_allocated_gb",
 )
 
 DATABASE_SIZE_EXCLUDE_MARKERS = (
@@ -613,6 +621,20 @@ def parse_size_bytes(value: str | None) -> float | None:
     return number
 
 
+def parse_database_size_item_bytes(item_label: str, value: str | None) -> float | None:
+    parsed = parse_size_bytes(value)
+    if parsed is None:
+        return None
+    text = (value or "").strip().lower()
+    item_text = item_label.lower()
+    explicit_unit_markers = ("tb", "tib", "gb", "gib", "mb", "mib", "kb", "kib", " b")
+    if any(marker in item_text for marker in DATABASE_SIZE_GB_ITEM_MARKERS) and not any(
+        marker in text for marker in explicit_unit_markers
+    ):
+        return parsed * 1024**3
+    return parsed
+
+
 def format_size_bytes(value: float | None) -> str:
     if value is None or value <= 0:
         return "-"
@@ -644,7 +666,7 @@ def database_size_value(host: Host) -> tuple[float | None, str]:
             continue
         if not any(marker in key_text for marker in DATABASE_SIZE_ITEM_MARKERS):
             continue
-        parsed = parse_size_bytes(value)
+        parsed = parse_database_size_item_bytes(key, value)
         if parsed:
             candidates.append((parsed, format_size_bytes(parsed)))
     if not candidates:
@@ -823,7 +845,7 @@ def database_size_rows_for_host(
             continue
         if not any(marker in key_text for marker in DATABASE_SIZE_ITEM_MARKERS):
             continue
-        parsed_size = parse_size_bytes(value)
+        parsed_size = parse_database_size_item_bytes(key, value)
         if not parsed_size:
             continue
         database_name = database_name_from_size_item_label(key)
