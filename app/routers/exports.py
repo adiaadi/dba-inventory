@@ -14,6 +14,23 @@ from app.core.config import get_settings
 from app.db.session import get_db
 from app.models import DatabaseInstance, Host
 from app.routers.common import apply_database_filters, apply_host_filters
+from app.routers.dashboard import (
+    DB_TYPE_VIEWS,
+    detected_db_type,
+    detected_db_type_by_zabbix_rules,
+    detected_server_platform_from_values,
+    host_search_text,
+    is_zabbix_server_asset,
+    normalized_db_type,
+    normalized_virtual_filter,
+    operating_system_label,
+    server_core_label,
+    server_model_label,
+    server_ram_label,
+    server_vendor_label,
+    unique_hosts,
+    virtual_status_label,
+)
 from app.services.zabbix_refresh import maybe_refresh_zabbix_cache
 
 router = APIRouter(prefix="/exports", tags=["exports"])
@@ -60,60 +77,135 @@ def append_excel_row(ws, values: Iterable) -> None:
     ws.append([excel_cell_value(value) for value in values])
 
 
+def view_db_type(view: str | None, db_type: str | None) -> str | None:
+    if db_type:
+        return normalized_db_type(db_type)
+    view_config = DB_TYPE_VIEWS.get(view or "")
+    if not view_config:
+        return None
+    return view_config["label"]
+
+
+def server_summary_export_rows(
+    db: Session,
+    db_type: str | None = None,
+    environment: str | None = None,
+    role: str | None = None,
+    monitoring_status: str | None = None,
+    virtual: str | None = None,
+    view: str | None = None,
+) -> list[dict]:
+    stmt = select(Host).options(selectinload(Host.databases)).order_by(Host.hostname)
+    stmt = apply_host_filters(stmt, None, environment, role, monitoring_status)
+    hosts = db.scalars(stmt).all()
+
+    host_db_labels = {
+        host.id: detected_db_type_by_zabbix_rules(host) or detected_db_type(host)
+        for host in hosts
+    }
+    requested_db_type = view_db_type(view, db_type)
+    if requested_db_type:
+        hosts = [host for host in hosts if host_db_labels.get(host.id) == requested_db_type]
+
+    server_hosts = unique_hosts([host for host in hosts if is_zabbix_server_asset(host)])
+    host_model_labels = {host.id: server_model_label(host) for host in server_hosts}
+    host_vendor_labels = {host.id: server_vendor_label(host) for host in server_hosts}
+    host_platform_labels = {
+        host.id: detected_server_platform_from_values(
+            host_vendor_labels.get(host.id),
+            host_model_labels.get(host.id),
+            host_search_text(host),
+        )
+        for host in server_hosts
+    }
+    host_virtual_labels = {
+        host.id: virtual_status_label(host_platform_labels.get(host.id))
+        for host in server_hosts
+    }
+
+    active_virtual_filter = normalized_virtual_filter(virtual)
+    if active_virtual_filter:
+        server_hosts = [
+            host
+            for host in server_hosts
+            if host_virtual_labels.get(host.id) == active_virtual_filter
+        ]
+
+    rows = []
+    for host in server_hosts:
+        instance_db_types = sorted({database.db_type for database in host.databases if database.db_type})
+        rows.append(
+            {
+                "server": host.zabbix_host_name or host.hostname,
+                "ip": host.ip_address or "-",
+                "environment": (host.environment or "-").upper(),
+                "db_type": host_db_labels.get(host.id) or host.db_type or ", ".join(instance_db_types) or "-",
+                "virtual": host_virtual_labels.get(host.id) or "-",
+                "server_model": host_model_labels.get(host.id) or "-",
+                "server_vendor": host_vendor_labels.get(host.id) or "-",
+                "core": server_core_label(host),
+                "ram": server_ram_label(host),
+                "operating_system": operating_system_label(host),
+            }
+        )
+    return rows
+
+
 @router.get("/hosts.xlsx")
 def export_hosts(
     db_type: str | None = None,
     environment: str | None = None,
     role: str | None = None,
+    monitoring_status: str | None = None,
+    virtual: str | None = None,
+    view: str | None = None,
     db: Session = Depends(get_db),
 ):
     maybe_refresh_zabbix_cache(db)
-    stmt = select(Host).options(selectinload(Host.databases)).order_by(Host.hostname)
-    stmt = apply_host_filters(stmt, db_type, environment, role)
-    hosts = db.scalars(stmt).all()
+    rows = server_summary_export_rows(
+        db,
+        db_type=db_type,
+        environment=environment,
+        role=role,
+        monitoring_status=monitoring_status,
+        virtual=virtual,
+        view=view,
+    )
 
     headers = [
-        "hostname",
-        "fqdn",
-        "ip_address",
-        "environment",
-        "db_type",
-        "os_name",
-        "location",
-        "owner_team",
-        "support_end_date",
-        "database_instance_types",
-        "zabbix_hostid",
-        "zabbix_host_name",
-        "zabbix_url",
-        "zabbix_last_sync_at",
+        "Server",
+        "IP",
+        "Environment",
+        "DB Type",
+        "Virtual",
+        "Server model",
+        "Server vendor",
+        "Core",
+        "RAM",
+        "Operating system",
     ]
     workbook = Workbook()
     ws = workbook.active
     ws.title = "Servers"
     ws.append(headers)
-    for host in hosts:
+    for row in rows:
         append_excel_row(
             ws,
             [
-                host.hostname,
-                host.fqdn,
-                host.ip_address,
-                host.environment,
-                host.db_type,
-                host.os_name,
-                host.location,
-                host.owner_team,
-                host.support_end_date,
-                ", ".join(sorted({database.db_type for database in host.databases})),
-                host.zabbix_hostid,
-                host.zabbix_host_name,
-                host.zabbix_url,
-                host.zabbix_last_sync_at,
+                row["server"],
+                row["ip"],
+                row["environment"],
+                row["db_type"],
+                row["virtual"],
+                row["server_model"],
+                row["server_vendor"],
+                row["core"],
+                row["ram"],
+                row["operating_system"],
             ]
         )
     apply_sheet_style(ws, headers)
-    return workbook_response(workbook, "dba_inventory_hosts.xlsx")
+    return workbook_response(workbook, "dba_inventory_server_summary.xlsx")
 
 
 @router.get("/databases.xlsx")

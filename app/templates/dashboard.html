@@ -84,7 +84,7 @@
             </button>
           </form>
           {% if current_view == "hosts" or db_type_view %}
-            <a class="btn btn-success btn-sm" href="/exports/hosts.xlsx"><i class="bi bi-file-earmark-excel"></i> {{ ui_text(request, "action.export_servers", "Export Servers") }}</a>
+            <a class="btn btn-success btn-sm" href="/exports/hosts.xlsx{% if request.url.query %}?{{ request.url.query }}{% endif %}"><i class="bi bi-file-earmark-excel"></i> {{ ui_text(request, "action.export_servers", "Export Servers") }}</a>
           {% elif current_view == "databases" %}
             <a class="btn btn-success btn-sm" href="/exports/databases.xlsx"><i class="bi bi-file-earmark-excel"></i> {{ ui_text(request, "action.export_dbs", "Export DBs") }}</a>
           {% else %}
