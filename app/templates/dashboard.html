@@ -123,7 +123,7 @@
             <div class="inventory-kpi-chart-wrap" aria-label="{{ db_type_view.label }} database environment chart">
               <canvas id="dbmsDatabaseEnvironmentChart"></canvas>
               <div class="inventory-kpi-center">
-                <strong>{{ type_database_assets|length }}</strong>
+                <strong>{{ type_database_chart_total }}</strong>
                 <span>{{ ui_text(request, "label.databases", "Databases")|upper }}</span>
               </div>
             </div>
@@ -154,7 +154,7 @@
             <div class="inventory-kpi-chart-wrap" aria-label="{{ db_type_view.label }} server platform chart">
               <canvas id="dbmsServerPlatformChart"></canvas>
               <div class="inventory-kpi-center">
-                <strong>{{ type_server_assets|length }}</strong>
+                <strong>{{ type_server_chart_total }}</strong>
                 <span>{{ ui_text(request, "label.servers", "Servers")|upper }}</span>
               </div>
             </div>

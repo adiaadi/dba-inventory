@@ -1616,6 +1616,8 @@ def dashboard(
     display_hosts = hosts_list
     type_database_assets: list[Host] = []
     type_server_assets: list[Host] = []
+    display_database_assets: list[Host] = []
+    display_server_assets: list[Host] = []
     if db_type_view:
         type_database_assets = unique_hosts(
             [host for host in type_base_hosts if is_family_database_asset(host, db_type_view["label"])]
@@ -1644,6 +1646,13 @@ def dashboard(
             ]
         display_hosts = display_database_assets if current_asset_view == "databases" else display_server_assets
 
+    type_server_summary_assets = type_server_assets
+    if db_type_view and environment:
+        type_server_summary_assets = [
+            host
+            for host in type_server_summary_assets
+            if (host.environment or "").strip().upper() == environment.upper()
+        ]
     type_database_environment_summary = [
         {
             "label": environment_label,
@@ -1660,12 +1669,38 @@ def dashboard(
             "label": platform_label,
             "count": sum(
                 1
-                for host in type_server_assets
+                for host in type_server_summary_assets
                 if host_platform_labels.get(host.id) == platform_label
             ),
         }
         for platform_label in ("Virtual", "Physical")
     ]
+    type_database_chart_assets = display_database_assets if db_type_view else []
+    type_server_chart_assets = display_server_assets if db_type_view else []
+    type_database_chart_summary = [
+        {
+            "label": environment_label,
+            "count": sum(
+                1
+                for host in type_database_chart_assets
+                if (host.environment or "").strip().upper() == environment_label
+            ),
+        }
+        for environment_label in ("PROD", "DEV", "TEST")
+    ]
+    type_server_chart_summary = [
+        {
+            "label": platform_label,
+            "count": sum(
+                1
+                for host in type_server_chart_assets
+                if host_platform_labels.get(host.id) == platform_label
+            ),
+        }
+        for platform_label in ("Virtual", "Physical")
+    ]
+    type_database_chart_total = sum(row["count"] for row in type_database_chart_summary)
+    type_server_chart_total = sum(row["count"] for row in type_server_chart_summary)
 
     database_assets = unique_hosts([
         host
@@ -1723,10 +1758,10 @@ def dashboard(
         "platformValues": list(visible_platform_counts.values()),
         "osLabels": [label for label, _ in os_family_counts],
         "osValues": [count for _, count in os_family_counts],
-        "typeDatabaseEnvironmentLabels": [row["label"] for row in type_database_environment_summary],
-        "typeDatabaseEnvironmentValues": [row["count"] for row in type_database_environment_summary],
-        "typeServerPlatformLabels": [row["label"] for row in type_server_platform_summary],
-        "typeServerPlatformValues": [row["count"] for row in type_server_platform_summary],
+        "typeDatabaseEnvironmentLabels": [row["label"] for row in type_database_chart_summary],
+        "typeDatabaseEnvironmentValues": [row["count"] for row in type_database_chart_summary],
+        "typeServerPlatformLabels": [row["label"] for row in type_server_chart_summary],
+        "typeServerPlatformValues": [row["count"] for row in type_server_chart_summary],
     }
     section_tabs = [
         {"key": "overview", "label": ui_text_value(request, "nav.overview", "Overview"), "icon": "bi-grid-1x2"},
@@ -1811,6 +1846,8 @@ def dashboard(
             "type_server_assets": type_server_assets,
             "type_database_environment_summary": type_database_environment_summary,
             "type_server_platform_summary": type_server_platform_summary,
+            "type_database_chart_total": type_database_chart_total,
+            "type_server_chart_total": type_server_chart_total,
             "monitoring_counts": monitoring_counts,
             "monitoring_summary": monitoring_summary,
             "db_type_counts": db_type_counts,
