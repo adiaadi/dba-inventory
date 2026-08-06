@@ -497,7 +497,7 @@ def operating_system_family_label(value: str | None) -> str:
     if "ubuntu" in normalized:
         return "Ubuntu"
     if "oracle linux" in normalized or "oracle enterprise linux" in normalized or normalized.startswith("oel"):
-        return "OEL"
+        return "Oracle Enterprise Linux"
     if "red hat" in normalized or "rhel" in normalized:
         return "RHEL"
     if "rocky" in normalized:
