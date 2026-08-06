@@ -2048,7 +2048,7 @@ body {
   color: var(--ink);
   display: block;
   font-size: 0.8rem;
-  font-weight: 850;
+  font-weight: 500;
   line-height: 1.15;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2059,7 +2059,7 @@ body {
   color: var(--ink);
   flex: 0 0 auto;
   font-size: 0.8rem;
-  font-weight: 850;
+  font-weight: 500;
   margin-left: auto;
   white-space: nowrap;
 }
@@ -2083,7 +2083,7 @@ body {
   color: #344054;
   display: flex;
   font-size: 0.76rem;
-  font-weight: 750;
+  font-weight: 500;
   gap: 7px;
   line-height: 1.16;
   min-width: 0;
@@ -2106,7 +2106,7 @@ body {
   color: #667085;
   display: block;
   font-size: 0.66rem;
-  font-weight: 700;
+  font-weight: 500;
   line-height: 1.12;
 }
 
