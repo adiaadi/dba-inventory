@@ -1324,6 +1324,15 @@ def dashboard(
     for host in server_hosts:
         for alias in host_aliases(host):
             server_hosts_by_alias.setdefault(alias, host)
+
+    def database_asset_datacenter(host: Host, family: str) -> str:
+        server_label = database_asset_server_label(host, family)
+        server_alias = normalized_host_alias(server_label)
+        server_host = server_hosts_by_alias.get(server_alias or "")
+        if server_host:
+            return datacenter_label(server_host)
+        return datacenter_label(host)
+
     db_family_counts = {
         family: len(unique_hosts([host for host in all_hosts if is_family_database_asset(host, family)]))
         for family in DB_FAMILIES
@@ -1449,6 +1458,7 @@ def dashboard(
                 server_label = database_asset_server_label(host, family)
                 server_alias = normalized_host_alias(server_label)
                 server_host = server_hosts_by_alias.get(server_alias or "")
+                row_datacenter = datacenter_label(server_host) if server_host else datacenter_label(host)
                 host_rows = database_size_rows_for_host(
                     host,
                     family,
@@ -1462,6 +1472,7 @@ def dashboard(
                             "ip": host.ip_address or "-",
                             "monitoring": host.monitoring_status,
                             "problem_count": host.problem_count or 0,
+                            "datacenter": row_datacenter,
                         }
                     )
                     rows.append(row)
@@ -1483,10 +1494,13 @@ def dashboard(
                         "row_size_total": 0,
                         "host_totals": {},
                         "total_size_bytes": 0,
+                        "datacenter": row.get("datacenter") or "Unknown",
                     },
                 )
                 if cluster["ip"] == "-" and row["server_ip"] != "-":
                     cluster["ip"] = row["server_ip"]
+                if cluster["datacenter"] == "Unknown" and row.get("datacenter") in {"MAIN", "DR"}:
+                    cluster["datacenter"] = row["datacenter"]
                 cluster["rows"].append(row)
                 cluster["row_size_total"] += row["size_bytes"]
                 if row["host_total_size_bytes"]:
@@ -1537,6 +1551,31 @@ def dashboard(
     datacenter_counts = {
         "MAIN": sum(1 for host in server_hosts if datacenter_label(host) == "MAIN"),
         "DR": sum(1 for host in server_hosts if datacenter_label(host) == "DR"),
+    }
+    datacenter_database_counts = {"MAIN": 0, "DR": 0}
+    for family in DB_FAMILIES:
+        for host in unique_hosts([host for host in all_hosts if is_family_database_asset(host, family)]):
+            host_datacenter = database_asset_datacenter(host, family)
+            if host_datacenter in datacenter_database_counts:
+                datacenter_database_counts[host_datacenter] += 1
+
+    datacenter_size_bytes = {"MAIN": 0, "DR": 0}
+    for section in database_size_sections:
+        for cluster in section["clusters"]:
+            cluster_datacenter = cluster.get("datacenter")
+            if cluster_datacenter in datacenter_size_bytes:
+                datacenter_size_bytes[cluster_datacenter] += cluster.get("total_size_bytes") or 0
+
+    datacenter_summary = {
+        site: {
+            "servers": datacenter_counts[site],
+            "databases": datacenter_database_counts[site],
+            "data_size": format_size_bytes(datacenter_size_bytes[site])
+            if datacenter_size_bytes[site]
+            else "-",
+            "data_size_bytes": datacenter_size_bytes[site],
+        }
+        for site in ("MAIN", "DR")
     }
     physical_server_rows = [
         {
@@ -1780,6 +1819,7 @@ def dashboard(
             "capacity_by_db": capacity_by_db,
             "database_size_sections": database_size_sections,
             "datacenter_counts": datacenter_counts,
+            "datacenter_summary": datacenter_summary,
             "physical_server_rows": physical_server_rows,
             "availability_counts": availability_counts,
             "problem_total": problem_total,

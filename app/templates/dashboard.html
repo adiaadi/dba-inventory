@@ -433,6 +433,7 @@
                 <div class="datacenter-node-head">
                   <span class="datacenter-icon"><i class="bi bi-building"></i></span>
                   <span>MAIN Datacenter</span>
+                  <small>Primary site</small>
                 </div>
                 <div class="datacenter-scene" aria-hidden="true">
                   <div class="datacenter-building">
@@ -442,9 +443,19 @@
                     <span></span><span></span><span></span><span></span>
                   </div>
                 </div>
-                <div class="datacenter-node-metric">
-                  <strong>{{ datacenter_counts.MAIN }}</strong>
-                  <small>Primary site</small>
+                <div class="datacenter-report-grid">
+                  <div class="datacenter-report-item">
+                    <span><i class="bi bi-hdd-network"></i> Servers</span>
+                    <strong>{{ datacenter_summary.MAIN.servers }}</strong>
+                  </div>
+                  <div class="datacenter-report-item">
+                    <span><i class="bi bi-database"></i> Databases</span>
+                    <strong>{{ datacenter_summary.MAIN.databases }}</strong>
+                  </div>
+                  <div class="datacenter-report-item datacenter-report-wide">
+                    <span><i class="bi bi-device-ssd"></i> Data volume</span>
+                    <strong>{{ datacenter_summary.MAIN.data_size }}</strong>
+                  </div>
                 </div>
               </div>
               <div class="datacenter-link" aria-hidden="true">
@@ -456,6 +467,7 @@
                 <div class="datacenter-node-head">
                   <span class="datacenter-icon"><i class="bi bi-hdd-rack"></i></span>
                   <span>DR Datacenter</span>
+                  <small>Recovery site</small>
                 </div>
                 <div class="datacenter-scene" aria-hidden="true">
                   <div class="datacenter-server-rack">
@@ -465,9 +477,19 @@
                     <span></span><span></span><span></span>
                   </div>
                 </div>
-                <div class="datacenter-node-metric">
-                  <strong>{{ datacenter_counts.DR }}</strong>
-                  <small>Recovery site</small>
+                <div class="datacenter-report-grid">
+                  <div class="datacenter-report-item">
+                    <span><i class="bi bi-hdd-network"></i> Servers</span>
+                    <strong>{{ datacenter_summary.DR.servers }}</strong>
+                  </div>
+                  <div class="datacenter-report-item">
+                    <span><i class="bi bi-database"></i> Databases</span>
+                    <strong>{{ datacenter_summary.DR.databases }}</strong>
+                  </div>
+                  <div class="datacenter-report-item datacenter-report-wide">
+                    <span><i class="bi bi-device-ssd"></i> Data volume</span>
+                    <strong>{{ datacenter_summary.DR.data_size }}</strong>
+                  </div>
                 </div>
               </div>
             </div>
