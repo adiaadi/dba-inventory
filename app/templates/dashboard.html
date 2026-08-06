@@ -157,7 +157,7 @@
                     {% if row.label == "Virtual" %}
                       <i class="bi bi-cloud summary-icon summary-icon-virtual"></i>{{ ui_text(request, "label.virtual", "Virtual")|upper }}
                     {% else %}
-                      <i class="bi bi-server summary-icon summary-icon-physical"></i>{{ ui_text(request, "label.physical", "Physical") }}
+                      <i class="bi bi-server summary-icon summary-icon-physical"></i>{{ ui_text(request, "label.physical", "Physical")|upper }}
                     {% endif %}
                   </span>
                   <strong>{{ row.count }}</strong>
@@ -221,11 +221,11 @@
             </div>
             <div class="inventory-summary-list">
               <div>
-                <span><i class="summary-dot dot-virtual"></i>{{ ui_text(request, "label.virtual", "Virtual") }}</span>
+                <span><i class="summary-dot dot-virtual"></i>{{ ui_text(request, "label.virtual", "Virtual")|upper }}</span>
                 <strong>{{ platform_counts.Virtual }}</strong>
               </div>
               <div>
-                <span><i class="summary-dot dot-physical"></i>{{ ui_text(request, "label.physical", "Physical") }}</span>
+                <span><i class="summary-dot dot-physical"></i>{{ ui_text(request, "label.physical", "Physical")|upper }}</span>
                 <strong>{{ platform_counts.Physical }}</strong>
               </div>
             </div>
@@ -277,8 +277,8 @@
               </div>
             </div>
             <div class="executive-chart-legend">
-              <div><span><i class="bi bi-cloud executive-legend-icon"></i>{{ ui_text(request, "label.virtual", "Virtual") }}</span><strong>{{ platform_counts.Virtual }}</strong></div>
-              <div><span><i class="bi bi-server executive-legend-icon"></i>{{ ui_text(request, "label.physical", "Physical") }}</span><strong>{{ platform_counts.Physical }}</strong></div>
+              <div><span><i class="bi bi-cloud executive-legend-icon"></i>{{ ui_text(request, "label.virtual", "Virtual")|upper }}</span><strong>{{ platform_counts.Virtual }}</strong></div>
+              <div><span><i class="bi bi-server executive-legend-icon"></i>{{ ui_text(request, "label.physical", "Physical")|upper }}</span><strong>{{ platform_counts.Physical }}</strong></div>
             </div>
           </div>
         </section>
