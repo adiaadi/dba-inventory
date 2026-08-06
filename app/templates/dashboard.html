@@ -129,7 +129,12 @@
             </div>
             <div class="inventory-summary-list">
               {% for row in type_database_environment_summary %}
-                <a class="inventory-summary-row {% if current_asset_view == 'databases' and (filters.environment or '')|upper == row.label %}active{% endif %}" href="/?view={{ current_view }}&asset_view=databases&environment={{ row.label }}">
+                {% set environment_filter_active = current_asset_view == 'databases' and (filters.environment or '')|upper == row.label %}
+                {% set environment_filter_href = '/?view=' ~ current_view ~ '&asset_view=databases' %}
+                {% if not environment_filter_active %}
+                  {% set environment_filter_href = environment_filter_href ~ '&environment=' ~ row.label %}
+                {% endif %}
+                <a class="inventory-summary-row {% if environment_filter_active %}active{% endif %}" href="{{ environment_filter_href }}">
                   <span><i class="summary-dot env-dot env-dot-{{ row.label|lower }}"></i>{{ row.label }}</span>
                   <strong>{{ row.count }}</strong>
                 </a>
@@ -156,7 +161,15 @@
             <div class="inventory-summary-list">
               {% for row in type_server_platform_summary %}
                 {% set platform_filter_value = "YES" if row.label == "Virtual" else "NO" %}
-                <a class="inventory-summary-row {% if current_asset_view == 'servers' and active_virtual_filter == platform_filter_value %}active{% endif %}" href="/?view={{ current_view }}&asset_view=servers&virtual={{ platform_filter_value }}">
+                {% set platform_filter_active = current_asset_view == 'servers' and active_virtual_filter == platform_filter_value %}
+                {% set platform_filter_href = '/?view=' ~ current_view ~ '&asset_view=servers' %}
+                {% if filters.environment %}
+                  {% set platform_filter_href = platform_filter_href ~ '&environment=' ~ filters.environment %}
+                {% endif %}
+                {% if not platform_filter_active %}
+                  {% set platform_filter_href = platform_filter_href ~ '&virtual=' ~ platform_filter_value %}
+                {% endif %}
+                <a class="inventory-summary-row {% if platform_filter_active %}active{% endif %}" href="{{ platform_filter_href }}">
                   <span>
                     {% if row.label == "Virtual" %}
                       <i class="bi bi-cloud summary-icon summary-icon-virtual"></i>{{ ui_text(request, "label.virtual", "Virtual")|upper }}
