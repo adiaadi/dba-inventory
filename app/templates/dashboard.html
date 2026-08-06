@@ -442,14 +442,14 @@
         <div class="summary-side-stack">
           <section class="overview-panel executive-panel">
             <div class="overview-section-heading">
-              <h2>{{ ui_text(request, "panel.datacenter_footprint", "Datacenter Footprint") }}</h2>
+              <h2>{{ ui_text(request, "panel.datacenter_footprint", "DATACENTER") }}</h2>
             </div>
             <div class="datacenter-map datacenter-map-compact datacenter-visual">
               <div class="datacenter-node datacenter-node-main">
                 <div class="datacenter-node-head">
                   <span class="datacenter-icon"><i class="bi bi-building"></i></span>
-                  <span>MAIN Datacenter</span>
-                  <small>Primary site</small>
+                  <span>MAIN</span>
+                  <small class="datacenter-site-primary">Primary site</small>
                 </div>
                 <div class="datacenter-scene" aria-hidden="true">
                   <div class="datacenter-building">
@@ -482,8 +482,8 @@
               <div class="datacenter-node datacenter-node-dr">
                 <div class="datacenter-node-head">
                   <span class="datacenter-icon"><i class="bi bi-hdd-rack"></i></span>
-                  <span>DR Datacenter</span>
-                  <small>Recovery site</small>
+                  <span>DR</span>
+                  <small class="datacenter-site-recovery">Recovery site</small>
                 </div>
                 <div class="datacenter-scene" aria-hidden="true">
                   <div class="datacenter-server-rack">

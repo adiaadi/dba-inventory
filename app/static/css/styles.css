@@ -1649,16 +1649,28 @@ body {
 }
 
 .datacenter-node .datacenter-node-head small {
-  background: rgba(255, 255, 255, 0.84);
-  border: 1px solid #e1e6ee;
+  background: #eef6ff;
+  border: 1px solid #93c5fd;
   border-radius: 999px;
-  color: #667085;
+  color: #1d4ed8;
   font-size: 0.58rem;
   font-weight: 850;
   margin-left: auto;
   padding: 4px 7px;
   text-transform: uppercase;
   white-space: nowrap;
+}
+
+.datacenter-node .datacenter-node-head .datacenter-site-primary {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #15803d;
+}
+
+.datacenter-node .datacenter-node-head .datacenter-site-recovery {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: #1d4ed8;
 }
 
 .datacenter-icon {
@@ -1814,9 +1826,9 @@ body {
   border: 1px solid #e1e6ee;
   border-radius: 8px;
   display: grid;
-  gap: 4px;
+  gap: 7px;
   min-width: 0;
-  padding: 9px 10px;
+  padding: 10px;
 }
 
 .datacenter-report-wide {
@@ -1824,12 +1836,13 @@ body {
 }
 
 .datacenter-report-item span {
-  align-items: center;
   color: #475467;
-  display: flex;
+  display: grid;
   font-size: 0.7rem;
   font-weight: 850;
-  gap: 6px;
+  gap: 5px;
+  grid-template-columns: auto minmax(0, 1fr);
+  line-height: 1.15;
   min-width: 0;
   text-transform: uppercase;
 }
@@ -1843,6 +1856,7 @@ body {
   color: var(--brand-dark);
   font-size: 1.32rem;
   line-height: 1;
+  padding-left: 22px;
 }
 
 .datacenter-node-main .datacenter-report-wide strong {
