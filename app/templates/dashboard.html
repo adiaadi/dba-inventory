@@ -205,18 +205,28 @@
               </div>
             </div>
             <div class="inventory-summary-list inventory-db-family-list">
-              <div class="inventory-summary-row">
+              {% set db_filter_base = '/?view=hosts' %}
+              {% if filters.environment %}
+                {% set db_filter_base = db_filter_base ~ '&environment=' ~ filters.environment %}
+              {% endif %}
+              {% if active_virtual_filter %}
+                {% set db_filter_base = db_filter_base ~ '&virtual=' ~ active_virtual_filter %}
+              {% endif %}
+              {% set oracle_filter_active = active_server_db_type == "Oracle" %}
+              <a class="inventory-summary-row {% if oracle_filter_active %}active{% endif %}" href="{{ db_filter_base if oracle_filter_active else db_filter_base ~ '&db_type=Oracle' }}">
                 <span><i class="summary-dot dot-oracle"></i>{{ ui_text(request, "label.oracle", "Oracle") }}</span>
                 <strong>{{ db_family_counts.Oracle }}</strong>
-              </div>
-              <div class="inventory-summary-row">
+              </a>
+              {% set postgresql_filter_active = active_server_db_type == "PostgreSQL" %}
+              <a class="inventory-summary-row {% if postgresql_filter_active %}active{% endif %}" href="{{ db_filter_base if postgresql_filter_active else db_filter_base ~ '&db_type=PostgreSQL' }}">
                 <span><i class="summary-dot dot-postgresql"></i>{{ ui_text(request, "label.postgresql", "PostgreSQL") }}</span>
                 <strong>{{ db_family_counts.PostgreSQL }}</strong>
-              </div>
-              <div class="inventory-summary-row">
+              </a>
+              {% set sqlserver_filter_active = active_server_db_type == "SQLServer" %}
+              <a class="inventory-summary-row {% if sqlserver_filter_active %}active{% endif %}" href="{{ db_filter_base if sqlserver_filter_active else db_filter_base ~ '&db_type=SQLServer' }}">
                 <span><i class="summary-dot dot-sqlserver"></i>{{ ui_text(request, "label.sqlserver", "SQLServer") }}</span>
                 <strong>{{ db_family_counts.SQLServer }}</strong>
-              </div>
+              </a>
             </div>
           </div>
         </div>
@@ -237,14 +247,23 @@
               </div>
             </div>
             <div class="inventory-summary-list">
-              <div class="inventory-summary-row">
+              {% set platform_filter_base = '/?view=hosts' %}
+              {% if filters.environment %}
+                {% set platform_filter_base = platform_filter_base ~ '&environment=' ~ filters.environment %}
+              {% endif %}
+              {% if active_server_db_type %}
+                {% set platform_filter_base = platform_filter_base ~ '&db_type=' ~ active_server_db_type %}
+              {% endif %}
+              {% set virtual_filter_active = active_virtual_filter == "YES" %}
+              <a class="inventory-summary-row {% if virtual_filter_active %}active{% endif %}" href="{{ platform_filter_base if virtual_filter_active else platform_filter_base ~ '&virtual=YES' }}">
                 <span><i class="summary-dot dot-virtual"></i>{{ ui_text(request, "label.virtual", "Virtual")|upper }}</span>
                 <strong>{{ platform_counts.Virtual }}</strong>
-              </div>
-              <div class="inventory-summary-row">
+              </a>
+              {% set physical_filter_active = active_virtual_filter == "NO" %}
+              <a class="inventory-summary-row {% if physical_filter_active %}active{% endif %}" href="{{ platform_filter_base if physical_filter_active else platform_filter_base ~ '&virtual=NO' }}">
                 <span><i class="summary-dot dot-physical"></i>{{ ui_text(request, "label.physical", "Physical")|upper }}</span>
                 <strong>{{ platform_counts.Physical }}</strong>
-              </div>
+              </a>
             </div>
           </div>
         </div>
