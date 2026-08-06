@@ -1713,9 +1713,10 @@ def dashboard(
         },
     }
     if db_type_view:
+        databases_label = ui_text_value(request, "label.databases", "Databases")
         section_subtitles[current_view] = (
-            f"DATABASES {len(type_database_assets)}\n"
-            f"{servers_label.upper()} {len(type_server_assets)}"
+            f"{databases_label} {len(type_database_assets)}\n"
+            f"{servers_label} {len(type_server_assets)}"
         )
 
     return templates.TemplateResponse(

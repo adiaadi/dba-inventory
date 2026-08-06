@@ -477,7 +477,7 @@
       <section class="overview-panel">
         <div class="overview-section-heading">
           {% if db_type_view %}
-            <h2>{{ db_type_view.label }} {% if current_asset_view == "databases" %}{{ ui_text(request, "label.databases", "Databases")|upper }}{% else %}{{ ui_text(request, "label.servers", "Servers")|upper }}{% endif %}</h2>
+            <h2>{{ db_type_view.label }} {% if current_asset_view == "databases" %}{{ ui_text(request, "label.databases", "Databases") }}{% else %}{{ ui_text(request, "label.servers", "Servers") }}{% endif %}</h2>
             <span>{{ display_hosts|length }} {{ ui_text(request, "label.records_from_zabbix", "records from Zabbix") }}</span>
           {% else %}
             <h2>{{ ui_text(request, "panel.server_summary", "Server Summary") }}</h2>
