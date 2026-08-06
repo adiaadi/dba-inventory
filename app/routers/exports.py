@@ -1,5 +1,7 @@
+from datetime import UTC, datetime
 from io import BytesIO
 from typing import Iterable
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
@@ -8,6 +10,7 @@ from openpyxl.styles import Font, PatternFill
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
+from app.core.config import get_settings
 from app.db.session import get_db
 from app.models import DatabaseInstance, Host
 from app.routers.common import apply_database_filters, apply_host_filters
@@ -36,6 +39,25 @@ def workbook_response(workbook: Workbook, filename: str) -> StreamingResponse:
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+def excel_cell_value(value):
+    if not isinstance(value, datetime):
+        return value
+
+    settings = get_settings()
+    try:
+        timezone = ZoneInfo(settings.app_timezone)
+    except ZoneInfoNotFoundError:
+        timezone = UTC
+
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=UTC)
+    return value.astimezone(timezone).replace(tzinfo=None)
+
+
+def append_excel_row(ws, values: Iterable) -> None:
+    ws.append([excel_cell_value(value) for value in values])
 
 
 @router.get("/hosts.xlsx")
@@ -71,7 +93,8 @@ def export_hosts(
     ws.title = "Servers"
     ws.append(headers)
     for host in hosts:
-        ws.append(
+        append_excel_row(
+            ws,
             [
                 host.hostname,
                 host.fqdn,
@@ -128,7 +151,8 @@ def export_databases(
     ws.title = "Databases"
     ws.append(headers)
     for database in databases:
-        ws.append(
+        append_excel_row(
+            ws,
             [
                 database.db_type,
                 database.name,
