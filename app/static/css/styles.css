@@ -889,6 +889,11 @@ body {
   font-weight: 750;
 }
 
+.inventory-db-family-list span {
+  font-size: 0.92rem;
+  font-weight: 850;
+}
+
 .inventory-summary-list strong {
   color: var(--brand-dark);
   font-size: 1rem;
