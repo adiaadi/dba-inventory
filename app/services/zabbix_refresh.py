@@ -33,11 +33,12 @@ def _is_stale(last_sync_at: datetime | None, now: datetime, ttl_seconds: int) ->
 
 def maybe_refresh_zabbix_cache(db: Session, force: bool = False) -> str | None:
     settings = get_settings()
-    if (
-        not settings.zabbix_url
-        or not settings.zabbix_api_token
-        or settings.zabbix_auto_refresh_seconds <= 0
-    ):
+    if not settings.zabbix_url or not settings.zabbix_api_token:
+        if force:
+            return "ZABBIX_URL and ZABBIX_API_TOKEN must be set."
+        return None
+
+    if not force and settings.zabbix_auto_refresh_seconds <= 0:
         return None
 
     now = datetime.now(UTC)
