@@ -121,6 +121,7 @@ def dbms_database_export_rows(
             {
                 "instance_name": host.zabbix_host_name or host.hostname,
                 "ip": host.ip_address or "-",
+                "environment": (host.environment or "-").upper(),
                 "db_type": db_type,
                 "product": database_product_label(host, family) or "-",
                 "version": database_version_label(host, family) or "-",
@@ -216,7 +217,7 @@ def export_hosts(
             monitoring_status=monitoring_status,
         )
         db_type_label = export_db_type_label(requested_db_type)
-        headers = ["Instance Name", "IP", "DB Type", "Product", "Version"]
+        headers = ["Instance Name", "IP", "Environment", "DB Type", "Product", "Version"]
         workbook = Workbook()
         ws = workbook.active
         ws.title = f"{db_type_label} Databases"
@@ -227,6 +228,7 @@ def export_hosts(
                 [
                     row["instance_name"],
                     row["ip"],
+                    row["environment"],
                     row["db_type"],
                     row["product"],
                     row["version"],
