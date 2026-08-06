@@ -1570,7 +1570,7 @@ def dashboard(
     if requested_db_type:
         hosts_list = [host for host in hosts_list if host_db_labels.get(host.id) == requested_db_type]
     type_base_stmt = select(Host).options(selectinload(Host.databases)).order_by(Host.hostname)
-    type_base_stmt = apply_host_filters(type_base_stmt, None, environment, role, monitoring_status)
+    type_base_stmt = apply_host_filters(type_base_stmt, None, None, role, monitoring_status)
     type_base_hosts = db.scalars(type_base_stmt).all()
 
     db_type_view = DB_TYPE_VIEWS.get(current_view)
@@ -1584,13 +1584,26 @@ def dashboard(
         type_server_assets = unique_hosts(
             [host for host in type_base_hosts if is_family_server_asset(host, db_type_view["label"])]
         )
-        if active_virtual_filter and current_asset_view == "servers":
-            type_server_assets = [
+        display_database_assets = type_database_assets
+        display_server_assets = type_server_assets
+        if environment:
+            display_database_assets = [
                 host
-                for host in type_server_assets
+                for host in display_database_assets
+                if (host.environment or "").strip().upper() == environment.upper()
+            ]
+            display_server_assets = [
+                host
+                for host in display_server_assets
+                if (host.environment or "").strip().upper() == environment.upper()
+            ]
+        if active_virtual_filter:
+            display_server_assets = [
+                host
+                for host in display_server_assets
                 if host_virtual_labels.get(host.id) == active_virtual_filter
             ]
-        display_hosts = type_database_assets if current_asset_view == "databases" else type_server_assets
+        display_hosts = display_database_assets if current_asset_view == "databases" else display_server_assets
 
     type_database_environment_summary = [
         {

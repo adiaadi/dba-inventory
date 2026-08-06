@@ -108,14 +108,14 @@
 
     {% if db_type_view %}
       <section class="inventory-summary-groups dbms-summary-groups">
-        <a class="inventory-summary-card dbms-summary-card {% if current_asset_view == 'databases' %}active{% endif %}" href="/?view={{ current_view }}&asset_view=databases">
-          <div class="inventory-summary-head">
+        <div class="inventory-summary-card dbms-summary-card {% if current_asset_view == 'databases' %}active{% endif %}">
+          <a class="inventory-summary-head inventory-summary-card-select" href="/?view={{ current_view }}&asset_view=databases">
             <div>
               <span>{{ ui_text(request, "label.databases", "Databases")|upper }}</span>
               <strong>{{ type_database_assets|length }}</strong>
             </div>
             <i class="bi bi-database-check"></i>
-          </div>
+          </a>
           <div class="inventory-summary-body">
             <div class="inventory-kpi-chart-wrap" aria-label="{{ db_type_view.label }} database environment chart">
               <canvas id="dbmsDatabaseEnvironmentChart"></canvas>
@@ -126,22 +126,22 @@
             </div>
             <div class="inventory-summary-list">
               {% for row in type_database_environment_summary %}
-                <div>
+                <a class="inventory-summary-row {% if current_asset_view == 'databases' and (filters.environment or '')|upper == row.label %}active{% endif %}" href="/?view={{ current_view }}&asset_view=databases&environment={{ row.label }}">
                   <span><i class="summary-dot env-dot env-dot-{{ row.label|lower }}"></i>{{ row.label }}</span>
                   <strong>{{ row.count }}</strong>
-                </div>
+                </a>
               {% endfor %}
             </div>
           </div>
-        </a>
-        <a class="inventory-summary-card dbms-summary-card {% if current_asset_view == 'servers' %}active{% endif %}" href="/?view={{ current_view }}&asset_view=servers">
-          <div class="inventory-summary-head">
+        </div>
+        <div class="inventory-summary-card dbms-summary-card {% if current_asset_view == 'servers' %}active{% endif %}">
+          <a class="inventory-summary-head inventory-summary-card-select" href="/?view={{ current_view }}&asset_view=servers">
             <div>
               <span>{{ ui_text(request, "label.servers", "Servers")|upper }}</span>
               <strong>{{ type_server_assets|length }}</strong>
             </div>
             <i class="bi bi-hdd-network"></i>
-          </div>
+          </a>
           <div class="inventory-summary-body">
             <div class="inventory-kpi-chart-wrap" aria-label="{{ db_type_view.label }} server platform chart">
               <canvas id="dbmsServerPlatformChart"></canvas>
@@ -152,7 +152,8 @@
             </div>
             <div class="inventory-summary-list">
               {% for row in type_server_platform_summary %}
-                <div>
+                {% set platform_filter_value = "YES" if row.label == "Virtual" else "NO" %}
+                <a class="inventory-summary-row {% if current_asset_view == 'servers' and active_virtual_filter == platform_filter_value %}active{% endif %}" href="/?view={{ current_view }}&asset_view=servers&virtual={{ platform_filter_value }}">
                   <span>
                     {% if row.label == "Virtual" %}
                       <i class="bi bi-cloud summary-icon summary-icon-virtual"></i>{{ ui_text(request, "label.virtual", "Virtual")|upper }}
@@ -161,11 +162,11 @@
                     {% endif %}
                   </span>
                   <strong>{{ row.count }}</strong>
-                </div>
+                </a>
               {% endfor %}
             </div>
           </div>
-        </a>
+        </div>
       </section>
     {% elif current_view == "hosts" %}
       {% set virtual_servers = platform_counts.Virtual or 0 %}
