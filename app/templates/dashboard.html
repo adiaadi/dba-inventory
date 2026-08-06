@@ -171,8 +171,8 @@
     {% elif current_view == "hosts" %}
       {% set virtual_servers = platform_counts.Virtual or 0 %}
       {% set physical_servers = platform_counts.Physical or 0 %}
-      <section class="inventory-summary-groups">
-        <div class="inventory-summary-card">
+      <section class="inventory-summary-groups dbms-summary-groups server-overview-summary-groups">
+        <div class="inventory-summary-card dbms-summary-card server-overview-summary-card">
           <div class="inventory-summary-head">
             <div>
               <span>{{ ui_text(request, "label.databases", "Databases")|upper }}</span>
@@ -189,22 +189,22 @@
               </div>
             </div>
             <div class="inventory-summary-list inventory-db-family-list">
-              <div>
+              <div class="inventory-summary-row">
                 <span><i class="summary-dot dot-oracle"></i>{{ ui_text(request, "label.oracle", "Oracle") }}</span>
                 <strong>{{ db_family_counts.Oracle }}</strong>
               </div>
-              <div>
+              <div class="inventory-summary-row">
                 <span><i class="summary-dot dot-postgresql"></i>{{ ui_text(request, "label.postgresql", "PostgreSQL") }}</span>
                 <strong>{{ db_family_counts.PostgreSQL }}</strong>
               </div>
-              <div>
+              <div class="inventory-summary-row">
                 <span><i class="summary-dot dot-sqlserver"></i>{{ ui_text(request, "label.sqlserver", "SQLServer") }}</span>
                 <strong>{{ db_family_counts.SQLServer }}</strong>
               </div>
             </div>
           </div>
         </div>
-        <div class="inventory-summary-card">
+        <div class="inventory-summary-card dbms-summary-card server-overview-summary-card">
           <div class="inventory-summary-head">
             <div>
               <span>{{ ui_text(request, "label.servers", "Servers")|upper }}</span>
@@ -221,11 +221,11 @@
               </div>
             </div>
             <div class="inventory-summary-list">
-              <div>
+              <div class="inventory-summary-row">
                 <span><i class="summary-dot dot-virtual"></i>{{ ui_text(request, "label.virtual", "Virtual")|upper }}</span>
                 <strong>{{ platform_counts.Virtual }}</strong>
               </div>
-              <div>
+              <div class="inventory-summary-row">
                 <span><i class="summary-dot dot-physical"></i>{{ ui_text(request, "label.physical", "Physical")|upper }}</span>
                 <strong>{{ platform_counts.Physical }}</strong>
               </div>
@@ -937,7 +937,7 @@
   });
   makeChart("inventoryServerEstateChart", "doughnut", dashboardData.platformLabels, dashboardData.platformValues, {
     cutout: "68%",
-    datasetBackgroundColor: executiveDoughnutPalette,
+    datasetBackgroundColor: dbmsServerPlatformPalette,
     datasetBorderWidth: 3,
     datasetBorderRadius: 0,
     datasetHoverOffset: 6,

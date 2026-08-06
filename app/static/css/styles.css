@@ -918,6 +918,11 @@ body {
   font-weight: 850;
 }
 
+.server-overview-summary-card .inventory-summary-list span {
+  font-size: 0.8rem;
+  font-weight: 750;
+}
+
 .inventory-summary-list strong {
   color: var(--brand-dark);
   font-size: 1rem;
