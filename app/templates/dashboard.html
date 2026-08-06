@@ -758,6 +758,37 @@
     Chart.defaults.plugins.tooltip.padding = 10;
     Chart.defaults.plugins.tooltip.titleFont = { weight: "800" };
     Chart.defaults.plugins.tooltip.bodyFont = { weight: "800" };
+    Chart.register({
+      id: "barValueLabels",
+      afterDatasetsDraw(chart, args, pluginOptions) {
+        if (!pluginOptions || !pluginOptions.enabled) {
+          return;
+        }
+        const dataset = chart.data.datasets[0];
+        const meta = chart.getDatasetMeta(0);
+        if (!dataset || !meta || meta.hidden) {
+          return;
+        }
+
+        const { ctx, chartArea } = chart;
+        ctx.save();
+        ctx.fillStyle = pluginOptions.color || "#111827";
+        ctx.font = pluginOptions.font || "800 13px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+        ctx.textBaseline = "middle";
+        meta.data.forEach((bar, index) => {
+          const value = dataset.data[index];
+          if (value === null || value === undefined || value === "") {
+            return;
+          }
+          const text = String(value);
+          const preferredX = bar.x + 8;
+          const x = Math.min(preferredX, chartArea.right - 4);
+          ctx.textAlign = preferredX > chartArea.right - 4 ? "right" : "left";
+          ctx.fillText(text, x, bar.y);
+        });
+        ctx.restore();
+      },
+    });
   }
 
   function percentTooltipLabel(context) {
@@ -978,12 +1009,16 @@
     datasetBorderColor: osPalette,
     datasetBorderWidth: 1,
     layout: {
-      padding: { left: 6, right: 4 },
+      padding: { left: 6, right: 28 },
     },
-    plugins: { legend: { display: false } },
+    plugins: {
+      legend: { display: false },
+      barValueLabels: { enabled: true },
+    },
     scales: {
       x: {
         beginAtZero: true,
+        suggestedMax: Math.max(0, ...(dashboardData.osValues || [])) + 3,
         grid: { color: "rgba(17, 24, 39, 0.08)" },
         ticks: {
           color: "#475467",
