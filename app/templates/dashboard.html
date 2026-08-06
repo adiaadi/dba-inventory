@@ -83,7 +83,10 @@
               <i class="bi bi-arrow-repeat"></i> {{ ui_text(request, "action.refresh_zabbix", "Refresh Zabbix") }}
             </button>
           </form>
-          {% if current_view == "hosts" or db_type_view %}
+          {% if db_type_view %}
+            {% set export_asset_label = ui_text(request, "label.databases", "Databases") if current_asset_view == "databases" else ui_text(request, "label.servers", "Servers") %}
+            <a class="btn btn-success btn-sm" href="/exports/hosts.xlsx{% if request.url.query %}?{{ request.url.query }}{% endif %}"><i class="bi bi-file-earmark-excel"></i> Export {{ db_type_view.label }} {{ export_asset_label }}</a>
+          {% elif current_view == "hosts" %}
             <a class="btn btn-success btn-sm" href="/exports/hosts.xlsx{% if request.url.query %}?{{ request.url.query }}{% endif %}"><i class="bi bi-file-earmark-excel"></i> {{ ui_text(request, "action.export_servers", "Export Servers") }}</a>
           {% elif current_view == "databases" %}
             <a class="btn btn-success btn-sm" href="/exports/databases.xlsx"><i class="bi bi-file-earmark-excel"></i> {{ ui_text(request, "action.export_dbs", "Export DBs") }}</a>
