@@ -24,6 +24,7 @@ from app.routers.dashboard import (
     host_search_text,
     is_family_database_asset,
     is_zabbix_server_asset,
+    kernel_version_label,
     normalized_db_type,
     normalized_virtual_filter,
     operating_system_label,
@@ -190,6 +191,7 @@ def server_summary_export_rows(
                 "core": server_core_label(host),
                 "ram": server_ram_label(host),
                 "operating_system": operating_system_label(host),
+                "kernel": kernel_version_label(host),
             }
         )
     return rows
@@ -264,6 +266,7 @@ def export_hosts(
         "Core",
         "RAM",
         "Operating system",
+        "Kernel",
     ]
     workbook = Workbook()
     ws = workbook.active
@@ -283,6 +286,7 @@ def export_hosts(
                 row["core"],
                 row["ram"],
                 row["operating_system"],
+                row["kernel"],
             ]
         )
     apply_sheet_style(ws, headers)

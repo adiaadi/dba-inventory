@@ -90,6 +90,7 @@ DEFAULT_UI_TEXTS = [
     {"key": "label.core", "category": "Table", "label": "Core column", "default": "Core"},
     {"key": "label.ram", "category": "Table", "label": "RAM column", "default": "RAM"},
     {"key": "label.operating_system", "category": "Table", "label": "Operating system column", "default": "Operating system"},
+    {"key": "label.kernel", "category": "Table", "label": "Kernel column", "default": "Kernel"},
     {"key": "label.monitoring", "category": "Table", "label": "Monitoring column", "default": "Monitoring"},
     {"key": "label.problems", "category": "Table", "label": "Problems column", "default": "Problems"},
     {"key": "label.model", "category": "Table", "label": "Model column", "default": "Model"},

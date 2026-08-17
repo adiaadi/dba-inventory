@@ -941,13 +941,19 @@ body {
   background: var(--brand);
 }
 
-.dot-postgresql,
 .dot-total,
 .dot-virtual {
   background: var(--brand-dark);
 }
 
-.dot-sqlserver,
+.dot-postgresql {
+  background: #16a34a;
+}
+
+.dot-sqlserver {
+  background: #2563eb;
+}
+
 .dot-unknown {
   background: #7a8798;
 }
@@ -1555,14 +1561,36 @@ body {
   width: 100% !important;
 }
 
-.summary-support-panel {
-  grid-column: span 2;
+.summary-bottom-grid {
+  align-items: stretch;
+  display: grid;
+  gap: 14px;
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 1.45fr) minmax(500px, 1fr);
+}
+
+.summary-support-panel,
+.summary-side-stack {
+  grid-column: auto;
+}
+
+.summary-support-panel .overview-table {
+  font-size: 0.84rem;
+}
+
+.summary-support-panel .overview-table th,
+.summary-support-panel .overview-table td {
+  padding-bottom: 0.38rem;
+  padding-top: 0.38rem;
+}
+
+.summary-support-panel .overview-section-heading h2 {
+  font-size: 0.92rem;
 }
 
 .summary-side-stack {
   display: grid;
   gap: 14px;
-  grid-column: span 1;
 }
 
 .summary-side-stack .overview-panel {
@@ -1570,7 +1598,9 @@ body {
 }
 
 .summary-side-stack .datacenter-map {
-  grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr);
+  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) 34px minmax(0, 1fr);
+  padding: 10px;
 }
 
 .summary-side-stack .datacenter-node {
@@ -2971,6 +3001,7 @@ body {
   .inventory-summary-groups,
   .overview-grid,
   .executive-grid,
+  .summary-bottom-grid,
   .db-size-grid,
   .db-size-3d-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2983,6 +3014,11 @@ body {
   .summary-support-panel,
   .summary-side-stack {
     grid-column: span 2;
+  }
+
+  .summary-bottom-grid .summary-support-panel,
+  .summary-bottom-grid .summary-side-stack {
+    grid-column: 1 / -1;
   }
 
   .executive-card-grid {
@@ -3036,6 +3072,7 @@ body {
   .inventory-summary-groups,
   .overview-grid,
   .executive-grid,
+  .summary-bottom-grid,
   .executive-card-grid,
   .admin-text-grid,
   .db-size-grid,

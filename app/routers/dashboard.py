@@ -20,6 +20,7 @@ from app.routers.common import (
 )
 from app.services.zabbix_items import (
     clean_item_text,
+    kernel_version_item_label,
     operating_system_item_label,
     parse_zabbix_item_values,
     server_model_item_label,
@@ -488,6 +489,10 @@ def operating_system_label(host: Host) -> str:
     inventory = imported_zabbix_inventory(host)
     fallback = host.os_name or inventory.get("os_full") or inventory.get("os") or inventory.get("os_short")
     return operating_system_item_label(item_values, fallback) or "-"
+
+
+def kernel_version_label(host: Host) -> str:
+    return kernel_version_item_label(imported_zabbix_items(host)) or "-"
 
 
 def operating_system_family_label(value: str | None) -> str:
@@ -1286,6 +1291,7 @@ def dashboard(
     filters = active_filters(db_type, environment, role, monitoring_status)
     active_virtual_filter = normalized_virtual_filter(virtual)
     zabbix_refresh_error = maybe_refresh_zabbix_cache(db, force=refresh)
+    zabbix_refresh_success = refresh and zabbix_refresh_error is None
     counts = {
         "hosts": db.scalar(select(func.count(Host.id))) or 0,
         "databases": db.scalar(select(func.count(DatabaseInstance.id))) or 0,
@@ -1319,6 +1325,7 @@ def dashboard(
     }
     host_core_labels = {host.id: server_core_label(host) for host in all_hosts}
     host_ram_labels = {host.id: server_ram_label(host) for host in all_hosts}
+    host_kernel_labels = {host.id: kernel_version_label(host) for host in all_hosts}
     server_hosts = unique_hosts([host for host in all_hosts if is_zabbix_server_asset(host)])
     server_hosts_by_alias: dict[str, Host] = {}
     for host in server_hosts:
@@ -1837,6 +1844,7 @@ def dashboard(
             "host_vendor_labels": host_vendor_labels,
             "host_core_labels": host_core_labels,
             "host_ram_labels": host_ram_labels,
+            "host_kernel_labels": host_kernel_labels,
             "server_db_type_options": ["PostgreSQL", "SQLServer", "Oracle"],
             "active_server_db_type": requested_db_type,
             "active_virtual_filter": active_virtual_filter,
@@ -1863,6 +1871,7 @@ def dashboard(
             "problem_average": problem_average,
             "last_sync_at": last_sync_at,
             "zabbix_refresh_error": zabbix_refresh_error,
+            "zabbix_refresh_success": zabbix_refresh_success,
             "zabbix_inventory_warning": zabbix_inventory_warning,
             "top_hosts": top_hosts,
             "chart_data": chart_data,

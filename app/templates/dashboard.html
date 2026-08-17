@@ -103,6 +103,12 @@
       </div>
     {% endif %}
 
+    {% if zabbix_refresh_success %}
+      <div class="alert alert-success py-2 mb-3" role="alert">
+        Zabbix data refreshed successfully.
+      </div>
+    {% endif %}
+
     {% if zabbix_inventory_warning %}
       <div class="alert alert-info py-2 mb-3" role="alert">
         {{ zabbix_inventory_warning }}
@@ -403,67 +409,68 @@
           </div>
         </section>
 
-        <section class="overview-panel executive-panel summary-support-panel">
-          <div class="overview-section-heading">
-            <h2>{{ ui_text(request, "panel.physical_support", "Physical Servers Support") }}</h2>
-            {% if request.session.get("admin_user") %}
-              <a class="btn btn-outline-secondary btn-sm" href="/admin/support"><i class="bi bi-pencil-square"></i> {{ ui_text(request, "nav.admin", "Admin") }}</a>
-            {% else %}
-              <span>{{ physical_server_rows|length }} {{ ui_text(request, "label.physical_servers", "physical servers") }}</span>
-            {% endif %}
-          </div>
-          <div class="table-responsive">
-            <table class="table table-sm align-middle overview-table">
-              <thead>
-                <tr>
-                  <th>{{ ui_text(request, "label.server", "Server") }}</th>
-                  <th>{{ ui_text(request, "label.model", "Model") }}</th>
-                  <th>{{ ui_text(request, "label.vendor", "Vendor") }}</th>
-                  <th>{{ ui_text(request, "label.datacenter", "Datacenter") }}</th>
-                  <th>{{ ui_text(request, "label.support_end", "Support end") }}</th>
-                  <th>{{ ui_text(request, "label.status", "Status") }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for row in physical_server_rows %}
-                  {% set host = row.host %}
-                  <tr>
-                    <td>
-                      <a class="table-link" href="/hosts/{{ host.id }}">{{ host.hostname|upper }}</a>
-                    </td>
-                    <td>{{ row.model }}</td>
-                    <td>{{ row.vendor }}</td>
-                    <td>{{ row.datacenter }}</td>
-                    <td>
-                      {% if request.session.get("admin_user") %}
-                        <form class="support-date-form" method="post" action="/hosts/{{ host.id }}/support-end-date">
-                          <input class="form-control form-control-sm" type="date" name="support_end_date" value="{{ host.support_end_date or '' }}">
-                          <button class="btn btn-sm btn-outline-secondary" type="submit">{{ ui_text(request, "action.save", "Save") }}</button>
-                        </form>
-                      {% else %}
-                        {{ host.support_end_date or "-" }}
-                      {% endif %}
-                    </td>
-                    <td>
-                      <span class="support-status-badge support-status-{{ row.support_status|lower|replace(' ', '-') }}">
-                        {{ row.support_status }}
-                      </span>
-                    </td>
-                  </tr>
-                {% else %}
-                  <tr><td colspan="6" class="empty-state">{{ ui_text(request, "empty.no_physical_servers", "No physical servers found.") }}</td></tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <div class="summary-side-stack">
-          <section class="overview-panel executive-panel">
+        <div class="summary-bottom-grid">
+          <section class="overview-panel executive-panel summary-support-panel">
             <div class="overview-section-heading">
-              <h2>{{ ui_text(request, "panel.datacenter_footprint", "DATACENTER") }}</h2>
+              <h2>{{ ui_text(request, "panel.physical_support", "Physical Servers Support") }}</h2>
+              {% if request.session.get("admin_user") %}
+                <a class="btn btn-outline-secondary btn-sm" href="/admin/support"><i class="bi bi-pencil-square"></i> {{ ui_text(request, "nav.admin", "Admin") }}</a>
+              {% else %}
+                <span>{{ physical_server_rows|length }} {{ ui_text(request, "label.physical_servers", "physical servers") }}</span>
+              {% endif %}
             </div>
-            <div class="datacenter-map datacenter-map-compact datacenter-visual">
+            <div class="table-responsive">
+              <table class="table table-sm align-middle overview-table">
+                <thead>
+                  <tr>
+                    <th>{{ ui_text(request, "label.server", "Server") }}</th>
+                    <th>{{ ui_text(request, "label.model", "Model") }}</th>
+                    <th>{{ ui_text(request, "label.vendor", "Vendor") }}</th>
+                    <th>{{ ui_text(request, "label.datacenter", "Datacenter") }}</th>
+                    <th>{{ ui_text(request, "label.support_end", "Support end") }}</th>
+                    <th>{{ ui_text(request, "label.status", "Status") }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in physical_server_rows %}
+                    {% set host = row.host %}
+                    <tr>
+                      <td>
+                        <a class="table-link" href="/hosts/{{ host.id }}">{{ host.hostname|upper }}</a>
+                      </td>
+                      <td>{{ row.model }}</td>
+                      <td>{{ row.vendor }}</td>
+                      <td>{{ row.datacenter }}</td>
+                      <td>
+                        {% if request.session.get("admin_user") %}
+                          <form class="support-date-form" method="post" action="/hosts/{{ host.id }}/support-end-date">
+                            <input class="form-control form-control-sm" type="date" name="support_end_date" value="{{ host.support_end_date or '' }}">
+                            <button class="btn btn-sm btn-outline-secondary" type="submit">{{ ui_text(request, "action.save", "Save") }}</button>
+                          </form>
+                        {% else %}
+                          {{ host.support_end_date or "-" }}
+                        {% endif %}
+                      </td>
+                      <td>
+                        <span class="support-status-badge support-status-{{ row.support_status|lower|replace(' ', '-') }}">
+                          {{ row.support_status }}
+                        </span>
+                      </td>
+                    </tr>
+                  {% else %}
+                    <tr><td colspan="6" class="empty-state">{{ ui_text(request, "empty.no_physical_servers", "No physical servers found.") }}</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <div class="summary-side-stack">
+            <section class="overview-panel executive-panel">
+              <div class="overview-section-heading">
+                <h2>{{ ui_text(request, "panel.datacenter_footprint", "DATACENTER") }}</h2>
+              </div>
+              <div class="datacenter-map datacenter-map-compact datacenter-visual">
               <div class="datacenter-node datacenter-node-main">
                 <div class="datacenter-node-head">
                   <span class="datacenter-icon"><i class="bi bi-building"></i></span>
@@ -528,7 +535,8 @@
                 </div>
               </div>
             </div>
-          </section>
+            </section>
+          </div>
         </div>
       </div>
     {% elif current_view == "hosts" or db_type_view %}
@@ -597,6 +605,7 @@
                   <th>{{ ui_text(request, "label.core", "Core") }}</th>
                   <th>{{ ui_text(request, "label.ram", "RAM") }}</th>
                   <th>{{ ui_text(request, "label.operating_system", "Operating system") }}</th>
+                  <th>{{ ui_text(request, "label.kernel", "Kernel") }}</th>
                 {% endif %}
               </tr>
             </thead>
@@ -627,11 +636,12 @@
                     <td>{{ host_core_labels.get(host.id) or "-" }}</td>
                     <td>{{ host_ram_labels.get(host.id) or "-" }}</td>
                     <td>{{ host_os_labels.get(host.id) or "-" }}</td>
+                    <td>{{ host_kernel_labels.get(host.id) or "-" }}</td>
                   {% endif %}
                 </tr>
               {% else %}
                 <tr>
-                  <td colspan="{% if is_database_asset_view %}6{% else %}10{% endif %}" class="empty-state">
+                  <td colspan="{% if is_database_asset_view %}6{% else %}11{% endif %}" class="empty-state">
                     {% if is_database_asset_view %}{{ ui_text(request, "empty.no_instances", "No instances found.") }}{% else %}{{ ui_text(request, "empty.no_servers", "No servers found.") }}{% endif %}
                   </td>
                 </tr>
@@ -796,6 +806,7 @@
 <script>
   const dashboardData = {{ chart_data|tojson }};
   const palette = ["#e30613", "#111827", "#9ca3af", "#0f8b5f", "#f59e0b", "#64748b", "#2563eb", "#7c3aed", "#0ea5e9", "#14b8a6"];
+  const databasePortfolioPalette = ["#e30613", "#16a34a", "#2563eb"];
   const executiveDoughnutPalette = ["#e30613", "#111827", "#9ca3af", "#64748b"];
   const dbmsEnvironmentPalette = ["#e30613", "#2563eb", "#16a34a"];
   const dbmsServerPlatformPalette = ["#111827", "#e30613"];
@@ -950,7 +961,7 @@
   makeChart("dbTypeChart", "bar", dashboardData.dbTypeLabels, dashboardData.dbTypeValues);
   makeChart("inventoryDatabasePortfolioChart", "doughnut", dashboardData.inventoryLabels, dashboardData.inventoryDatabaseValues, {
     cutout: "68%",
-    datasetBackgroundColor: executiveDoughnutPalette,
+    datasetBackgroundColor: databasePortfolioPalette,
     datasetBorderWidth: 3,
     datasetBorderRadius: 0,
     datasetHoverOffset: 6,
@@ -1022,7 +1033,7 @@
   });
   makeChart("executiveDatabasePortfolioChart", "doughnut", dashboardData.inventoryLabels, dashboardData.inventoryDatabaseValues, {
     cutout: "68%",
-    datasetBackgroundColor: executiveDoughnutPalette,
+    datasetBackgroundColor: databasePortfolioPalette,
     datasetBorderWidth: 3,
     datasetBorderRadius: 0,
     datasetHoverOffset: 6,

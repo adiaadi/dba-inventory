@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 
 ZABBIX_OS_ITEM_KEYS = (
     "system.sw.os.get",
@@ -108,6 +109,18 @@ def operating_system_item_label(item_values: dict[str, str], fallback: str | Non
         if value:
             return clean_operating_system_label(value)
     return clean_operating_system_label(fallback)
+
+
+def kernel_version_item_label(item_values: dict[str, str], fallback: str | None = None) -> str | None:
+    text = item_values.get("system.sw.os") or fallback
+    if not text:
+        return None
+
+    normalized = " ".join(text.split())
+    match = re.search(r"\blinux\s+version\s+([^\s(]+)", normalized, flags=re.IGNORECASE)
+    if not match:
+        return None
+    return clean_item_text(match.group(1), max_length=120)
 
 
 def clean_operating_system_label(value: str | None) -> str | None:
