@@ -2,7 +2,7 @@ from collections import Counter
 from datetime import UTC, date, datetime
 import json
 import re
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, urlencode
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -324,6 +324,23 @@ def first_tag_value(host: Host, tag_names: tuple[str, ...]) -> str | None:
         if values:
             return values[0]
     return None
+
+
+def normalized_service_key(value: str | None) -> str:
+    return " ".join((value or "").strip().lower().split())
+
+
+def service_tag_values(host: Host) -> list[str]:
+    values = []
+    seen: set[str] = set()
+    for value in imported_zabbix_tags(host).get("service", []):
+        label = clean_item_text(value, max_length=120)
+        key = normalized_service_key(label)
+        if not label or not key or key in seen:
+            continue
+        seen.add(key)
+        values.append(label)
+    return values
 
 
 def has_tag_value(host: Host, tag_name: str, expected_value: str) -> bool:
@@ -1282,10 +1299,11 @@ def dashboard(
     role: str | None = None,
     monitoring_status: str | None = None,
     virtual: str | None = None,
+    service: str | None = None,
     refresh: bool = False,
     db: Session = Depends(get_db),
 ):
-    allowed_views = {"overview", "hosts", "databases", "clusters", *DB_TYPE_VIEWS.keys()}
+    allowed_views = {"overview", "hosts", "services", "databases", "clusters", *DB_TYPE_VIEWS.keys()}
     current_view = view if view in allowed_views else "overview"
     current_asset_view = asset_view if asset_view in {"databases", "servers"} else "databases"
     filters = active_filters(db_type, environment, role, monitoring_status)
@@ -1730,6 +1748,110 @@ def dashboard(
             for host in filtered_server_hosts
             if host_virtual_labels.get(host.id) == active_virtual_filter
         ]
+    service_database_pool = database_assets
+    service_server_pool = server_assets
+    if environment:
+        service_database_pool = [
+            host
+            for host in service_database_pool
+            if (host.environment or "").strip().upper() == environment.upper()
+        ]
+        service_server_pool = [
+            host
+            for host in service_server_pool
+            if (host.environment or "").strip().upper() == environment.upper()
+        ]
+    if requested_db_type:
+        service_database_pool = [
+            host
+            for host in service_database_pool
+            if host_db_labels.get(host.id) == requested_db_type
+        ]
+        service_server_pool = [
+            host
+            for host in service_server_pool
+            if host_db_labels.get(host.id) == requested_db_type
+        ]
+    if active_virtual_filter:
+        service_server_pool = [
+            host
+            for host in service_server_pool
+            if host_virtual_labels.get(host.id) == active_virtual_filter
+        ]
+
+    service_server_by_alias: dict[str, Host] = {}
+    for host in service_server_pool:
+        for alias in host_aliases(host):
+            service_server_by_alias.setdefault(alias, host)
+
+    service_groups_by_key: dict[str, dict] = {}
+
+    def service_view_href(service_name: str | None = None) -> str:
+        params = {"view": "services"}
+        if service_name:
+            params["service"] = service_name
+        if filters.environment:
+            params["environment"] = filters.environment
+        if requested_db_type:
+            params["db_type"] = requested_db_type
+        if active_virtual_filter:
+            params["virtual"] = active_virtual_filter
+        return f"/?{urlencode(params)}"
+
+    def add_service_asset(host: Host, asset_kind: str) -> None:
+        for service_name in service_tag_values(host):
+            service_key = normalized_service_key(service_name)
+            if not service_key:
+                continue
+            group = service_groups_by_key.setdefault(
+                service_key,
+                {
+                    "name": service_name,
+                    "databases": [],
+                    "servers": [],
+                },
+            )
+            group[asset_kind].append(host)
+            if asset_kind == "databases":
+                family = host_db_labels.get(host.id) or detected_db_type(host)
+                if family:
+                    server_label = database_asset_server_label(host, family)
+                    server_alias = normalized_host_alias(server_label)
+                    server_host = service_server_by_alias.get(server_alias or "")
+                    if server_host:
+                        group["servers"].append(server_host)
+
+    for host in service_database_pool:
+        add_service_asset(host, "databases")
+    for host in service_server_pool:
+        add_service_asset(host, "servers")
+
+    service_groups = []
+    for service_key, group in service_groups_by_key.items():
+        database_hosts = unique_hosts(group["databases"])
+        server_hosts_for_service = unique_hosts(group["servers"])
+        service_groups.append(
+            {
+                "key": service_key,
+                "name": group["name"],
+                "url": service_view_href(group["name"]),
+                "databases": database_hosts,
+                "servers": server_hosts_for_service,
+                "database_count": len(database_hosts),
+                "server_count": len(server_hosts_for_service),
+                "asset_count": len(database_hosts) + len(server_hosts_for_service),
+            }
+        )
+    service_groups.sort(key=lambda row: (-row["asset_count"], row["name"].lower()))
+    selected_service_key = normalized_service_key(service)
+    selected_service_group = next(
+        (row for row in service_groups if row["key"] == selected_service_key),
+        None,
+    )
+    if selected_service_group is None and service_groups:
+        selected_service_group = service_groups[0]
+    service_database_assets = selected_service_group["databases"] if selected_service_group else []
+    service_server_assets = selected_service_group["servers"] if selected_service_group else []
     if current_view == "hosts":
         display_hosts = filtered_server_hosts
 
@@ -1777,6 +1899,7 @@ def dashboard(
     section_tabs = [
         {"key": "overview", "label": ui_text_value(request, "nav.overview", "Overview"), "icon": "bi-grid-1x2"},
         {"key": "hosts", "label": ui_text_value(request, "nav.servers", "Servers"), "icon": "bi-hdd-network"},
+        {"key": "services", "label": ui_text_value(request, "nav.services", "SERVICE"), "icon": "bi-diagram-3"},
         {"key": "oracle", "label": ui_text_value(request, "nav.oracle", "Oracle"), "icon": "bi-database"},
         {"key": "postgresql", "label": ui_text_value(request, "nav.postgresql", "PostgreSQL"), "icon": "bi-database-fill"},
         {"key": "sqlserver", "label": ui_text_value(request, "nav.sqlserver", "SQLServer"), "icon": "bi-server"},
@@ -1787,6 +1910,7 @@ def dashboard(
     section_titles = {
         "overview": ui_text_value(request, "section.overview.title", "SUMMARY OVERVIEW"),
         "hosts": ui_text_value(request, "section.hosts.title", "SERVERS OVERVIEW"),
+        "services": ui_text_value(request, "section.services.title", "SERVICE"),
         "databases": ui_text_value(request, "section.databases.title", "DATABASE ASSETS INVENTORY"),
         "clusters": ui_text_value(request, "section.clusters.title", "HA/DR CLUSTERS INVENTORY"),
         "oracle": ui_text_value(request, "section.oracle.title", DB_TYPE_VIEWS["oracle"]["title"]),
@@ -1803,6 +1927,7 @@ def dashboard(
             f"SQLServer {db_family_counts['SQLServer']}"
         ),
         "hosts": f"{servers_label.upper()} {len(filtered_server_hosts)}",
+        "services": f"Services {len(service_groups)}",
         "databases": f"DB assets {len(database_assets)} in current view",
         "clusters": f"clusters {len(clusters)} in current view",
         **{
@@ -1854,6 +1979,10 @@ def dashboard(
             "active_virtual_filter": active_virtual_filter,
             "database_assets": database_assets,
             "server_assets": server_assets,
+            "service_groups": service_groups,
+            "selected_service_group": selected_service_group,
+            "service_database_assets": service_database_assets,
+            "service_server_assets": service_server_assets,
             "type_database_assets": type_database_assets,
             "type_server_assets": type_server_assets,
             "type_database_environment_summary": type_database_environment_summary,

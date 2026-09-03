@@ -2601,6 +2601,83 @@ body {
   font-weight: 750;
 }
 
+.service-overview-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(250px, 0.32fr) minmax(0, 1fr);
+}
+
+.service-list-panel {
+  align-self: start;
+}
+
+.service-list {
+  display: grid;
+  gap: 8px;
+}
+
+.service-list-row {
+  background: #f8fafc;
+  border: 1px solid #e1e7ef;
+  border-radius: 8px;
+  color: var(--brand-dark);
+  display: grid;
+  gap: 5px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-height: 64px;
+  padding: 10px;
+  text-decoration: none;
+  transition: background-color 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.service-list-row:hover,
+.service-list-row.active {
+  background: #fff;
+  border-color: var(--brand);
+  box-shadow: 0 10px 22px rgba(227, 6, 19, 0.08);
+}
+
+.service-list-row span {
+  align-items: center;
+  display: inline-flex;
+  font-family: var(--display-font);
+  font-size: 0.9rem;
+  font-weight: 850;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.service-list-row span i {
+  color: var(--brand);
+  flex: 0 0 auto;
+}
+
+.service-list-row strong {
+  color: var(--brand-dark);
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.service-list-row small {
+  color: #667085;
+  font-size: 0.75rem;
+  font-weight: 700;
+  grid-column: 1 / -1;
+}
+
+.service-detail-stack {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.service-empty-state {
+  min-height: 110px;
+}
+
 .support-status-badge {
   align-items: center;
   border-radius: 999px;
@@ -3000,6 +3077,7 @@ body {
   .overview-kpis,
   .inventory-summary-groups,
   .overview-grid,
+  .service-overview-grid,
   .executive-grid,
   .summary-bottom-grid,
   .db-size-grid,
@@ -3009,6 +3087,8 @@ body {
 
   .overview-panel-span-2,
   .overview-table-panel,
+  .service-list-panel,
+  .service-detail-stack,
   .executive-panel-span-2,
   .executive-panel-span-3,
   .summary-support-panel,
@@ -3071,6 +3151,7 @@ body {
   .overview-kpis,
   .inventory-summary-groups,
   .overview-grid,
+  .service-overview-grid,
   .executive-grid,
   .summary-bottom-grid,
   .executive-card-grid,

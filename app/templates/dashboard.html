@@ -21,6 +21,9 @@
       <input type="hidden" name="view" value="{{ current_view }}">
       <input type="hidden" name="asset_view" value="{{ current_asset_view }}">
       <input type="hidden" name="virtual" value="{{ active_virtual_filter or '' }}">
+      {% if current_view == "services" and selected_service_group %}
+        <input type="hidden" name="service" value="{{ selected_service_group.name }}">
+      {% endif %}
       <div class="sidebar-caption">{{ ui_text(request, "sidebar.filters", "Filters") }}</div>
       <label>
         {{ ui_text(request, "filter.environment", "Environment") }}
@@ -78,6 +81,9 @@
             <input type="hidden" name="db_type" value="{{ filters.db_type or '' }}">
             <input type="hidden" name="environment" value="{{ filters.environment or '' }}">
             <input type="hidden" name="virtual" value="{{ active_virtual_filter or '' }}">
+            {% if current_view == "services" and selected_service_group %}
+              <input type="hidden" name="service" value="{{ selected_service_group.name }}">
+            {% endif %}
             <input type="hidden" name="refresh" value="1">
             <button class="btn btn-outline-secondary btn-sm" type="submit">
               <i class="bi bi-arrow-repeat"></i> {{ ui_text(request, "action.refresh_zabbix", "Refresh Zabbix") }}
@@ -546,6 +552,121 @@
             </div>
             </section>
           </div>
+        </div>
+      </div>
+    {% elif current_view == "services" %}
+      <div class="service-overview-grid">
+        <section class="overview-panel service-list-panel">
+          <div class="overview-section-heading">
+            <h2>{{ ui_text(request, "panel.services", "Services") }}</h2>
+            <span>{{ service_groups|length }} {{ ui_text(request, "label.records", "records") }}</span>
+          </div>
+          <div class="service-list">
+            {% for row in service_groups %}
+              <a class="service-list-row {% if selected_service_group and selected_service_group.key == row.key %}active{% endif %}" href="{{ row.url }}">
+                <span>
+                  <i class="bi bi-diagram-3"></i>
+                  {{ row.name }}
+                </span>
+                <strong>{{ row.asset_count }}</strong>
+                <small>{{ row.database_count }} {{ ui_text(request, "label.databases", "Databases") }} &middot; {{ row.server_count }} {{ ui_text(request, "label.servers", "Servers") }}</small>
+              </a>
+            {% else %}
+              <div class="empty-state service-empty-state">
+                No services found. Add Zabbix tag service to database and server hosts, then click Refresh Zabbix.
+              </div>
+            {% endfor %}
+          </div>
+        </section>
+
+        <div class="service-detail-stack">
+          <section class="overview-panel">
+            <div class="overview-section-heading">
+              <h2>{{ selected_service_group.name if selected_service_group else "Service" }} {{ ui_text(request, "label.databases", "Databases") }}</h2>
+              <span>{{ service_database_assets|length }} {{ ui_text(request, "label.records", "records") }}</span>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-sm align-middle table-hover overview-table">
+                <thead>
+                  <tr>
+                    <th>{{ ui_text(request, "label.instance_name", "Instance Name") }}</th>
+                    <th>{{ ui_text(request, "label.ip", "IP") }}</th>
+                    <th>{{ ui_text(request, "label.environment", "Environment") }}</th>
+                    <th>{{ ui_text(request, "label.db_type", "DB Type") }}</th>
+                    <th>{{ ui_text(request, "label.product", "Product") }}</th>
+                    <th>{{ ui_text(request, "label.version", "Version") }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for host in service_database_assets %}
+                    <tr>
+                      <td><a class="table-link" href="/hosts/{{ host.id }}">{{ host.zabbix_host_name or host.hostname }}</a></td>
+                      <td>{{ host.ip_address or "-" }}</td>
+                      <td>
+                        <span class="pill env-pill env-{{ (host.environment or 'unknown')|lower|replace(' ', '-') }}">
+                          {{ (host.environment or "-")|upper }}
+                        </span>
+                      </td>
+                      <td>{{ host_db_labels.get(host.id) or host.db_type or "-" }}</td>
+                      <td>{{ host_database_product_labels.get(host.id) or "-" }}</td>
+                      <td>{{ host_database_version_labels.get(host.id) or "-" }}</td>
+                    </tr>
+                  {% else %}
+                    <tr><td colspan="6" class="empty-state">{{ ui_text(request, "empty.no_instances", "No instances found.") }}</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="overview-panel">
+            <div class="overview-section-heading">
+              <h2>{{ selected_service_group.name if selected_service_group else "Service" }} {{ ui_text(request, "label.servers", "Servers") }}</h2>
+              <span>{{ service_server_assets|length }} {{ ui_text(request, "label.records", "records") }}</span>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-sm align-middle table-hover overview-table">
+                <thead>
+                  <tr>
+                    <th>{{ ui_text(request, "label.server", "Server") }}</th>
+                    <th>{{ ui_text(request, "label.ip", "IP") }}</th>
+                    <th>{{ ui_text(request, "label.environment", "Environment") }}</th>
+                    <th>{{ ui_text(request, "label.db_type", "DB Type") }}</th>
+                    <th>{{ ui_text(request, "label.virtual", "Virtual") }}</th>
+                    <th>{{ ui_text(request, "label.server_model", "Server model") }}</th>
+                    <th>{{ ui_text(request, "label.server_vendor", "Server vendor") }}</th>
+                    <th>{{ ui_text(request, "label.core", "Core") }}</th>
+                    <th>{{ ui_text(request, "label.ram", "RAM") }}</th>
+                    <th>{{ ui_text(request, "label.operating_system", "Operating system") }}</th>
+                    <th>{{ ui_text(request, "label.kernel", "Kernel") }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for host in service_server_assets %}
+                    <tr>
+                      <td><a class="table-link" href="/hosts/{{ host.id }}">{{ host.zabbix_host_name or host.hostname }}</a></td>
+                      <td>{{ host.ip_address or "-" }}</td>
+                      <td>
+                        <span class="pill env-pill env-{{ (host.environment or 'unknown')|lower|replace(' ', '-') }}">
+                          {{ (host.environment or "-")|upper }}
+                        </span>
+                      </td>
+                      <td>{{ host_db_labels.get(host.id) or host.db_type or "-" }}</td>
+                      <td>{{ host_virtual_labels.get(host.id) or "NO" }}</td>
+                      <td>{{ host_model_labels.get(host.id) or "-" }}</td>
+                      <td>{{ host_vendor_labels.get(host.id) or "-" }}</td>
+                      <td>{{ host_core_labels.get(host.id) or "-" }}</td>
+                      <td>{{ host_ram_labels.get(host.id) or "-" }}</td>
+                      <td>{{ host_os_labels.get(host.id) or "-" }}</td>
+                      <td>{{ host_kernel_labels.get(host.id) or "-" }}</td>
+                    </tr>
+                  {% else %}
+                    <tr><td colspan="11" class="empty-state">{{ ui_text(request, "empty.no_servers", "No servers found.") }}</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </section>
         </div>
       </div>
     {% elif current_view == "hosts" or db_type_view %}
