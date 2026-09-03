@@ -1790,8 +1790,8 @@ def dashboard(
         params = {"view": "services"}
         if service_name:
             params["service"] = service_name
-        if filters.environment:
-            params["environment"] = filters.environment
+        if filters.get("environment"):
+            params["environment"] = filters["environment"]
         if requested_db_type:
             params["db_type"] = requested_db_type
         if active_virtual_filter:
