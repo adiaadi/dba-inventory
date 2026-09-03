@@ -51,6 +51,7 @@ class Settings:
     zabbix_verify_ssl: bool = env_bool("ZABBIX_VERIFY_SSL", True)
     zabbix_ca_file: str | None = getenv("ZABBIX_CA_FILE")
     zabbix_auto_refresh_seconds: int = env_int("ZABBIX_AUTO_REFRESH_SECONDS", 300)
+    zabbix_refresh_wait_seconds: int = env_int("ZABBIX_REFRESH_WAIT_SECONDS", 300)
 
 
 @lru_cache

@@ -113,6 +113,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 ZABBIX_URL=https://zabbix.example.local
 ZABBIX_API_TOKEN=your-zabbix-api-token
 ZABBIX_VERIFY_SSL=true
+ZABBIX_REFRESH_WAIT_SECONDS=300
 ```
 
 Синхронизация импортирует реальные hosts из Zabbix groups, обновляет tags/inventory/items, `environment`, `zabbix_hostid`, `zabbix_host_name`, `zabbix_url`, `zabbix_agent_availability`, `monitoring_status`, `problem_count` и время последней синхронизации. При полном refresh удаляются локальные Zabbix hosts, которые больше не входят в inventory groups.

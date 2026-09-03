@@ -1292,7 +1292,10 @@ def dashboard(
     active_virtual_filter = normalized_virtual_filter(virtual)
     zabbix_refresh_result = maybe_refresh_zabbix_cache(db, force=refresh)
     zabbix_refresh_error = zabbix_refresh_result.error if zabbix_refresh_result else None
-    zabbix_refresh_success = bool(refresh and zabbix_refresh_result and not zabbix_refresh_error)
+    zabbix_refresh_info = zabbix_refresh_result.message if zabbix_refresh_result else None
+    zabbix_refresh_success = bool(
+        refresh and zabbix_refresh_result and not zabbix_refresh_error and not zabbix_refresh_info
+    )
     counts = {
         "hosts": db.scalar(select(func.count(Host.id))) or 0,
         "databases": db.scalar(select(func.count(DatabaseInstance.id))) or 0,
@@ -1872,6 +1875,7 @@ def dashboard(
             "problem_average": problem_average,
             "last_sync_at": last_sync_at,
             "zabbix_refresh_error": zabbix_refresh_error,
+            "zabbix_refresh_info": zabbix_refresh_info,
             "zabbix_refresh_result": zabbix_refresh_result,
             "zabbix_refresh_success": zabbix_refresh_success,
             "zabbix_inventory_warning": zabbix_inventory_warning,

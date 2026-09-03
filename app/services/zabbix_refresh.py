@@ -24,6 +24,7 @@ class ZabbixRefreshResult:
     updated: int = 0
     deleted: int = 0
     error: str | None = None
+    message: str | None = None
 
 
 def _aware_utc(value: datetime | None) -> datetime | None:
@@ -66,13 +67,28 @@ def maybe_refresh_zabbix_cache(db: Session, force: bool = False) -> ZabbixRefres
             return ZabbixRefreshResult(attempted=False, error=_last_error)
         return None
 
-    if not _refresh_lock.acquire(blocking=False):
-        if force:
+    lock_acquired = _refresh_lock.acquire(blocking=False)
+    if not lock_acquired:
+        if not force:
+            return None
+
+        lock_acquired = _refresh_lock.acquire(
+            timeout=max(settings.zabbix_refresh_wait_seconds, 1)
+        )
+        if not lock_acquired:
             return ZabbixRefreshResult(
                 attempted=True,
-                error="Zabbix refresh is already running.",
+                message="Zabbix refresh is still running. Showing cached data.",
             )
-        return None
+
+        db.expire_all()
+        last_sync_after_wait = _aware_utc(db.scalar(select(func.max(Host.zabbix_last_sync_at))))
+        if last_sync_after_wait and last_sync_after_wait >= now:
+            _refresh_lock.release()
+            return ZabbixRefreshResult(
+                attempted=True,
+                message="Zabbix refresh completed by another request. Showing latest cached data.",
+            )
 
     try:
         _last_attempt_at = now

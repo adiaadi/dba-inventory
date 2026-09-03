@@ -103,6 +103,12 @@
       </div>
     {% endif %}
 
+    {% if zabbix_refresh_info %}
+      <div class="alert alert-info py-2 mb-3" role="alert">
+        {{ zabbix_refresh_info }}
+      </div>
+    {% endif %}
+
     {% if zabbix_refresh_success %}
       <div class="alert alert-success py-2 mb-3" role="alert">
         Zabbix data refreshed successfully.
