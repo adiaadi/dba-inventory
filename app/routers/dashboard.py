@@ -1290,8 +1290,9 @@ def dashboard(
     current_asset_view = asset_view if asset_view in {"databases", "servers"} else "databases"
     filters = active_filters(db_type, environment, role, monitoring_status)
     active_virtual_filter = normalized_virtual_filter(virtual)
-    zabbix_refresh_error = maybe_refresh_zabbix_cache(db, force=refresh)
-    zabbix_refresh_success = refresh and zabbix_refresh_error is None
+    zabbix_refresh_result = maybe_refresh_zabbix_cache(db, force=refresh)
+    zabbix_refresh_error = zabbix_refresh_result.error if zabbix_refresh_result else None
+    zabbix_refresh_success = bool(refresh and zabbix_refresh_result and not zabbix_refresh_error)
     counts = {
         "hosts": db.scalar(select(func.count(Host.id))) or 0,
         "databases": db.scalar(select(func.count(DatabaseInstance.id))) or 0,
@@ -1871,6 +1872,7 @@ def dashboard(
             "problem_average": problem_average,
             "last_sync_at": last_sync_at,
             "zabbix_refresh_error": zabbix_refresh_error,
+            "zabbix_refresh_result": zabbix_refresh_result,
             "zabbix_refresh_success": zabbix_refresh_success,
             "zabbix_inventory_warning": zabbix_inventory_warning,
             "top_hosts": top_hosts,

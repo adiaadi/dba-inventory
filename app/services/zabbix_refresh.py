@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from threading import Lock
 
@@ -14,6 +15,15 @@ from app.services.zabbix_inventory import refresh_zabbix_inventory
 _refresh_lock = Lock()
 _last_attempt_at: datetime | None = None
 _last_error: str | None = None
+
+
+@dataclass(frozen=True)
+class ZabbixRefreshResult:
+    attempted: bool
+    created: int = 0
+    updated: int = 0
+    deleted: int = 0
+    error: str | None = None
 
 
 def _aware_utc(value: datetime | None) -> datetime | None:
@@ -31,11 +41,14 @@ def _is_stale(last_sync_at: datetime | None, now: datetime, ttl_seconds: int) ->
     return now - last_sync_at >= timedelta(seconds=ttl_seconds)
 
 
-def maybe_refresh_zabbix_cache(db: Session, force: bool = False) -> str | None:
+def maybe_refresh_zabbix_cache(db: Session, force: bool = False) -> ZabbixRefreshResult | None:
     settings = get_settings()
     if not settings.zabbix_url or not settings.zabbix_api_token:
         if force:
-            return "ZABBIX_URL and ZABBIX_API_TOKEN must be set."
+            return ZabbixRefreshResult(
+                attempted=True,
+                error="ZABBIX_URL and ZABBIX_API_TOKEN must be set.",
+            )
         return None
 
     if not force and settings.zabbix_auto_refresh_seconds <= 0:
@@ -49,9 +62,16 @@ def maybe_refresh_zabbix_cache(db: Session, force: bool = False) -> str | None:
     global _last_attempt_at, _last_error
     retry_floor = min(settings.zabbix_auto_refresh_seconds, 60)
     if not force and _last_attempt_at and now - _last_attempt_at < timedelta(seconds=retry_floor):
-        return _last_error
+        if _last_error:
+            return ZabbixRefreshResult(attempted=False, error=_last_error)
+        return None
 
     if not _refresh_lock.acquire(blocking=False):
+        if force:
+            return ZabbixRefreshResult(
+                attempted=True,
+                error="Zabbix refresh is already running.",
+            )
         return None
 
     try:
@@ -62,9 +82,15 @@ def maybe_refresh_zabbix_cache(db: Session, force: bool = False) -> str | None:
             _last_error = "Zabbix refresh returned 0 hosts for configured groups."
         else:
             _last_error = None
+        return ZabbixRefreshResult(
+            attempted=True,
+            created=created,
+            updated=updated,
+            deleted=deleted,
+            error=_last_error,
+        )
     except (RuntimeError, ZabbixApiError) as exc:
         _last_error = str(exc)
+        return ZabbixRefreshResult(attempted=True, error=_last_error)
     finally:
         _refresh_lock.release()
-
-    return _last_error

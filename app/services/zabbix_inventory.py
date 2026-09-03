@@ -225,7 +225,6 @@ def prune_stale_zabbix_hosts(db, seen_hostids: set[str], verbose: bool = True) -
         host
         for host in imported_hosts
         if str(host.zabbix_hostid) not in seen_hostids
-        and "Imported from Zabbix groups:" in (host.notes or "")
     ]
     for host in stale_hosts:
         if verbose:
@@ -290,7 +289,7 @@ def refresh_zabbix_inventory(group_names: list[str] | None = None, verbose: bool
                     f"{action}: {host.hostname} hostid={host.zabbix_hostid} "
                     f"status={host.monitoring_status} problems={host.problem_count}"
                 )
-        if group_names is None and not missing_group_names:
+        if group_names is None:
             deleted = prune_stale_zabbix_hosts(db, seen_hostids, verbose=verbose)
         elif verbose:
             print("Stale host cleanup skipped because refresh used custom or incomplete group set.")

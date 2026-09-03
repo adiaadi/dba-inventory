@@ -106,6 +106,9 @@
     {% if zabbix_refresh_success %}
       <div class="alert alert-success py-2 mb-3" role="alert">
         Zabbix data refreshed successfully.
+        Created: {{ zabbix_refresh_result.created }}.
+        Updated: {{ zabbix_refresh_result.updated }}.
+        Deleted: {{ zabbix_refresh_result.deleted }}.
       </div>
     {% endif %}
 
