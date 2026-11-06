@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Replication Monitoring | DBA Inventory{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="/static/css/replication.css">
+<div class="replication-page">
+  <header class="replication-heading">
+    <div><a class="small text-muted" href="/">← Inventory</a><h1>DB Replication — DR Site</h1><p>Oracle Archive Logs · PostgreSQL Streaming · SQL Server Log Shipping</p></div>
+    <div class="replication-controls">
+      <span id="poll-status" role="status" aria-live="polite">Connecting…</span>
+      <label class="small">Refresh <select id="poll-interval" aria-label="Refresh interval"><option value="30">30 sec</option><option value="60">60 sec</option></select></label>
+      <button id="pause-poll" class="btn btn-sm btn-outline-secondary" type="button" aria-pressed="false">Pause</button>
+      <button id="refresh-poll" class="btn btn-sm btn-outline-secondary" type="button">Refresh</button>
+    </div>
+  </header>
+  <div class="replication-filters" role="group" aria-label="Database engine">
+    <button class="active" data-engine="all" aria-pressed="true">All databases</button>
+    <button data-engine="oracle" aria-pressed="false">Oracle</button>
+    <button data-engine="postgresql" aria-pressed="false">PostgreSQL</button>
+    <button data-engine="sqlserver" aria-pressed="false">SQL Server</button>
+  </div>
+  <div id="replication-error" class="alert alert-warning" role="alert" hidden></div>
+  <div id="replication-summary" class="replication-summary"></div>
+  <div class="replication-section-title"><h2>Replication status</h2><span id="snapshot-time">Waiting for measurements</span></div>
+  <div id="replication-pairs"><div class="replication-empty">Loading replication metrics…</div></div>
+  <p class="replication-footnote">Read-only monitoring · Measurements and 60-minute history from Zabbix · Time shown in your browser’s timezone</p>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/replication.js" defer></script>{% endblock %}

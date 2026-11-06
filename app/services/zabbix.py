@@ -335,6 +335,23 @@ class ZabbixClient:
             limit=limit,
         )
 
+    def get_replication_items(self, itemids: list[str]) -> list[dict[str, Any]]:
+        if not itemids:
+            return []
+        return self._call("item.get", {
+            "itemids": itemids,
+            "output": ["itemid", "lastvalue", "lastclock", "status", "state", "value_type"],
+            "monitored": True,
+        }) or []
+
+    def get_replication_history(self, itemids: list[str], value_type: str, time_from: int, time_till: int) -> list[dict[str, Any]]:
+        return self._call("history.get", {
+            "itemids": itemids, "history": int(value_type),
+            "output": ["itemid", "clock", "value"],
+            "time_from": time_from, "time_till": time_till,
+            "sortfield": "clock", "sortorder": "DESC", "limit": 10000,
+        }) or []
+
     def get_hostid_by_hostname(self, hostname: str) -> str | None:
         host = self.get_host_by_hostname(hostname)
         if not host:

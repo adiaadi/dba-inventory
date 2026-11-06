@@ -1,0 +1,6 @@
+services:
+  app:
+    environment:
+      REPLICATION_CONFIG_FILE: /app/config/replication.json
+    volumes:
+      - ./config/replication.json:/app/config/replication.json:ro

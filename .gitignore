@@ -11,3 +11,4 @@ outputs/
 work/
 postgres_data/
 certs/
+config/replication.json

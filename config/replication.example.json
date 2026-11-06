@@ -1,0 +1,47 @@
+{
+  "pairs": [
+    {
+      "id": "oracle-findb-thread1", "name": "FINDB · thread 1", "engine": "oracle",
+      "primary": "ora-prd01", "standby": "ora-dr01", "environment": "production",
+      "schedule": "Every 5 min", "stale_after_seconds": 900,
+      "metrics": {
+        "archived_seq": {"itemid": "10001"},
+        "copied_seq": {"itemid": "10002"},
+        "applied_seq": {"itemid": "10003"},
+        "archive_gap": {"itemid": "10004", "warning": 1, "critical": 10},
+        "pending_apply": {"itemid": "10005"},
+        "last_success_age": {"itemid": "10006"},
+        "transfer_job": {"itemid": "10007", "values": {"0": "success", "1": "failed"}},
+        "apply_job": {"itemid": "10008", "values": {"0": "success", "1": "failed"}}
+      }
+    },
+    {
+      "id": "postgres-coredb-dr", "name": "COREDB", "engine": "postgresql",
+      "primary": "pg-prod01", "standby": "pg-dr01", "environment": "production",
+      "expected_patroni_nodes": 3, "stale_after_seconds": 180,
+      "metrics": {
+        "wal_backlog": {"itemid": "20001"},
+        "replay_lag": {"itemid": "20002", "warning": 10, "critical": 60},
+        "stream_state": {"itemid": "20003"},
+        "sync_state": {"itemid": "20004"},
+        "leader_lock": {"itemid": "20005", "values": {"1": "held", "0": "lost"}},
+        "replica_state": {"itemid": "20006"},
+        "patroni_nodes": {"itemid": "20007"}
+      }
+    },
+    {
+      "id": "sqlserver-bankdb-dr", "name": "BANKDB", "engine": "sqlserver",
+      "primary": "sql-prd01", "standby": "sql-dr01", "environment": "production",
+      "stale_after_seconds": 180,
+      "metrics": {
+        "backup_age": {"itemid": "30001", "factor": 60},
+        "copy_age": {"itemid": "30002", "factor": 60},
+        "restore_age": {"itemid": "30003", "factor": 60, "warning": 1800, "critical": 5400},
+        "pending_files": {"itemid": "30004"},
+        "backup_job": {"itemid": "30005", "values": {"1": "success", "0": "failed"}},
+        "copy_job": {"itemid": "30006", "values": {"1": "success", "0": "failed"}},
+        "restore_job": {"itemid": "30007", "values": {"1": "success", "0": "failed"}}
+      }
+    }
+  ]
+}

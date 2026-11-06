@@ -239,6 +239,9 @@ uvicorn app.main:app --reload
 
 ## Основные страницы
 
+- `/replication` — live-мониторинг репликации Oracle / PostgreSQL / SQL Server:
+  [настройка Zabbix items, порогов и Docker Compose](docs/replication-monitoring.md).
+
 - `/` - Dashboard
 - `/hosts` - список серверов
 - `/databases` - список СУБД и инстансов

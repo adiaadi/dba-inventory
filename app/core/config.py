@@ -52,6 +52,7 @@ class Settings:
     zabbix_ca_file: str | None = getenv("ZABBIX_CA_FILE")
     zabbix_auto_refresh_seconds: int = env_int("ZABBIX_AUTO_REFRESH_SECONDS", 300)
     zabbix_refresh_wait_seconds: int = env_int("ZABBIX_REFRESH_WAIT_SECONDS", 300)
+    replication_config_file: str = getenv("REPLICATION_CONFIG_FILE", "")
 
 
 @lru_cache
