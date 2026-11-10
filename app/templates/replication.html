@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Replication Monitoring | DBA Inventory{% endblock %}
 {% block content %}
-<link rel="stylesheet" href="/static/css/replication.css">
+<link rel="stylesheet" href="/static/css/replication.css?v=20261110-diagram2">
 <div class="replication-page">
   <header class="replication-heading">
     <div><a class="small text-muted" href="/">← Inventory</a><h1>DB Replication — DR Site</h1><p>Oracle Archive Logs · PostgreSQL Streaming · SQL Server Log Shipping</p></div>
@@ -12,13 +12,11 @@
       <button id="refresh-poll" class="btn btn-sm btn-outline-secondary" type="button">Refresh</button>
     </div>
   </header>
-  <nav id="replication-selector" class="replication-selector" aria-label="Database engine and database"></nav>
+  <nav id="replication-selector" class="replication-navigation" aria-label="Database engine and database"><div class="replication-filters"><button type="button" data-engine="oracle">Oracle</button><button type="button" data-engine="postgresql">PostgreSQL</button><button type="button" data-engine="sqlserver">SQL Server</button></div></nav>
   <div id="replication-error" class="alert alert-warning" role="alert" hidden></div>
-  <div id="replication-summary" class="replication-summary"></div>
-  <div id="replication-architecture"></div>
   <div class="replication-section-title"><h2>Replication status</h2><span id="snapshot-time">Waiting for measurements</span></div>
   <div id="replication-pairs"><div class="replication-empty">Loading replication metrics…</div></div>
   <p class="replication-footnote">Read-only monitoring · Measurements and 60-minute history from Zabbix · Time shown in your browser’s timezone</p>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/replication.js" defer></script>{% endblock %}
+{% block scripts %}<script src="/static/js/replication.js?v=20261110-diagram2" defer></script>{% endblock %}
