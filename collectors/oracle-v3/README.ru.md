@@ -1,4 +1,4 @@
-# Oracle v3: CBSETL, CAPETL, DWH на CBS-DR-DB01
+# Oracle v3: CBSETL, CAPETL, DWH на ORA-DR-DB
 
 Комплект подготовлен из переданных рабочих файлов stage2. На сервере не установлен.
 Предназначен для одного redo thread (thread 1), mounted physical standby.
@@ -20,7 +20,7 @@
 
 ## 1. Установка рядом с v2
 
-Передайте каталог `collectors/oracle-v3` на CBS-DR-DB01, затем из него:
+Передайте каталог `collectors/oracle-v3` на ORA-DR-DB, затем из него:
 
 ```bash
 python3 -m unittest discover -s . -p 'test_*.py' -v
@@ -116,7 +116,7 @@ sudo -u zabbix zabbix_agent2 -t 'db.replication.oracle.raw[CBSETL]'
 ```
 
 Импортируйте `zabbix-template-8.0.json` и привяжите нужные новые шаблоны к
-техническому хосту `cbs-dr-db01`. В комплекте три шаблона с отдельными UUID и keys.
+техническому хосту `ora-dr-db`. В комплекте три шаблона с отдельными UUID и keys.
 Не используйте Delete missing. Старый шаблон CBSETL и его история остаются;
 после перехода отключите старые items/triggers, чтобы они не выдавали stale alerts.
 Новые items начинают собственную историю. Agent active checks требуют корректного
@@ -138,7 +138,7 @@ keys `db.replication.oracle.v3.raw.SID`; Alias связывает их с keys `
 заменяйте только пару уже переключённого SID; CBSETL может продолжать использовать
 старые keys без параметра до своего перехода.
 Не заменяйте рабочий JSON на полный v3 заранее: старые keys отличаются.
-Коллектор находится на CBS-DR-DB01, а не в контейнере приложения портала.
+Коллектор находится на ORA-DR-DB, а не в контейнере приложения портала.
 
 ## Откат
 
