@@ -27,7 +27,7 @@ def build(data, services=None):
     metrics['pending_apply'].update(warning=1,critical=10)
     metrics['last_success_age'].update(warning=600,critical=1800)
     return {'pairs':[dict(id='oracle-cbsetl-thread1',name='CBSETL / thread 1',engine='oracle',
-        primary='cbs-prod-db',standby='cbs-dr-db',environment='production',
+        primary='cbs-prod-db01',standby='cbs-dr-db01',environment='production',
         schedule='Every 3 min (01,04,...,58)',stale_after_seconds=180,metrics=metrics)]}
 
 

@@ -44,8 +44,8 @@ unsupported items, NULL/нечисловые/отрицательные знач
 
 ### Поиск по key: cbsetl
 
-Для трёх баз на CBS-DR-DB подготовлен `config/replication.cbs-dr.json`:
-CBSETL (CBS-PROD-DB01), CAPETL (CAP-PROD-DB), DWH (DWH-PROD-DB).
+Для трёх баз на CBS-DR-DB01 подготовлен `config/replication.cbs-dr.json`:
+CBSETL (CBS-PROD-DB01), CAPETL (CAP-PROD-DB01), DWH (DWH-PROD-DB01).
 У CAPETL и DWH `metrics` пока пусты: карточки показывают NO DATA до настройки
 отдельных Zabbix keys для каждой базы. Команды sync_seed_arch.sh и
 restore_arch_notify.sh не определяют эти keys. Не используйте для них keys CBSETL.
@@ -53,14 +53,14 @@ restore_arch_notify.sh не определяют эти keys. Не исполь�
 `config/replication.json`, сохранив существующие настройки CBSETL.
 
 Готовая конфигурация: `config/replication.cbsetl.json`, primary `cbs-prod-db01`,
-standby `cbs-dr-db`. Скопируйте её в `config/replication.json`, если конфигурации ещё нет;
+standby `cbs-dr-db01`. Скопируйте её в `config/replication.json`, если конфигурации ещё нет;
 в существующую конфигурацию добавьте пару из массива `pairs`.
 
 Каждая метрика принимает либо `itemid`, либо `key`, например:
 `"archive_gap": {"key": "db.replication.oracle.archive_gap"}`.
 Для key обязательно поле пары `zabbix_host`: точное техническое имя хоста в Zabbix,
 не отображаемое имя. В конфигурации cbsetl предполагается, что items размещены на
-`cbs-dr-db`; если коллектор привязан к другому хосту, измените `zabbix_host`.
+`cbs-dr-db01`; если коллектор привязан к другому хосту, измените `zabbix_host`.
 Поиск ограничен этим хостом и точным key. ID для истории определяется автоматически.
 Отсутствующие/недоступные items дают NO DATA. Старые конфигурации с itemid поддерживаются.
 Порог свежести cbsetl — 900 секунд; уточните его по реальному интервалу сбора.

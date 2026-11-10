@@ -15,7 +15,7 @@ import time
 LOCAL = Path('/u01/arch/CBSETL_seed')
 REMOTE = '/oradata/backup/CBSETL_seed'
 SSH = ['ssh', '-o', 'BatchMode=yes', '-o', 'StrictHostKeyChecking=yes',
-       '-o', 'ConnectTimeout=10', 'oracle@cbs-prod-db']
+       '-o', 'ConnectTimeout=10', 'oracle@cbs-prod-db01']
 LIMIT = 10000
 SID = 'CBSETL'
 FILE_REGEX = r'1_[1-9][0-9]*_[1-9][0-9]*\.dbf'
@@ -23,7 +23,7 @@ FILE_REGEX = r'1_[1-9][0-9]*_[1-9][0-9]*\.dbf'
 
 def configure(sid, host):
     global SID, LOCAL, REMOTE, SSH, FILE_REGEX
-    allowed = {'CBSETL': 'cbs-prod-db', 'CAPETL': 'cap-prod-db', 'DWH': 'dwh-prod-db'}
+    allowed = {'CBSETL': 'cbs-prod-db01', 'CAPETL': 'cap-prod-db01', 'DWH': 'dwh-prod-db01'}
     if allowed.get(sid) != host:
         raise ValueError('Unsupported database/host')
     SID = sid

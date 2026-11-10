@@ -147,14 +147,14 @@ class ReplicationTests(unittest.TestCase):
         result = r.build_pair(resolved.pairs[0], items, 10000)
         self.assertEqual(result["status"], "unknown")
         self.assertEqual(next(m for m in result["metrics"] if m["key"] == "archive_gap")["status"], "warning")
-        self.assertEqual(client.get_replication_items_by_keys.call_args.args[0], "cbs-dr-db")
+        self.assertEqual(client.get_replication_items_by_keys.call_args.args[0], "cbs-dr-db01")
         client.get_replication_items.assert_not_called()
 
     def test_key_api_scopes_exact_keys_to_host(self):
         client = ZabbixClient("https://example.test", "secret")
         with patch.object(client, "_call", side_effect=[[{"hostid": "17"}], []]) as call:
-            client.get_replication_items_by_keys("cbs-dr-db", ["exact.key"])
-            self.assertEqual(call.call_args_list[0].args[1]["filter"], {"host": ["cbs-dr-db"]})
+            client.get_replication_items_by_keys("cbs-dr-db01", ["exact.key"])
+            self.assertEqual(call.call_args_list[0].args[1]["filter"], {"host": ["cbs-dr-db01"]})
             self.assertEqual(call.call_args.args[1]["hostids"], ["17"])
             self.assertEqual(call.call_args.args[1]["filter"], {"key_": ["exact.key"]})
         with patch.object(client, "_call", return_value=[]) as call:

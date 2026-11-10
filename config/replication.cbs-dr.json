@@ -1,10 +1,10 @@
 {
   "pairs": [
     {
-      "zabbix_host": "cbs-dr-db",
+      "zabbix_host": "cbs-dr-db01",
       "stale_after_seconds": 900,
       "id": "oracle-cbsetl",
-      "standby": "cbs-dr-db",
+      "standby": "cbs-dr-db01",
       "metrics": {
         "archived_seq": {
           "key": "db.replication.oracle.archived_seq"
@@ -40,9 +40,9 @@
       "id": "oracle-capetl",
       "name": "CAPETL",
       "engine": "oracle",
-      "primary": "cap-prod-db",
-      "standby": "cbs-dr-db",
-      "zabbix_host": "cbs-dr-db",
+      "primary": "cap-prod-db01",
+      "standby": "cbs-dr-db01",
+      "zabbix_host": "cbs-dr-db01",
       "environment": "production",
       "stale_after_seconds": 900,
       "metrics": {}
@@ -51,9 +51,9 @@
       "id": "oracle-dwh",
       "name": "DWH",
       "engine": "oracle",
-      "primary": "dwh-prod-db",
-      "standby": "cbs-dr-db",
-      "zabbix_host": "cbs-dr-db",
+      "primary": "dwh-prod-db01",
+      "standby": "cbs-dr-db01",
+      "zabbix_host": "cbs-dr-db01",
       "environment": "production",
       "stale_after_seconds": 900,
       "metrics": {}

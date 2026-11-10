@@ -13,9 +13,9 @@ class MultiDatabaseTests(unittest.TestCase):
 
     def test_profiles_isolate_paths_hosts_and_names(self):
         for sid, host, name, remote in (
-            ('CBSETL', 'cbs-prod-db', '1_42_123.dbf', '/oradata/backup/CBSETL_seed'),
-            ('CAPETL', 'cap-prod-db', '42_1_123.arc', '/oradata/backup/CAPETL_seed'),
-            ('DWH', 'dwh-prod-db', '1_42_123.dbf', '/oradata/archive'),
+            ('CBSETL', 'cbs-prod-db01', '1_42_123.dbf', '/oradata/backup/CBSETL_seed'),
+            ('CAPETL', 'cap-prod-db01', '42_1_123.arc', '/oradata/backup/CAPETL_seed'),
+            ('DWH', 'dwh-prod-db01', '1_42_123.dbf', '/oradata/archive'),
         ):
             monitor.configure(sid)
             self.assertEqual(monitor.STATE.as_posix(), f'/var/lib/db-inv-oracle/{sid}/state-v3.json')
@@ -43,7 +43,7 @@ class MultiDatabaseTests(unittest.TestCase):
             run.return_value.stdout = '{}'
             monitor.sql_output('SELECT', True)
             command = run.call_args.args[0]
-            self.assertIn('oracle@dwh-prod-db', command)
+            self.assertIn('oracle@dwh-prod-db01', command)
             self.assertIn('ORACLE_SID=DWH;', command[-1])
 
     def test_default_read_path_tracks_selected_database(self):
@@ -66,7 +66,7 @@ class MultiDatabaseTests(unittest.TestCase):
                 with self.assertRaises(ValueError) as error:
                     monitor.sql_output('SELECT', True)
                 self.assertIn(expected, str(error.exception))
-                self.assertIn('cap-prod-db', str(error.exception))
+                self.assertIn('cap-prod-db01', str(error.exception))
                 self.assertIn('SID=CAPETL', str(error.exception))
 
     def test_sql_diagnostics_are_bounded(self):

@@ -1,16 +1,16 @@
 {
   "CBSETL": {
-    "primary": "cbs-prod-db",
+    "primary": "cbs-prod-db01",
     "dbid": 3514081376,
     "header_count": 16
   },
   "CAPETL": {
-    "primary": "cap-prod-db",
+    "primary": "cap-prod-db01",
     "dbid": null,
     "header_count": null
   },
   "DWH": {
-    "primary": "dwh-prod-db",
+    "primary": "dwh-prod-db01",
     "dbid": null,
     "header_count": null
   }

@@ -1,10 +1,10 @@
 {
   "pairs": [
     {
-      "zabbix_host": "cbs-dr-db",
+      "zabbix_host": "cbs-dr-db01",
       "stale_after_seconds": 900,
       "id": "oracle-cbsetl",
-      "standby": "cbs-dr-db",
+      "standby": "cbs-dr-db01",
       "metrics": {
         "archived_seq": {
           "key": "db.replication.oracle.archived_seq"

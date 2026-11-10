@@ -1,4 +1,4 @@
-# Oracle v3: CBSETL, CAPETL, DWH на CBS-DR-DB
+# Oracle v3: CBSETL, CAPETL, DWH на CBS-DR-DB01
 
 Комплект подготовлен из переданных рабочих файлов stage2. На сервере не установлен.
 Предназначен для одного redo thread (thread 1), mounted physical standby.
@@ -11,17 +11,16 @@
 
 | SID | SSH primary | Архивы primary | Архивы standby | Формат |
 |---|---|---|---|---|
-| CBSETL | cbs-prod-db | /oradata/backup/CBSETL_seed | /u01/arch/CBSETL_seed | 1_SEQ_RESETLOGS.dbf |
-| CAPETL | cap-prod-db | /oradata/backup/CAPETL_seed | /u01/arch/CAPETL_seed | SEQ_1_RESETLOGS.arc |
-| DWH | dwh-prod-db | /oradata/archive | /u01/arch/DWH_seed | 1_SEQ_RESETLOGS.dbf |
+| CBSETL | cbs-prod-db01 | /oradata/backup/CBSETL_seed | /u01/arch/CBSETL_seed | 1_SEQ_RESETLOGS.dbf |
+| CAPETL | cap-prod-db01 | /oradata/backup/CAPETL_seed | /u01/arch/CAPETL_seed | SEQ_1_RESETLOGS.arc |
+| DWH | dwh-prod-db01 | /oradata/archive | /u01/arch/DWH_seed | 1_SEQ_RESETLOGS.dbf |
 
-CBS-PROD-DB01 остаётся подписью портала, SSH-адрес cbs-prod-db взят из рабочего
-monitor.py. Для CAPETL перенос теперь выбирает только thread 1 текущего RESETLOGS_ID.
+Имена SSH-хостов и подписи портала используют окончание db01. Для CAPETL перенос теперь выбирает только thread 1 текущего RESETLOGS_ID.
 Каталоги и SID primary взяты из исходных скриптов; подтвердите их через inspect/probe.
 
 ## 1. Установка рядом с v2
 
-Передайте каталог `collectors/oracle-v3` на CBS-DR-DB, затем из него:
+Передайте каталог `collectors/oracle-v3` на CBS-DR-DB01, затем из него:
 
 ```bash
 python3 -m unittest discover -s . -p 'test_*.py' -v
@@ -117,7 +116,7 @@ sudo -u zabbix zabbix_agent2 -t 'db.replication.oracle.raw[CBSETL]'
 ```
 
 Импортируйте `zabbix-template-8.0.json` и привяжите нужные новые шаблоны к
-техническому хосту `cbs-dr-db`. В комплекте три шаблона с отдельными UUID и keys.
+техническому хосту `cbs-dr-db01`. В комплекте три шаблона с отдельными UUID и keys.
 Не используйте Delete missing. Старый шаблон CBSETL и его история остаются;
 после перехода отключите старые items/triggers, чтобы они не выдавали stale alerts.
 Новые items начинают собственную историю. Agent active checks требуют корректного
@@ -135,7 +134,7 @@ Hostname/ServerActive, как и исходный шаблон. Actions/полу
 заменяйте только пару уже переключённого SID; CBSETL может продолжать использовать
 старые keys без параметра до своего перехода.
 Не заменяйте рабочий JSON на полный v3 заранее: старые keys отличаются.
-Коллектор находится на CBS-DR-DB, а не в контейнере приложения портала.
+Коллектор находится на CBS-DR-DB01, а не в контейнере приложения портала.
 
 ## Откат
 

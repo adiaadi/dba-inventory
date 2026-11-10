@@ -15,7 +15,7 @@ import archives
 
 BASE = Path(__file__).resolve().parent
 SID = 'CBSETL'
-PROFILE = dict(primary='cbs-prod-db', dbid=3514081376, header_count=16)
+PROFILE = dict(primary='cbs-prod-db01', dbid=3514081376, header_count=16)
 STATE = Path('/var/lib/db-inv-oracle/CBSETL/state-v3.json')
 MANIFEST = STATE.with_name('manifest-v3.json')
 KEYS = ('archived_seq', 'copied_seq', 'applied_seq', 'archive_gap',
@@ -248,7 +248,7 @@ def pinned():
 
 def configure(sid):
     global SID, PROFILE, STATE, MANIFEST
-    allowed = {'CBSETL': 'cbs-prod-db', 'CAPETL': 'cap-prod-db', 'DWH': 'dwh-prod-db'}
+    allowed = {'CBSETL': 'cbs-prod-db01', 'CAPETL': 'cap-prod-db01', 'DWH': 'dwh-prod-db01'}
     if sid not in allowed:
         raise ValueError('Unsupported SID')
     profile = json.loads((BASE / 'databases.json').read_text())[sid]

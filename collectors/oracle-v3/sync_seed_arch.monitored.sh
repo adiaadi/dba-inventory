@@ -10,9 +10,9 @@ set -euo pipefail
 #   ./sync_seed_arch.sh <PRIMARY_HOST> <AUX_SID>
 #
 # Examples:
-#   ./sync_seed_arch.sh cap-prod-db CAPETL
-#   ./sync_seed_arch.sh cbs-prod-db CBSETL
-#   ./sync_seed_arch.sh dwh-prod-db DWH
+#   ./sync_seed_arch.sh cap-prod-db01 CAPETL
+#   ./sync_seed_arch.sh cbs-prod-db01 CBSETL
+#   ./sync_seed_arch.sh dwh-prod-db01 DWH
 #
 # File name formats:
 #   CAPETL -> <SEQ>_<THREAD>_<ID>.arc	e.g. 2293_1_1204738459.arc
@@ -28,9 +28,9 @@ usage() {
 Usage: $0 <PRIMARY_HOST> <AUX_SID>
 
 Examples:
-  $0 cap-prod-db CAPETL
-  $0 cbs-prod-db CBSETL
-  $0 dwh-prod-db DWH
+  $0 cap-prod-db01 CAPETL
+  $0 cbs-prod-db01 CBSETL
+  $0 dwh-prod-db01 DWH
 EOF
   exit 1
 }
@@ -40,7 +40,7 @@ AUX_SID="${2:-}"
 RESETLOGS_ID="${3:-}"
 
 case "$AUX_SID:$PRIMARY_HOST" in
-  CBSETL:cbs-prod-db|CAPETL:cap-prod-db|DWH:dwh-prod-db) ;;
+  CBSETL:cbs-prod-db01|CAPETL:cap-prod-db01|DWH:dwh-prod-db01) ;;
   *) printf 'Unsupported SID/primary pair\n' >&2; exit 1 ;;
 esac
 [[ "$RESETLOGS_ID" =~ ^[1-9][0-9]*$ ]] || exit 1
