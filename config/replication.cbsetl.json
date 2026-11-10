@@ -29,6 +29,9 @@
         },
         "apply_job": {
           "key": "db.replication.oracle.apply_job"
+        },
+        "transfer_stats": {
+          "key": "db.replication.oracle.transfer_stats[CBSETL]"
         }
       },
       "name": "cbsetl",

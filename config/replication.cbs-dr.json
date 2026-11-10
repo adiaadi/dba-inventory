@@ -29,6 +29,9 @@
         },
         "apply_job": {
           "key": "db.replication.oracle.apply_job"
+        },
+        "transfer_stats": {
+          "key": "db.replication.oracle.transfer_stats[CBSETL]"
         }
       },
       "name": "cbsetl",
@@ -46,7 +49,11 @@
       "zabbix_host": "ora-dr-db",
       "environment": "production",
       "stale_after_seconds": 900,
-      "metrics": {},
+      "metrics": {
+        "transfer_stats": {
+          "key": "db.replication.oracle.transfer_stats[CAPETL]"
+        }
+      },
       "schedule": "Every 3 min (00, 03, ..., 57)"
     },
     {
@@ -58,7 +65,11 @@
       "zabbix_host": "ora-dr-db",
       "environment": "production",
       "stale_after_seconds": 900,
-      "metrics": {},
+      "metrics": {
+        "transfer_stats": {
+          "key": "db.replication.oracle.transfer_stats[DWH]"
+        }
+      },
       "schedule": "Every 3 min (02, 05, ..., 59)"
     }
   ]
