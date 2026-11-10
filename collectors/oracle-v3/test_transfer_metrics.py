@@ -9,6 +9,20 @@ import transfer_metrics as t
 
 
 class TransferMetricsTests(unittest.TestCase):
+    def test_idle_cycles_keep_last_real_copy(self):
+        measured = dict(bytes_received=1000, duration_seconds=4, bytes_per_second=250,
+                        attempts=1, completed_at=100)
+        current, last = monitor.retain_last_copy(measured, None)
+        idle = dict(bytes_received=0, duration_seconds=0, bytes_per_second=None,
+                    attempts=0, completed_at=200)
+        current, last = monitor.retain_last_copy(idle, last)
+        self.assertEqual(current['attempts'], 0)
+        self.assertEqual(current['last_copy']['bytes_per_second'], 250)
+        self.assertEqual(current['last_copy']['completed_at'], 100)
+        current, last = monitor.retain_last_copy(None, last)
+        self.assertIsNone(current)
+        self.assertEqual(last['completed_at'], 100)
+
     def test_rsync_receive_counter_and_elapsed_time(self):
         run = Mock(return_value=SimpleNamespace(returncode=0,
             stdout='Total bytes received: 31,268,352\n', stderr=''))

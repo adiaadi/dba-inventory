@@ -201,9 +201,16 @@ def transfer_stats_info(pair, items, now):
             return None
         if data['attempts'] and data['duration_seconds'] <= 0:
             return None
+        last = data.get('last_copy')
+        last_copy = None
+        if isinstance(last, dict):
+            fields = ('bytes_received', 'duration_seconds', 'attempts', 'completed_at')
+            if (all(type(last.get(k)) in (int, float) and math.isfinite(last[k]) and last[k] > 0 for k in fields)
+                    and last['completed_at'] <= now):
+                last_copy = dict(last, bytes_per_second=last['bytes_received']/last['duration_seconds'])
         return dict(bytes_received=data['bytes_received'], duration_seconds=data['duration_seconds'],
                     bytes_per_second=data['bytes_received']/data['duration_seconds'] if data['attempts'] else None,
-                    attempts=data['attempts'], completed_at=data['completed_at'])
+                    attempts=data['attempts'], completed_at=data['completed_at'], last_copy=last_copy)
     except (ValueError, TypeError, KeyError):
         return None
 
@@ -214,7 +221,7 @@ def build_pair(pair, items, now):
         if metric["key"] == "patroni_nodes" and metric["status"] == "healthy" and metric["value"] < pair.expected_patroni_nodes:
             metric.update(status="critical", reason="Fewer healthy Patroni nodes than expected")
     clocks = [m["clock"] for m in metrics if m["clock"] is not None]
-    return {"id": pair.id, "name": pair.name, "engine": pair.engine, "title": TITLES[pair.engine], "primary": pair.primary, "standby": pair.standby, "environment": pair.environment, "schedule": pair.schedule, "stale_after_seconds": pair.stale_after_seconds, "status": pair_status(metrics), "metrics": metrics, "oldest_measurement": min(clocks) if clocks else None, "trend": [], "trend_key": TRENDS[pair.engine], "trend_error": None, "archive_file": archive_file_info(pair, items, now), "transfer_stats": transfer_stats_info(pair, items, now)}
+    return {"id": pair.id, "name": pair.name, "engine": pair.engine, "title": TITLES[pair.engine], "primary": pair.primary, "standby": pair.standby, "environment": pair.environment, "schedule": pair.schedule, "stale_after_seconds": pair.stale_after_seconds, "status": pair_status(metrics), "metrics": metrics, "oldest_measurement": min(clocks) if clocks else None, "trend": [], "trend_key": TRENDS[pair.engine], "trend_error": None, "archive_file": archive_file_info(pair, items, now), "transfer_stats": transfer_stats_info(pair, items, now), "transfer_stats_configured": "transfer_stats" in pair.metrics}
 
 
 _lock = Lock()

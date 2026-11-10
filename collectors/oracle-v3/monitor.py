@@ -150,11 +150,21 @@ def transfer_report(started_at):
         return None
 
 
+def retain_last_copy(current, previous):
+    if current and current.get('attempts', 0) > 0 and current.get('bytes_received', 0) > 0:
+        previous = {k: current[k] for k in ('bytes_received', 'duration_seconds',
+                                          'bytes_per_second', 'attempts', 'completed_at')}
+    if current is not None:
+        current = dict(current, last_copy=previous)
+    return current, previous
+
+
 def cycle(previous, write=save, query=sql_snapshot, execute=job, clock=time.time,
           read_manifest=lambda: load(MANIFEST), write_manifest=lambda m: save(m, MANIFEST),
           get_rows=metadata, verify=archives.receipt_for, present=None):
     data = {key: None for key in KEYS}
     data.update(sampled_at=int(clock()), cycle_ok=0, error='', archive_file=None, transfer_stats=None,
+                last_copy=previous.get('last_copy'),
                 source_sampled_at=int(clock()),
                 last_success_at=previous.get('last_success_at'),
                 last_progress_at=previous.get('last_progress_at'),
@@ -168,6 +178,7 @@ def cycle(previous, write=save, query=sql_snapshot, execute=job, clock=time.time
         identity = archives.identity(before)
         if data['identity'] != identity:
             data.update(last_success_at=None, last_progress_at=None, progress_seq=None)
+            data['last_copy'] = None
         data['identity'] = identity
         confirmed_applied(before)
         primary = query(True)
@@ -189,7 +200,8 @@ def cycle(previous, write=save, query=sql_snapshot, execute=job, clock=time.time
         transfer_rc = run_job('sync_seed_arch.monitored.sh',
                              [PROFILE['primary'], SID, str(primary['resetlogs_id'])], 'transfer_job')
         if transfer_rc == 0:
-            data['transfer_stats'] = transfer_report(transfer_started)
+            data['transfer_stats'], data['last_copy'] = retain_last_copy(
+                transfer_report(transfer_started), data['last_copy'])
         data['source_sampled_at'] = int(clock())
         primary = query(True)
         if archives.identity(primary) != identity:

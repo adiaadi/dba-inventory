@@ -153,7 +153,12 @@ sudo install -m 0755 sync_seed_arch.monitored.sh /opt/db-inv-oracle-v3/
 Не меняйте databases.json, cron или UserParameter. Новый файл состояния
 `/var/lib/db-inv-oracle/<SID>/transfer-v3.json` создаётся автоматически под тем же
 chain/sync lock. Дождитесь следующего штатного цикла; при новом цикле статистика
-сбрасывается, старый успешный результат не выдаётся за новый.
+сбрасывается. Отдельное поле last_copy сохраняет последний реальный успешный
+перенос с его исходным completed_at. В пустом цикле портал показывает No new files
+и историческую скорость с датой. При смене идентичности БД last_copy сбрасывается.
+Для этого обновления достаточно заменить monitor.py и обновить портал; шаблон
+transfer_stats и helper остаются совместимыми. До первого измеренного переноса
+отображается Waiting for a measured transfer.
 
 Повторно импортируйте шаблон с Create new / Update existing, без Delete missing.
 Добавлен TEXT dependent item `db.replication.oracle.transfer_stats[SID]`.

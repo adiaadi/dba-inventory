@@ -36,6 +36,13 @@ class ReplicationTests(unittest.TestCase):
         result = r.build_pair(pair, items, 10000)
         self.assertEqual(result['transfer_stats']['bytes_per_second'], 512)
         self.assertEqual(result['status'], 'healthy')
+        idle = dict(bytes_received=0, duration_seconds=0, attempts=0, completed_at=10000,
+                    last_copy=dict(stats, completed_at=1000))
+        items['99998']['lastvalue'] = json.dumps(idle)
+        result = r.build_pair(pair, items, 10000)
+        self.assertEqual(result['transfer_stats']['last_copy']['bytes_per_second'], 512)
+        self.assertTrue(result['transfer_stats_configured'])
+        self.assertFalse(r.build_pair(sample(), {}, 10000)['transfer_stats_configured'])
         for change in ({'duration_seconds':0}, {'bytes_received':-1}, {'completed_at':1}):
             items['99998']['lastvalue'] = json.dumps(dict(stats, **change))
             self.assertIsNone(r.build_pair(pair, items, 10000)['transfer_stats'])
