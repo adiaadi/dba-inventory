@@ -129,12 +129,17 @@ def receipt_for(seq, rid, previous=None, directory=None, remote=remote_digest):
         before = fingerprint(path)
     except FileNotFoundError:
         return None
-    if previous and previous['fingerprint'] == before:
-        return previous
     digest = hashlib.sha256()
     with path.open('rb') as source:
         for block in iter(lambda: source.read(1024*1024), b''):
             digest.update(block)
+    if fingerprint(path) != before:
+        raise ValueError('Local archive changed during verification')
+    # Filesystems may preserve all stat fields across a same-size rewrite.
+    # Only reuse a receipt after checking the actual local bytes as well.
+    if (previous and previous['fingerprint'] == before and
+            (previous['size'], previous['sha256']) == (before[2], digest.hexdigest())):
+        return previous
     origin = remote(name)
     if origin is None:
         # Previously verified bytes can survive cleanup of the primary source.

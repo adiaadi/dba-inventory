@@ -3,6 +3,7 @@ import hashlib
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import archives
 import monitor
@@ -108,6 +109,21 @@ class ArchiveTests(unittest.TestCase):
             d=Path(td);(d/'1_11_1202061920.dbf').write_bytes(b'wrong')
             self.assertIsNone(archives.receipt_for(11,1202061920,directory=d,
                 remote=lambda n:(5,hashlib.sha256(b'right').hexdigest())))
+
+    def test_same_stat_fields_do_not_hide_rewritten_contents(self):
+        with tempfile.TemporaryDirectory() as td:
+            directory = Path(td)
+            path = directory / '1_11_1202061920.dbf'
+            path.write_bytes(b'archive')
+            origin = (7, hashlib.sha256(b'archive').hexdigest())
+            with patch.object(archives, 'fingerprint', return_value=[1, 2, 7, 4, 5]):
+                previous = archives.receipt_for(11, 1202061920, directory=directory,
+                                                remote=lambda name: origin)
+                path.write_bytes(b'corrupt')
+                self.assertIsNone(archives.receipt_for(11, 1202061920, previous,
+                                  directory=directory, remote=lambda name: origin))
+                self.assertIsNone(archives.receipt_for(11, 1202061920, previous,
+                                  directory=directory, remote=lambda name: None))
 
     def test_missing_source_not_adopted(self):
         with tempfile.TemporaryDirectory() as td:
