@@ -2,7 +2,7 @@
   'use strict';
   const $ = id => document.getElementById(id);
   const labels = {healthy: 'HEALTHY', warning: 'WARNING', critical: 'CRITICAL', stale: 'STALE DATA', unknown: 'NO DATA'};
-  let snapshot = null, receivedAt = 0, engine = null, selectedPair = null, paused = false, busy = false, timer, failed = false;
+  let snapshot = null, receivedAt = 0, engine = null, selectedPair = null, historyHours = 1, paused = false, busy = false, timer, failed = false;
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const number = value => Number(value).toLocaleString(undefined, {maximumFractionDigits: 2});
   const date = clock => clock ? new Date(clock * 1000).toLocaleString() : 'No measurement';
@@ -45,17 +45,18 @@
   }
   function trend(pair, m) {
     const points = pair.trend;
-    const heading = `<div class="replication-caption">${esc(m.label)} · Last 60 min</div>`;
+    const period = snapshot.history_seconds || 3600;
+    const heading = `<div class="replication-trend-heading"><div class="replication-caption">${esc(m.label)}</div><select class="replication-history-period" aria-label="History period" ${busy ? 'disabled' : ''}>${[1,3,6,12,24].map(hours => `<option value="${hours}" ${hours === historyHours ? 'selected' : ''}>Last ${hours === 1 ? '60 min' : hours + ' hours'}</option>`).join('')}</select></div>`;
     if (pair.trend_error || points.length < 2) return heading + `<p class="small text-muted">${esc(pair.trend_error || 'Not enough history yet')}</p>`;
-    const end = snapshot.fetched_at, start = end - 3600;
+    const end = snapshot.fetched_at, start = end - period;
     const max = Math.max(1, ...points.map(p => p.value));
     const paths = [];
     points.forEach((p, i) => {
       const gap = i === 0 || p.clock - points[i-1].clock > 180;
-      paths.push(`${gap ? 'M' : 'L'}${((p.clock-start)/3600*300).toFixed(2)},${(100-p.value/max*90).toFixed(2)}`);
+      paths.push(`${gap ? 'M' : 'L'}${((p.clock-start)/period*300).toFixed(2)},${(100-p.value/max*90).toFixed(2)}`);
     });
     const color = pair.status === 'critical' ? '#df405a' : pair.status === 'healthy' ? '#00a67a' : '#c68a1a';
-    return heading + `<svg viewBox="0 0 300 110" role="img" aria-label="${esc(m.label)} over the last hour"><path d="M0 10H300 M0 55H300 M0 100H300" stroke="#dce1e7" stroke-dasharray="3 4"/><path d="${paths.join(' ')}" fill="none" stroke="${color}" stroke-width="2.5"/></svg><div class="replication-trend-labels"><span>${esc(new Date(start*1000).toLocaleTimeString())}</span><span>Max ${number(max)} ${esc(m.unit)}</span><span>${esc(new Date(end*1000).toLocaleTimeString())}</span></div>`;
+    return heading + `<svg viewBox="0 0 300 110" role="img" aria-label="${esc(m.label)} over the selected period"><path d="M0 10H300 M0 55H300 M0 100H300" stroke="#dce1e7" stroke-dasharray="3 4"/><path d="${paths.join(' ')}" fill="none" stroke="${color}" stroke-width="2.5"/></svg><div class="replication-trend-labels"><span>${esc(new Date(start*1000).toLocaleTimeString())}</span><span>Max ${number(max)} ${esc(m.unit)}</span><span>${esc(new Date(end*1000).toLocaleTimeString())}</span></div>`;
   }
   function renderSelector() {
     const engines = [['oracle', 'Oracle'], ['postgresql', 'PostgreSQL'], ['sqlserver', 'SQL Server']];
@@ -115,7 +116,7 @@
     const timeout = setTimeout(()=>controller.abort(), 45000);
     $('poll-status').textContent = 'Refreshing…';
     try {
-      const response = await fetch('/replication/api', {signal:controller.signal, cache:'no-store', headers:{Accept:'application/json'}});
+      const response = await fetch(`/replication/api?history_hours=${historyHours}`, {signal:controller.signal, cache:'no-store', headers:{Accept:'application/json'}});
       if (response.redirected || response.status === 401) throw new Error('Session expired. Sign in again.');
       if (!response.ok) throw new Error('Monitoring endpoint unavailable.');
       snapshot = await response.json(); receivedAt = performance.now(); failed = false;
@@ -123,6 +124,7 @@
       $('replication-error').textContent = snapshot.error || '';
       $('poll-status').textContent = snapshot.error ? 'Source unavailable' : paused ? 'Paused' : 'Polling enabled';
     } catch (error) {
+      if (snapshot) historyHours = (snapshot.history_seconds || 3600) / 3600;
       failed = true; $('replication-error').hidden = false;
       $('replication-error').textContent = `${error.name === 'AbortError' ? 'Request timed out.' : error.message} Displayed measurements are not current.`;
       $('poll-status').textContent = 'Connection lost';
@@ -136,6 +138,12 @@
     if (!button) return;
     engine = button.dataset.engine;
     selectedPair = button.dataset.pair || null;
+    render();
+  });
+  $('replication-pairs').addEventListener('change', event => {
+    if (!event.target.matches('.replication-history-period') || busy) return;
+    historyHours = Number(event.target.value);
+    refresh();
     render();
   });
   $('refresh-poll').addEventListener('click',refresh);

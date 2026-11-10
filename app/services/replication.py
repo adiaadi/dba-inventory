@@ -247,15 +247,18 @@ def resolve_items(config, client):
     return config, items
 
 
-def get_snapshot():
+def get_snapshot(history_hours=1):
     """A bounded, per-worker cache shares polls across portal viewers."""
     global _cached, _cached_at
+    if history_hours not in (1, 3, 6, 12, 24):
+        raise ValueError('Unsupported history period')
+    history_seconds = history_hours * 3600
     settings = get_settings()
     with _lock:
-        if _cached is not None and time.monotonic() - _cached_at < 30:
+        if _cached is not None and _cached.get('history_seconds') == history_seconds and time.monotonic() - _cached_at < 30:
             return _cached
         now = int(time.time())
-        snapshot = {"fetched_at": now, "poll_seconds": 30, "pairs": [], "error": None}
+        snapshot = {"fetched_at": now, "poll_seconds": 30, "pairs": [], "error": None, "history_seconds": history_seconds}
         try:
             config = read_config(settings.replication_config_file)
         except (OSError, ValueError):
@@ -283,7 +286,7 @@ def get_snapshot():
                 for value_type in ("0", "3"):
                     ids = sorted({p.metrics[TRENDS[p.engine]].itemid for p in config.pairs if TRENDS[p.engine] in p.metrics and str(items.get(p.metrics[TRENDS[p.engine]].itemid, {}).get("value_type")) == value_type})
                     if ids:
-                        rows = client.get_replication_history(ids, value_type, now - 3600, now)
+                        rows = client.get_replication_history(ids, value_type, now - history_seconds, now)
                         for row in rows:
                             history.setdefault(str(row["itemid"]), []).append(row)
             except (ZabbixApiError, OSError, ValueError):
@@ -297,7 +300,7 @@ def get_snapshot():
                     try:
                         value = float(row["value"]) * mapping.factor
                         clock = int(row["clock"])
-                        if math.isfinite(value) and value >= 0 and now - 3600 <= clock <= now:
+                        if math.isfinite(value) and value >= 0 and now - history_seconds <= clock <= now:
                             result["trend"].append({"clock": clock, "value": value})
                     except (KeyError, TypeError, ValueError, OverflowError):
                         continue

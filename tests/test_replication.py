@@ -207,6 +207,22 @@ class ReplicationTests(unittest.TestCase):
         client.get_replication_history.assert_called_once_with(["42"], "3", 6400, 10000)
         self.assertEqual(result["pairs"][0]["trend"], [{"clock": 9999, "value": 2}])
 
+    def test_history_period_changes_query_and_cache(self):
+        p = sample()
+        client = Mock()
+        client.get_replication_items.return_value = list(good_items(p, 100000).values())
+        client.get_replication_history.return_value = [{"itemid": p.metrics['archive_gap'].itemid, 'clock': '20000', 'value': '2'}]
+        settings = Mock(replication_config_file='config', zabbix_url='https://example.test', zabbix_api_token='secret', zabbix_verify_ssl=True, zabbix_ca_file=None)
+        with patch.object(r, 'get_settings', return_value=settings), patch.object(r, 'read_config', return_value=r.ReplicationConfig(pairs=[p])), patch.object(r, 'ZabbixClient', return_value=client), patch.object(r.time, 'time', return_value=100000):
+            hourly = r.get_snapshot(1)
+            daily = r.get_snapshot(24)
+            cached = r.get_snapshot(24)
+        self.assertEqual(hourly['pairs'][0]['trend'], [])
+        self.assertEqual(daily['pairs'][0]['trend'], [{'clock': 20000, 'value': 2}])
+        self.assertIs(cached, daily)
+        self.assertEqual(client.get_replication_history.call_count, 2)
+        client.get_replication_history.assert_called_with([p.metrics['archive_gap'].itemid], '3', 13600, 100000)
+
 
 class RouteTests(unittest.TestCase):
     def test_session_protection_page_and_api(self):
@@ -229,6 +245,11 @@ class RouteTests(unittest.TestCase):
                 self.assertEqual(response.status_code, 200)
                 self.assertEqual(response.json()["pairs"], [])
                 self.assertEqual(response.headers["cache-control"], "no-store")
+            with patch('app.routers.replication.get_snapshot', return_value={'pairs': []}) as snapshot:
+                self.assertEqual(client.get('/replication/api?history_hours=24').status_code, 200)
+                snapshot.assert_called_once_with(24)
+            for hours in ('0', '2', '25', 'invalid'):
+                self.assertEqual(client.get('/replication/api?history_hours=' + hours).status_code, 422)
 
 
 if __name__ == "__main__":
