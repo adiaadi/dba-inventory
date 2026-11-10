@@ -2,7 +2,7 @@
   'use strict';
   const $ = id => document.getElementById(id);
   const labels = {healthy: 'HEALTHY', warning: 'WARNING', critical: 'CRITICAL', stale: 'STALE DATA', unknown: 'NO DATA'};
-  let snapshot = null, receivedAt = 0, engine = null, selectedPair = null, historyHours = 1, paused = false, busy = false, timer, failed = false;
+  let snapshot = null, receivedAt = 0, engine = null, selectedPair = null, paused = false, busy = false, timer, failed = false;
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const number = value => Number(value).toLocaleString(undefined, {maximumFractionDigits: 2});
   const date = clock => clock ? new Date(clock * 1000).toLocaleString() : 'No measurement';
@@ -45,8 +45,8 @@
   }
   function trend(pair, m) {
     const points = pair.trend;
-    const period = snapshot.history_seconds || 3600;
-    const heading = `<div class="replication-trend-heading"><div class="replication-caption">${esc(m.label)}</div><select class="replication-history-period" aria-label="History period" ${busy ? 'disabled' : ''}>${[1,3,6,12,24].map(hours => `<option value="${hours}" ${hours === historyHours ? 'selected' : ''}>Last ${hours === 1 ? '60 min' : hours + ' hours'}</option>`).join('')}</select></div>`;
+    const period = 3600;
+    const heading = `<div class="replication-caption">${esc(m.label)} · Last 60 min</div>`;
     if (pair.trend_error || points.length < 2) return heading + `<p class="small text-muted">${esc(pair.trend_error || 'Not enough history yet')}</p>`;
     const end = snapshot.fetched_at, start = end - period;
     const max = Math.max(1, ...points.map(p => p.value));
@@ -80,7 +80,7 @@
     const statsFresh = !failed && stats && snapshot && snapshot.fetched_at + (performance.now() - receivedAt) / 1000 - stats.completed_at <= pair.stale_after_seconds;
     const transferText = !statsFresh ? 'Copy speed / time: not measured' : stats.attempts === 0 ? 'No new files · Last cycle' : `Last copy: ${number(stats.bytes_per_second / 1048576)} MiB/s<br>Copy time: ${number(stats.duration_seconds)} s`;
     const arrow = (label, key) => `<div class="architecture-link"><span>${esc(label)}</span>${key ? value(key) : ''}${pair.engine === 'oracle' && key === 'transfer_job' ? `<small class="copy-speed">${transferText}</small>` : ''}<div class="architecture-track" aria-hidden="true"><i></i><b>▶</b></div></div>`;
-    return `<section class="replication-architecture ${active ? 'architecture-active' : ''}" aria-label="Replication architecture"><div class="architecture-heading"><h2>${esc(title)}</h2><span>${esc(upper(pair.name))} · Primary → DR site</span>${badge(failed ? 'stale' : pair.status)}</div><div class="architecture-flow"><div class="architecture-node"><small>PRODUCTION</small>${cylinder}<strong>${esc(upper(pair.primary))}</strong><b>${esc(upper(pair.name))}</b><span>${esc(source)}</span><em>${esc(sourceNote)}</em>${value(pair.engine === 'oracle' ? 'archived_seq' : pair.engine === 'postgresql' ? 'leader_lock' : 'backup_age')}</div>${arrow(transfer, pair.engine === 'oracle' ? 'transfer_job' : pair.engine === 'postgresql' ? 'stream_state' : 'copy_job')}<div class="architecture-node architecture-archives">${logs}<strong>${esc(copies)}</strong>${pair.engine === 'oracle' ? '<em>Sequence / SCN + SHA-256 audit</em>' : ''}${value(pair.engine === 'oracle' ? 'copied_seq' : pair.engine === 'postgresql' ? 'wal_backlog' : 'copy_age')}${pair.engine === 'oracle' ? file : ''}</div>${arrow(apply, pair.engine === 'oracle' ? 'apply_job' : pair.engine === 'postgresql' ? 'replica_state' : 'restore_job')}<div class="architecture-node"><small>DR SITE · DATABASE</small>${cylinder}<strong>${esc(upper(pair.standby))}</strong><b>${esc(upper(pair.name))}</b><span>${esc(target)}</span><em>${esc(targetNote)}</em>${value(pair.engine === 'oracle' ? 'applied_seq' : pair.engine === 'postgresql' ? 'replay_lag' : 'restore_age')}</div></div><div class="architecture-counters">${(pair.engine === 'oracle' ? ['archive_gap','pending_apply','last_success_age'] : pair.engine === 'postgresql' ? ['sync_state','patroni_nodes'] : ['pending_files']).map(key => `<span>${esc(m[key]?.label || key)}: <strong>${formatted(m[key])}</strong></span>`).join('')}</div><p class="architecture-note">Speed is the average rsync receive rate of the last completed copy, including protocol overhead</p></section>`;
+    return `<section class="replication-architecture ${active ? 'architecture-active' : ''}" aria-label="Replication architecture"><div class="architecture-heading"><h2>${esc(title)}</h2><span>${esc(upper(pair.name))} · Primary → DR site</span>${badge(failed ? 'stale' : pair.status)}</div><div class="architecture-flow"><div class="architecture-node"><small>PRODUCTION</small>${cylinder}<strong>${esc(upper(pair.primary))}</strong><b>${esc(upper(pair.name))}</b><span>${esc(source)}</span><em>${esc(sourceNote)}</em>${value(pair.engine === 'oracle' ? 'archived_seq' : pair.engine === 'postgresql' ? 'leader_lock' : 'backup_age')}</div>${arrow(transfer, pair.engine === 'oracle' ? 'transfer_job' : pair.engine === 'postgresql' ? 'stream_state' : 'copy_job')}<div class="architecture-node architecture-archives">${logs}<strong>${esc(copies)}</strong>${pair.engine === 'oracle' ? '<em>Sequence / SCN + SHA-256 audit</em>' : ''}${value(pair.engine === 'oracle' ? 'copied_seq' : pair.engine === 'postgresql' ? 'wal_backlog' : 'copy_age')}${pair.engine === 'oracle' ? file : ''}</div>${arrow(apply, pair.engine === 'oracle' ? 'apply_job' : pair.engine === 'postgresql' ? 'replica_state' : 'restore_job')}<div class="architecture-node"><small>DR SITE · DATABASE</small>${cylinder}<strong>${esc(upper(pair.standby))}</strong><b>${esc(upper(pair.name))}</b><span>${esc(target)}</span><em>${esc(targetNote)}</em>${value(pair.engine === 'oracle' ? 'applied_seq' : pair.engine === 'postgresql' ? 'replay_lag' : 'restore_age')}</div></div><div class="architecture-counters">${(pair.engine === 'oracle' ? ['archive_gap','pending_apply','last_success_age'] : pair.engine === 'postgresql' ? ['sync_state','patroni_nodes'] : ['pending_files']).map(key => `<span>${esc(m[key]?.label || key)}: <strong>${formatted(m[key])}</strong></span>`).join('')}</div></section>`;
   }
   function healthPanel(pair) {
     const m = Object.fromEntries(pair.metrics.map(metric => [metric.key, metric]));
@@ -138,7 +138,7 @@
     const timeout = setTimeout(()=>controller.abort(), 45000);
     $('poll-status').textContent = 'Refreshing…';
     try {
-      const response = await fetch(`/replication/api?history_hours=${historyHours}`, {signal:controller.signal, cache:'no-store', headers:{Accept:'application/json'}});
+      const response = await fetch('/replication/api', {signal:controller.signal, cache:'no-store', headers:{Accept:'application/json'}});
       if (response.redirected || response.status === 401) throw new Error('Session expired. Sign in again.');
       if (!response.ok) throw new Error('Monitoring endpoint unavailable.');
       snapshot = await response.json(); receivedAt = performance.now(); failed = false;
@@ -146,7 +146,6 @@
       $('replication-error').textContent = snapshot.error || '';
       $('poll-status').textContent = snapshot.error ? 'Source unavailable' : paused ? 'Paused' : 'Polling enabled';
     } catch (error) {
-      if (snapshot) historyHours = (snapshot.history_seconds || 3600) / 3600;
       failed = true; $('replication-error').hidden = false;
       $('replication-error').textContent = `${error.name === 'AbortError' ? 'Request timed out.' : error.message} Displayed measurements are not current.`;
       $('poll-status').textContent = 'Connection lost';
@@ -160,12 +159,6 @@
     if (!button) return;
     engine = button.dataset.engine;
     selectedPair = button.dataset.pair || null;
-    render();
-  });
-  $('replication-pairs').addEventListener('change', event => {
-    if (!event.target.matches('.replication-history-period') || busy) return;
-    historyHours = Number(event.target.value);
-    refresh();
     render();
   });
   $('dr-overview').addEventListener('click', () => {
