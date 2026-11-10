@@ -180,6 +180,11 @@ def audit(snapshot, standby, rows, manifest, verify=receipt_for, persist=lambda 
             receipts[str(seq)] = receipt
             copied = max(copied or 0, seq)
             manifest['copied_seq'] = copied
+            if seq == copied:
+                manifest['last_verified_file'] = dict(
+                    name=archive_name(seq, int(snapshot['resetlogs_id'])),
+                    size_bytes=receipt['size'], sequence=seq,
+                    verified_at=receipt['verified_at'])
             if seq in required:
                 pending.add(seq)
         else:

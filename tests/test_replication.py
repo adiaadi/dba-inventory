@@ -26,6 +26,23 @@ def good_items(pair, now=10000):
 
 
 class ReplicationTests(unittest.TestCase):
+    def test_optional_archive_file_metadata(self):
+        import json
+        pair = sample()
+        pair.metrics['archive_file'] = r.ItemMapping(itemid='99999')
+        items = good_items(sample())
+        items['99999'] = dict(status='0', state='0', lastclock='10000',
+            lastvalue=json.dumps({'name':'16756_1_1204738459.arc','size_bytes':31268352}))
+        result = r.build_pair(pair, items, 10000)
+        self.assertEqual(result['status'], 'healthy')
+        self.assertEqual(result['archive_file']['size_bytes'], 31268352)
+        for value in ('null', '{}', '{"name":"../bad","size_bytes":1}'):
+            items['99999']['lastvalue'] = value
+            self.assertIsNone(r.build_pair(pair, items, 10000)['archive_file'])
+        items['99999']['lastvalue'] = json.dumps({'name':'1_42_123.dbf','size_bytes':7})
+        items['99999']['lastclock'] = '1'
+        self.assertIsNone(r.build_pair(pair, items, 10000)['archive_file'])
+
     def test_all_engines_healthy(self):
         for engine in r.METRICS:
             p = sample(engine)

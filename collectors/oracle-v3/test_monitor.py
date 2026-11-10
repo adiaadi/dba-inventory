@@ -37,6 +37,14 @@ class ArchiveTests(unittest.TestCase):
         result=archives.queue_metrics(m,r,p,10,12,present=lambda *a:True)
         self.assertEqual(result,dict(copied_seq=12,archive_gap=1,pending_apply=1))
 
+    def test_last_verified_file_survives_applied_receipt_cleanup(self):
+        manifest, _, _ = self.audit({10, 11, 12})
+        self.assertEqual(manifest['last_verified_file']['name'], '1_12_1202061920.dbf')
+        self.assertEqual(manifest['last_verified_file']['size_bytes'], 10)
+        manifest, _, _ = self.audit(set(), manifest, applied=12, upper=12)
+        self.assertEqual(manifest['last_verified_file']['sequence'], 12)
+        self.assertEqual(manifest['receipts'], {})
+
     def test_pending_deletion_is_counted_as_gap(self):
         m,r,p=self.audit({10,11,12})
         result=archives.queue_metrics(m,r,p,10,12,present=lambda seq,r:seq!=11)

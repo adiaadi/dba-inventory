@@ -302,6 +302,26 @@
                 "priority": "WARNING"
               }
             ]
+          },
+          {
+            "uuid": "7120493eeb48403db9f334f668aead37",
+            "name": "CBSETL replication: archive file",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.archive_file[CBSETL]",
+            "value_type": "TEXT",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.oracle.raw[CBSETL]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); return JSON.stringify(d.archive_file || null);"
+                ]
+              }
+            ]
           }
         ],
         "description": "CBSETL stages 1+2. Existing template identity preserved for in-place update. See README before enabling v2 collector."
@@ -600,6 +620,26 @@
                 "priority": "WARNING"
               }
             ]
+          },
+          {
+            "uuid": "33ed73566b9e465884915337de623680",
+            "name": "CAPETL replication: archive file",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.archive_file[CAPETL]",
+            "value_type": "TEXT",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.oracle.raw[CAPETL]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); return JSON.stringify(d.archive_file || null);"
+                ]
+              }
+            ]
           }
         ],
         "description": "CBSETL stages 1+2. Existing template identity preserved for in-place update. See README before enabling v2 collector."
@@ -896,6 +936,26 @@
                 "name": "DWH replication: pending_apply persists",
                 "expression": "min(/DB Inventory Oracle DWH v3/db.replication.oracle.pending_apply[DWH],10m)>0",
                 "priority": "WARNING"
+              }
+            ]
+          },
+          {
+            "uuid": "30b745000ddb47d497b0adb3d8f56942",
+            "name": "DWH replication: archive file",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.archive_file[DWH]",
+            "value_type": "TEXT",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.oracle.raw[DWH]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); return JSON.stringify(d.archive_file || null);"
+                ]
               }
             ]
           }

@@ -141,7 +141,7 @@ def cycle(previous, write=save, query=sql_snapshot, execute=job, clock=time.time
           read_manifest=lambda: load(MANIFEST), write_manifest=lambda m: save(m, MANIFEST),
           get_rows=metadata, verify=archives.receipt_for, present=None):
     data = {key: None for key in KEYS}
-    data.update(sampled_at=int(clock()), cycle_ok=0, error='',
+    data.update(sampled_at=int(clock()), cycle_ok=0, error='', archive_file=None,
                 source_sampled_at=int(clock()),
                 last_success_at=previous.get('last_success_at'),
                 last_progress_at=previous.get('last_progress_at'),
@@ -182,6 +182,7 @@ def cycle(previous, write=save, query=sql_snapshot, execute=job, clock=time.time
         manifest, required, pending = archives.audit(primary, before, rows, manifest,
                                                      verify=verify, persist=write_manifest)
         data['archived_seq'] = primary['archived_seq']
+        data['archive_file'] = manifest.get('last_verified_file')
         data['applied_seq'] = before['applied_seq']
         data.update(archives.queue_metrics(manifest, required, pending, before['applied_seq'],
                                            primary['archived_seq'], present=present))
@@ -232,7 +233,7 @@ def view(data, now=None):
     now = int(time.time()) if now is None else now
     if (not data or not 0 <= now - data.get('sampled_at', 0) <= 600 or
             not 0 <= now - data.get('source_sampled_at', data.get('sampled_at', 0)) <= 600):
-        return dict({key: None for key in KEYS}, cycle_ok=0, snapshot_age=None,
+        return dict({key: None for key in KEYS}, cycle_ok=0, snapshot_age=None, archive_file=None,
                     error='Snapshot missing, expired or timestamp is in the future')
     result = dict(data, snapshot_age=now-data['sampled_at'])
     for source, target in [('last_success_at', 'last_success_age'),

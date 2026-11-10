@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import logging
+import json
+import re
 import math
 import time
 from pathlib import Path
@@ -85,6 +87,10 @@ class ReplicationPair(BaseModel):
         for key, mapping in self.metrics.items():
             if mapping.key is not None and not self.zabbix_host:
                 raise ValueError("zabbix_host is required for key mappings")
+            if self.engine == 'oracle' and key == 'archive_file':
+                if mapping.factor != 1 or mapping.values or mapping.warning is not None or mapping.critical is not None:
+                    raise ValueError('archive_file does not support thresholds or value mapping')
+                continue
             if key not in METRICS[self.engine]:
                 raise ValueError(f"Unknown {self.engine} metric: {key}")
             _, _, warn, crit, healthy = METRICS[self.engine][key]
@@ -159,13 +165,31 @@ def pair_status(metrics):
     return next((s for s in ("critical", "stale", "unknown", "warning") if s in statuses), "healthy")
 
 
+def archive_file_info(pair, items, now):
+    mapping = pair.metrics.get('archive_file')
+    item = items.get(mapping.itemid) if mapping else None
+    if not item or str(item.get('status')) != '0' or str(item.get('state')) != '0':
+        return None
+    try:
+        if not 0 <= now - int(item['lastclock']) <= pair.stale_after_seconds:
+            return None
+        data = json.loads(item['lastvalue'])
+        if not isinstance(data, dict) or not re.fullmatch(r'(?:1_[0-9]+_[0-9]+\.dbf|[0-9]+_1_[0-9]+\.arc)', data.get('name', '')):
+            return None
+        if type(data.get('size_bytes')) is not int or data['size_bytes'] <= 0:
+            return None
+        return {'name': data['name'], 'size_bytes': data['size_bytes']}
+    except (ValueError, TypeError, KeyError):
+        return None
+
+
 def build_pair(pair, items, now):
     metrics = [metric_value(key, definition, pair.metrics.get(key), items.get(pair.metrics[key].itemid) if key in pair.metrics else None, now, pair.stale_after_seconds) for key, definition in METRICS[pair.engine].items()]
     for metric in metrics:
         if metric["key"] == "patroni_nodes" and metric["status"] == "healthy" and metric["value"] < pair.expected_patroni_nodes:
             metric.update(status="critical", reason="Fewer healthy Patroni nodes than expected")
     clocks = [m["clock"] for m in metrics if m["clock"] is not None]
-    return {"id": pair.id, "name": pair.name, "engine": pair.engine, "title": TITLES[pair.engine], "primary": pair.primary, "standby": pair.standby, "environment": pair.environment, "schedule": pair.schedule, "stale_after_seconds": pair.stale_after_seconds, "status": pair_status(metrics), "metrics": metrics, "oldest_measurement": min(clocks) if clocks else None, "trend": [], "trend_key": TRENDS[pair.engine], "trend_error": None}
+    return {"id": pair.id, "name": pair.name, "engine": pair.engine, "title": TITLES[pair.engine], "primary": pair.primary, "standby": pair.standby, "environment": pair.environment, "schedule": pair.schedule, "stale_after_seconds": pair.stale_after_seconds, "status": pair_status(metrics), "metrics": metrics, "oldest_measurement": min(clocks) if clocks else None, "trend": [], "trend_key": TRENDS[pair.engine], "trend_error": None, "archive_file": archive_file_info(pair, items, now)}
 
 
 _lock = Lock()

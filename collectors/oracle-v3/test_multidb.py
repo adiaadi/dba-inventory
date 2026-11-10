@@ -98,7 +98,7 @@ class MultiDatabaseTests(unittest.TestCase):
                     self.assertIn('/' + template['template'] + '/', trigger['expression'])
         self.assertEqual(len(uuids), len(set(uuids)))
         for pair in pairs:
-            self.assertEqual(len(pair['metrics']), 8)
+            self.assertEqual(len(pair['metrics']), 9)
             for metric in pair['metrics'].values():
                 self.assertIn(metric['key'], keys)
 

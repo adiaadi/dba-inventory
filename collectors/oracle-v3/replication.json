@@ -29,6 +29,9 @@
         },
         "apply_job": {
           "key": "db.replication.oracle.apply_job[CBSETL]"
+        },
+        "archive_file": {
+          "key": "db.replication.oracle.archive_file[CBSETL]"
         }
       },
       "name": "CBSETL",
@@ -69,6 +72,9 @@
         },
         "apply_job": {
           "key": "db.replication.oracle.apply_job[CAPETL]"
+        },
+        "archive_file": {
+          "key": "db.replication.oracle.archive_file[CAPETL]"
         }
       }
     },
@@ -105,6 +111,9 @@
         },
         "apply_job": {
           "key": "db.replication.oracle.apply_job[DWH]"
+        },
+        "archive_file": {
+          "key": "db.replication.oracle.archive_file[DWH]"
         }
       }
     }
