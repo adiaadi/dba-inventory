@@ -174,6 +174,11 @@ def audit(snapshot, standby, rows, manifest, verify=receipt_for, persist=lambda 
     candidates = sorted(required)
     if copied is None or copied < applied:
         candidates.insert(0, applied)
+    elif (not manifest.get('last_verified_file') and copied <= upper
+          and copied not in candidates):
+        # Upgrade older manifests even when the standby is caught up and there
+        # are no new archives. Do not infer file size from sequence alone.
+        candidates.insert(0, copied)
     for seq in candidates:
         receipt = verify(seq, int(snapshot['resetlogs_id']), receipts.get(str(seq)))
         if receipt:

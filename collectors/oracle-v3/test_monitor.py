@@ -45,6 +45,22 @@ class ArchiveTests(unittest.TestCase):
         self.assertEqual(manifest['last_verified_file']['sequence'], 12)
         self.assertEqual(manifest['receipts'], {})
 
+    def test_old_manifest_backfills_file_without_new_archives(self):
+        manifest, _, _ = self.audit({10, 11, 12})
+        del manifest['last_verified_file']
+        manifest, required, pending = self.audit({12}, manifest, applied=12, upper=12)
+        self.assertEqual(manifest['last_verified_file']['name'], '1_12_1202061920.dbf')
+        self.assertEqual(manifest['last_verified_file']['size_bytes'], 10)
+        self.assertEqual(archives.queue_metrics(manifest, required, pending, 12, 12),
+                         dict(copied_seq=12, archive_gap=0, pending_apply=0))
+
+    def test_old_manifest_missing_file_does_not_invent_metadata(self):
+        manifest, _, _ = self.audit({10, 11, 12})
+        del manifest['last_verified_file']
+        manifest, _, _ = self.audit(set(), manifest, applied=12, upper=12)
+        self.assertNotIn('last_verified_file', manifest)
+        self.assertEqual(manifest['copied_seq'], 12)
+
     def test_pending_deletion_is_counted_as_gap(self):
         m,r,p=self.audit({10,11,12})
         result=archives.queue_metrics(m,r,p,10,12,present=lambda seq,r:seq!=11)
