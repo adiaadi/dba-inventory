@@ -7,9 +7,21 @@
   const number = value => Number(value).toLocaleString(undefined, {maximumFractionDigits: 2});
   const date = clock => clock ? new Date(clock * 1000).toLocaleString() : 'No measurement';
   const badge = status => `<span class="replication-badge ${esc(status)}">${esc(labels[status] || status)}</span>`;
+  const upper = value => String(value ?? '').toUpperCase();
+  const logDate = clock => {
+    if (!clock) return 'NO TIMESTAMP';
+    const d = new Date(clock * 1000), pad = v => String(v).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  };
   function formatted(metric) {
     if (!metric || metric.value === null) return '—';
-    if (typeof metric.value === 'string') return esc(metric.value.toUpperCase());
+    if (typeof metric.value === 'string') {
+      const value = upper(metric.value);
+      if (value === 'SUCCESS') return '<span class="replication-success">SUCCESS</span>';
+      if (['FAILED', 'ERROR'].includes(value)) return '<span class="replication-error-text">ERROR</span>';
+      return esc(value);
+    }
+    if (['archived_seq', 'copied_seq', 'applied_seq'].includes(metric.key)) return `#${esc(String(metric.value))}`;
     if (metric.unit === 'bytes') return `${number(metric.value / 1048576)} MB`;
     if (metric.unit === 's' && metric.value >= 60) return `${number(metric.value / 60)} min`;
     return `${number(metric.value)}${metric.unit ? ' ' + esc(metric.unit) : ''}`;
@@ -18,7 +30,18 @@
     return `<div class="replication-metric"><small>${esc(m.label)}</small><strong class="metric-${esc(m.status)}" title="${esc(m.reason)}">${formatted(m)}</strong></div>`;
   }
   function step(label, host, m) {
-    return `<div class="replication-step"><small>${esc(label)}</small><strong>${esc(host)}</strong><div class="step-value metric-${esc(m?.status)}">${formatted(m)}</div></div>`;
+    return `<div class="replication-step"><small>${esc(label)}</small><strong>${esc(upper(host))}</strong><div class="step-value metric-${esc(m?.status)}">${formatted(m)}</div></div>`;
+  }
+  function terminal(pair) {
+    const line = (clock, content) => `<div class="replication-log-line"><span class="replication-log-time">${esc(logDate(clock))} |</span> ${content}</div>`;
+    const rows = [line(pair.oldest_measurement, `Database: ${esc(upper(pair.name))}`),
+      line(pair.oldest_measurement, `Primary: ${esc(upper(pair.primary))} | Standby: ${esc(upper(pair.standby))}`)];
+    pair.metrics.forEach(metric => {
+      const status = metric.status === 'healthy' ? 'SUCCESS' : metric.status === 'critical' ? 'ERROR' : labels[metric.status] || 'NO DATA';
+      const color = metric.status === 'healthy' ? 'replication-success' : metric.status === 'critical' ? 'replication-error-text' : 'replication-log-warning';
+      rows.push(line(metric.clock, `${esc(metric.label)}: ${formatted(metric)} | <span class="${color}">${esc(status)}</span>${metric.reason ? ' | '+esc(metric.reason) : ''}`));
+    });
+    return `<div class="replication-terminal" role="region" aria-label="Latest replication measurements" tabindex="0"><div class="replication-terminal-title">$ replication status · Latest measurements · Local time${failed ? ' · CACHED / CONNECTION LOST' : ''}</div>${rows.join('')}</div>`;
   }
   function trend(pair, m) {
     const points = pair.trend;
@@ -47,7 +70,7 @@
       steps = [step('1. Backup', pair.primary, m.backup_job), step('2. Copy', 'DR Site', m.copy_job), step('3. Restore', pair.standby, m.restore_job)];
       keys = ['backup_age','copy_age','restore_age','pending_files']; health = ['backup_job','copy_job','restore_job']; caption = 'Backup → Copy → Restore'; title = 'SQL Agent jobs';
     }
-    return `<article class="replication-card"><header><div><h3>${esc(pair.title)}</h3><small>${esc(pair.name)} · ${esc(pair.environment)}</small></div>${badge(failed ? 'stale' : pair.status)}</header><div class="replication-card-grid"><div><div class="replication-caption">${caption}</div><div class="replication-flow">${steps.join('<span class="replication-arrow" aria-hidden="true">→</span>')}</div><div class="replication-metrics">${keys.map(k => metricBox(m[k])).join('')}</div></div><aside class="replication-health"><h4>${title}</h4>${pair.schedule ? `<div class="replication-health-row"><span>Schedule</span><span>${esc(pair.schedule)}</span></div>` : ''}${health.map(k => `<div class="replication-health-row"><span>${esc(m[k].label)}</span><span class="metric-${esc(m[k].status)}">${formatted(m[k])}</span></div>`).join('')}<div class="replication-trend">${trend(pair, m[pair.trend_key])}</div></aside></div><details><summary>Measurement details · oldest: ${esc(date(pair.oldest_measurement))}</summary><ul>${pair.metrics.map(metric => `<li>${esc(metric.label)}: ${formatted(metric)} — ${esc(labels[metric.status])}; ${esc(date(metric.clock))}${metric.reason ? ' · '+esc(metric.reason) : ''}</li>`).join('')}</ul></details></article>`;
+    return `<article class="replication-card"><header><div><h3>${esc(pair.title)}</h3><small>${esc(upper(pair.name))} · ${esc(pair.environment)}</small></div>${badge(failed ? 'stale' : pair.status)}</header><div class="replication-card-grid"><div><div class="replication-caption">${caption}</div><div class="replication-flow">${steps.join('<span class="replication-arrow" aria-hidden="true">→</span>')}</div><div class="replication-metrics">${keys.map(k => metricBox(m[k])).join('')}</div></div><aside class="replication-health"><h4>${title}</h4>${pair.schedule ? `<div class="replication-health-row"><span>Schedule</span><span>${esc(pair.schedule)}</span></div>` : ''}${health.map(k => `<div class="replication-health-row"><span>${esc(m[k].label)}</span><span class="metric-${esc(m[k].status)}">${formatted(m[k])}</span></div>`).join('')}<div class="replication-trend">${trend(pair, m[pair.trend_key])}</div></aside></div><details><summary>Measurement details · oldest: ${esc(date(pair.oldest_measurement))}</summary>${terminal(pair)}</details></article>`;
   }
   function render() {
     if (!snapshot) return;
