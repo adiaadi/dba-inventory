@@ -34,7 +34,8 @@
       "name": "cbsetl",
       "environment": "production",
       "engine": "oracle",
-      "primary": "cbs-prod-db01"
+      "primary": "cbs-prod-db01",
+      "schedule": "Every 3 min (01, 04, …, 58)"
     },
     {
       "id": "oracle-capetl",
@@ -45,7 +46,8 @@
       "zabbix_host": "ora-dr-db",
       "environment": "production",
       "stale_after_seconds": 900,
-      "metrics": {}
+      "metrics": {},
+      "schedule": "Every 3 min (00, 03, …, 57)"
     },
     {
       "id": "oracle-dwh",
@@ -56,7 +58,8 @@
       "zabbix_host": "ora-dr-db",
       "environment": "production",
       "stale_after_seconds": 900,
-      "metrics": {}
+      "metrics": {},
+      "schedule": "Every 3 min (02, 05, …, 59)"
     }
   ]
 }

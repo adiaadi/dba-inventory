@@ -37,7 +37,8 @@
       "name": "CBSETL",
       "environment": "production",
       "engine": "oracle",
-      "primary": "cbs-prod-db01"
+      "primary": "cbs-prod-db01",
+      "schedule": "Every 3 min (01, 04, …, 58)"
     },
     {
       "id": "oracle-capetl",
@@ -76,7 +77,8 @@
         "archive_file": {
           "key": "db.replication.oracle.archive_file[CAPETL]"
         }
-      }
+      },
+      "schedule": "Every 3 min (00, 03, …, 57)"
     },
     {
       "id": "oracle-dwh",
@@ -115,7 +117,8 @@
         "archive_file": {
           "key": "db.replication.oracle.archive_file[DWH]"
         }
-      }
+      },
+      "schedule": "Every 3 min (02, 05, …, 59)"
     }
   ]
 }
