@@ -1,0 +1,907 @@
+{
+  "zabbix_export": {
+    "version": "8.0",
+    "template_groups": [
+      {
+        "uuid": "748ad4d098d447d492bb935c907f652f",
+        "name": "Templates/Databases"
+      }
+    ],
+    "templates": [
+      {
+        "uuid": "525aec5b14824c2e9c0ff2ba4058c52b",
+        "template": "DB Inventory Oracle CBSETL v3",
+        "name": "DB Inventory Oracle CBSETL v3",
+        "groups": [
+          {
+            "name": "Templates/Databases"
+          }
+        ],
+        "items": [
+          {
+            "uuid": "5ee7e58ee4494ff09c37eb3c8d0bb706",
+            "name": "CBSETL replication: snapshot",
+            "type": "ZABBIX_ACTIVE",
+            "key": "db.replication.oracle.raw[CBSETL]",
+            "delay": "60s",
+            "value_type": "TEXT",
+            "history": "1d",
+            "trends": "0",
+            "triggers": [
+              {
+                "uuid": "d8f58f91569f43359e59359171c361c0",
+                "name": "CBSETL replication: no agent data",
+                "expression": "nodata(/DB Inventory Oracle CBSETL v3/db.replication.oracle.raw[CBSETL],3m)=1",
+                "priority": "HIGH"
+              }
+            ]
+          },
+          {
+            "uuid": "3b8b1981da84483d88cdd6ac192f2053",
+            "name": "CBSETL replication: archived_seq",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.archived_seq[CBSETL]",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.oracle.raw[CBSETL]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"archived_seq\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "66b0018c242b49628f9e556b8577d198",
+            "name": "CBSETL replication: applied_seq",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.applied_seq[CBSETL]",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.oracle.raw[CBSETL]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"applied_seq\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "675ff4e9699e4b40b98366a335f83991",
+            "name": "CBSETL replication: last_success_age",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.last_success_age[CBSETL]",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.oracle.raw[CBSETL]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"last_success_age\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ],
+            "units": "s"
+          },
+          {
+            "uuid": "58c11a3f1a1c46618cead180a83d62a0",
+            "name": "CBSETL replication: last_progress_age",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.last_progress_age[CBSETL]",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.oracle.raw[CBSETL]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"last_progress_age\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ],
+            "units": "s"
+          },
+          {
+            "uuid": "4286db5afe1a400e878e6e259a3efe64",
+            "name": "CBSETL replication: snapshot_age",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.snapshot_age[CBSETL]",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.oracle.raw[CBSETL]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"snapshot_age\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ],
+            "units": "s"
+          },
+          {
+            "uuid": "3351ec1831754792b135d36cbcf20def",
+            "name": "CBSETL replication: cycle_ok",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.cycle_ok[CBSETL]",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.oracle.raw[CBSETL]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"cycle_ok\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ],
+            "triggers": [
+              {
+                "uuid": "872485d6dffe4874bd6dfb9a577ac615",
+                "name": "CBSETL replication: cycle or snapshot requires attention",
+                "expression": "max(/DB Inventory Oracle CBSETL v3/db.replication.oracle.cycle_ok[CBSETL],10m)=0",
+                "priority": "WARNING"
+              }
+            ]
+          },
+          {
+            "uuid": "93af8cae6b3747a58069e0d352481ae6",
+            "name": "CBSETL replication: transfer_job",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.transfer_job[CBSETL]",
+            "value_type": "CHAR",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.oracle.raw[CBSETL]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"transfer_job\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "ed92f629eaad44edafaf9984fb1fb22a",
+            "name": "CBSETL replication: apply_job",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.apply_job[CBSETL]",
+            "value_type": "CHAR",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.oracle.raw[CBSETL]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"apply_job\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "63d58762360f41a7a423ad4b3ddcc528",
+            "name": "CBSETL replication: error",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.error[CBSETL]",
+            "value_type": "TEXT",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.oracle.raw[CBSETL]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"error\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "c69b42699f9a40dc82ca760fe4e26a2e",
+            "name": "CBSETL replication: copied_seq",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.copied_seq[CBSETL]",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.oracle.raw[CBSETL]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"copied_seq\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "47c72a7d3caf497989cb29a147b3c39e",
+            "name": "CBSETL replication: archive_gap",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.archive_gap[CBSETL]",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.oracle.raw[CBSETL]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"archive_gap\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ],
+            "triggers": [
+              {
+                "uuid": "08baa4a096734513af0658bd015da63f",
+                "name": "CBSETL replication: archive_gap persists",
+                "expression": "min(/DB Inventory Oracle CBSETL v3/db.replication.oracle.archive_gap[CBSETL],10m)>0",
+                "priority": "WARNING"
+              }
+            ]
+          },
+          {
+            "uuid": "c6931dc871334d1ca322de838fd82a9b",
+            "name": "CBSETL replication: pending_apply",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.pending_apply[CBSETL]",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.oracle.raw[CBSETL]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"pending_apply\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ],
+            "triggers": [
+              {
+                "uuid": "c6124a75637d4c38ba39c0f74adca979",
+                "name": "CBSETL replication: pending_apply persists",
+                "expression": "min(/DB Inventory Oracle CBSETL v3/db.replication.oracle.pending_apply[CBSETL],10m)>0",
+                "priority": "WARNING"
+              }
+            ]
+          }
+        ],
+        "description": "CBSETL stages 1+2. Existing template identity preserved for in-place update. See README before enabling v2 collector."
+      },
+      {
+        "uuid": "e461589cb283481fa988cb2211428af0",
+        "template": "DB Inventory Oracle CAPETL v3",
+        "name": "DB Inventory Oracle CAPETL v3",
+        "groups": [
+          {
+            "name": "Templates/Databases"
+          }
+        ],
+        "items": [
+          {
+            "uuid": "fc9b9fd0eed04666813f6dbb26e616dc",
+            "name": "CAPETL replication: snapshot",
+            "type": "ZABBIX_ACTIVE",
+            "key": "db.replication.oracle.raw[CAPETL]",
+            "delay": "60s",
+            "value_type": "TEXT",
+            "history": "1d",
+            "trends": "0",
+            "triggers": [
+              {
+                "uuid": "082b40c6b4ca4513bbb7b5c9008a2675",
+                "name": "CAPETL replication: no agent data",
+                "expression": "nodata(/DB Inventory Oracle CAPETL v3/db.replication.oracle.raw[CAPETL],3m)=1",
+                "priority": "HIGH"
+              }
+            ]
+          },
+          {
+            "uuid": "5bf9d5691152468789631c6a6a83bfa7",
+            "name": "CAPETL replication: archived_seq",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.archived_seq[CAPETL]",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.oracle.raw[CAPETL]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"archived_seq\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "1dc7054debd74e27b104f0e5f258ae1f",
+            "name": "CAPETL replication: applied_seq",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.applied_seq[CAPETL]",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.oracle.raw[CAPETL]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"applied_seq\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "a314653a151a44bd8700bb52b2d0e02e",
+            "name": "CAPETL replication: last_success_age",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.last_success_age[CAPETL]",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.oracle.raw[CAPETL]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"last_success_age\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ],
+            "units": "s"
+          },
+          {
+            "uuid": "ae3a3ce64f00479ba84277bbee6b6551",
+            "name": "CAPETL replication: last_progress_age",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.last_progress_age[CAPETL]",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.oracle.raw[CAPETL]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"last_progress_age\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ],
+            "units": "s"
+          },
+          {
+            "uuid": "e089caabe27c44588544bb9ea85a98e9",
+            "name": "CAPETL replication: snapshot_age",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.snapshot_age[CAPETL]",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.oracle.raw[CAPETL]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"snapshot_age\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ],
+            "units": "s"
+          },
+          {
+            "uuid": "b6c9bd6b5b994aa68ee58c7350598bc0",
+            "name": "CAPETL replication: cycle_ok",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.cycle_ok[CAPETL]",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.oracle.raw[CAPETL]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"cycle_ok\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ],
+            "triggers": [
+              {
+                "uuid": "4e414d7dd17d4466a082b3a530e84166",
+                "name": "CAPETL replication: cycle or snapshot requires attention",
+                "expression": "max(/DB Inventory Oracle CAPETL v3/db.replication.oracle.cycle_ok[CAPETL],10m)=0",
+                "priority": "WARNING"
+              }
+            ]
+          },
+          {
+            "uuid": "50cb6de1e70e4160acad846ee1ece6d4",
+            "name": "CAPETL replication: transfer_job",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.transfer_job[CAPETL]",
+            "value_type": "CHAR",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.oracle.raw[CAPETL]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"transfer_job\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "9a7e5f210fda46d2950f54d48e1031cc",
+            "name": "CAPETL replication: apply_job",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.apply_job[CAPETL]",
+            "value_type": "CHAR",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.oracle.raw[CAPETL]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"apply_job\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "cd0e72c78abb4fa79ee65fe358a1f67a",
+            "name": "CAPETL replication: error",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.error[CAPETL]",
+            "value_type": "TEXT",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.oracle.raw[CAPETL]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"error\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "a629ca77201846368fa3342605a22e83",
+            "name": "CAPETL replication: copied_seq",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.copied_seq[CAPETL]",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.oracle.raw[CAPETL]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"copied_seq\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "5725bf021c6b4d889a0f656e364634db",
+            "name": "CAPETL replication: archive_gap",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.archive_gap[CAPETL]",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.oracle.raw[CAPETL]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"archive_gap\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ],
+            "triggers": [
+              {
+                "uuid": "ccd9f677c29247cfbdf2c9286e9ac46b",
+                "name": "CAPETL replication: archive_gap persists",
+                "expression": "min(/DB Inventory Oracle CAPETL v3/db.replication.oracle.archive_gap[CAPETL],10m)>0",
+                "priority": "WARNING"
+              }
+            ]
+          },
+          {
+            "uuid": "4221b95d40564e2384d1308988061dd5",
+            "name": "CAPETL replication: pending_apply",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.pending_apply[CAPETL]",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.oracle.raw[CAPETL]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"pending_apply\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ],
+            "triggers": [
+              {
+                "uuid": "d77f0bf9a2754d3b9acb7c0034e7f420",
+                "name": "CAPETL replication: pending_apply persists",
+                "expression": "min(/DB Inventory Oracle CAPETL v3/db.replication.oracle.pending_apply[CAPETL],10m)>0",
+                "priority": "WARNING"
+              }
+            ]
+          }
+        ],
+        "description": "CBSETL stages 1+2. Existing template identity preserved for in-place update. See README before enabling v2 collector."
+      },
+      {
+        "uuid": "2f3783739e224b00901439b5d217da23",
+        "template": "DB Inventory Oracle DWH v3",
+        "name": "DB Inventory Oracle DWH v3",
+        "groups": [
+          {
+            "name": "Templates/Databases"
+          }
+        ],
+        "items": [
+          {
+            "uuid": "b8a2ce26599d44b2b4574751ae014744",
+            "name": "DWH replication: snapshot",
+            "type": "ZABBIX_ACTIVE",
+            "key": "db.replication.oracle.raw[DWH]",
+            "delay": "60s",
+            "value_type": "TEXT",
+            "history": "1d",
+            "trends": "0",
+            "triggers": [
+              {
+                "uuid": "be155e73021d4873b034f180b9f5bf6e",
+                "name": "DWH replication: no agent data",
+                "expression": "nodata(/DB Inventory Oracle DWH v3/db.replication.oracle.raw[DWH],3m)=1",
+                "priority": "HIGH"
+              }
+            ]
+          },
+          {
+            "uuid": "c723a960f97b4e60a06f8746762cf978",
+            "name": "DWH replication: archived_seq",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.archived_seq[DWH]",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.oracle.raw[DWH]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"archived_seq\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "0edfc7f163fe41229de63e9173d91631",
+            "name": "DWH replication: applied_seq",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.applied_seq[DWH]",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.oracle.raw[DWH]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"applied_seq\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "bcf3ece1768640eaa55e182ec904ec1c",
+            "name": "DWH replication: last_success_age",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.last_success_age[DWH]",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.oracle.raw[DWH]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"last_success_age\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ],
+            "units": "s"
+          },
+          {
+            "uuid": "4d2e73785054494e9b5d593b9ee52379",
+            "name": "DWH replication: last_progress_age",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.last_progress_age[DWH]",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.oracle.raw[DWH]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"last_progress_age\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ],
+            "units": "s"
+          },
+          {
+            "uuid": "ed9f22795f354ccb971f8c1b8a852545",
+            "name": "DWH replication: snapshot_age",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.snapshot_age[DWH]",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.oracle.raw[DWH]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"snapshot_age\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ],
+            "units": "s"
+          },
+          {
+            "uuid": "fc8413c10da244d6a5fa8fdd0e2f0b4a",
+            "name": "DWH replication: cycle_ok",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.cycle_ok[DWH]",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.oracle.raw[DWH]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"cycle_ok\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ],
+            "triggers": [
+              {
+                "uuid": "e4694426874c406ebfda8ef177049178",
+                "name": "DWH replication: cycle or snapshot requires attention",
+                "expression": "max(/DB Inventory Oracle DWH v3/db.replication.oracle.cycle_ok[DWH],10m)=0",
+                "priority": "WARNING"
+              }
+            ]
+          },
+          {
+            "uuid": "66a0d4ae8bef44199636365d3f136e85",
+            "name": "DWH replication: transfer_job",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.transfer_job[DWH]",
+            "value_type": "CHAR",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.oracle.raw[DWH]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"transfer_job\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "c3b494a09a9d4583943801bb3962d80b",
+            "name": "DWH replication: apply_job",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.apply_job[DWH]",
+            "value_type": "CHAR",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.oracle.raw[DWH]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"apply_job\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "431c006a5c6849a0885c8591220183d4",
+            "name": "DWH replication: error",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.error[DWH]",
+            "value_type": "TEXT",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.oracle.raw[DWH]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"error\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "75760469ad4340ee9873fca235fac470",
+            "name": "DWH replication: copied_seq",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.copied_seq[DWH]",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.oracle.raw[DWH]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"copied_seq\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "787c9da2283a4c3b9e228975b6ba67fa",
+            "name": "DWH replication: archive_gap",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.archive_gap[DWH]",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.oracle.raw[DWH]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"archive_gap\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ],
+            "triggers": [
+              {
+                "uuid": "b72817f5d6704bfbb5efda9d0a8d2a24",
+                "name": "DWH replication: archive_gap persists",
+                "expression": "min(/DB Inventory Oracle DWH v3/db.replication.oracle.archive_gap[DWH],10m)>0",
+                "priority": "WARNING"
+              }
+            ]
+          },
+          {
+            "uuid": "23abd17047c14f84a44f0133a98a1bfb",
+            "name": "DWH replication: pending_apply",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.pending_apply[DWH]",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.oracle.raw[DWH]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var v=d[\"pending_apply\"]; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable\"; return v;"
+                ]
+              }
+            ],
+            "triggers": [
+              {
+                "uuid": "7a3d09a53a82492391a817f93561c924",
+                "name": "DWH replication: pending_apply persists",
+                "expression": "min(/DB Inventory Oracle DWH v3/db.replication.oracle.pending_apply[DWH],10m)>0",
+                "priority": "WARNING"
+              }
+            ]
+          }
+        ],
+        "description": "CBSETL stages 1+2. Existing template identity preserved for in-place update. See README before enabling v2 collector."
+      }
+    ]
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "pairs": [
+    {
+      "zabbix_host": "cbs-dr-db",
+      "stale_after_seconds": 900,
+      "id": "oracle-cbsetl",
+      "standby": "cbs-dr-db",
+      "metrics": {
+        "archived_seq": {
+          "key": "db.replication.oracle.archived_seq[CBSETL]"
+        },
+        "copied_seq": {
+          "key": "db.replication.oracle.copied_seq[CBSETL]"
+        },
+        "applied_seq": {
+          "key": "db.replication.oracle.applied_seq[CBSETL]"
+        },
+        "archive_gap": {
+          "key": "db.replication.oracle.archive_gap[CBSETL]"
+        },
+        "pending_apply": {
+          "key": "db.replication.oracle.pending_apply[CBSETL]"
+        },
+        "last_success_age": {
+          "key": "db.replication.oracle.last_success_age[CBSETL]"
+        },
+        "transfer_job": {
+          "key": "db.replication.oracle.transfer_job[CBSETL]"
+        },
+        "apply_job": {
+          "key": "db.replication.oracle.apply_job[CBSETL]"
+        }
+      },
+      "name": "CBSETL",
+      "environment": "production",
+      "engine": "oracle",
+      "primary": "cbs-prod-db01"
+    },
+    {
+      "id": "oracle-capetl",
+      "name": "CAPETL",
+      "engine": "oracle",
+      "primary": "cap-prod-db",
+      "standby": "cbs-dr-db",
+      "zabbix_host": "cbs-dr-db",
+      "environment": "production",
+      "stale_after_seconds": 900,
+      "metrics": {
+        "archived_seq": {
+          "key": "db.replication.oracle.archived_seq[CAPETL]"
+        },
+        "copied_seq": {
+          "key": "db.replication.oracle.copied_seq[CAPETL]"
+        },
+        "applied_seq": {
+          "key": "db.replication.oracle.applied_seq[CAPETL]"
+        },
+        "archive_gap": {
+          "key": "db.replication.oracle.archive_gap[CAPETL]"
+        },
+        "pending_apply": {
+          "key": "db.replication.oracle.pending_apply[CAPETL]"
+        },
+        "last_success_age": {
+          "key": "db.replication.oracle.last_success_age[CAPETL]"
+        },
+        "transfer_job": {
+          "key": "db.replication.oracle.transfer_job[CAPETL]"
+        },
+        "apply_job": {
+          "key": "db.replication.oracle.apply_job[CAPETL]"
+        }
+      }
+    },
+    {
+      "id": "oracle-dwh",
+      "name": "DWH",
+      "engine": "oracle",
+      "primary": "dwh-prod-db",
+      "standby": "cbs-dr-db",
+      "zabbix_host": "cbs-dr-db",
+      "environment": "production",
+      "stale_after_seconds": 900,
+      "metrics": {
+        "archived_seq": {
+          "key": "db.replication.oracle.archived_seq[DWH]"
+        },
+        "copied_seq": {
+          "key": "db.replication.oracle.copied_seq[DWH]"
+        },
+        "applied_seq": {
+          "key": "db.replication.oracle.applied_seq[DWH]"
+        },
+        "archive_gap": {
+          "key": "db.replication.oracle.archive_gap[DWH]"
+        },
+        "pending_apply": {
+          "key": "db.replication.oracle.pending_apply[DWH]"
+        },
+        "last_success_age": {
+          "key": "db.replication.oracle.last_success_age[DWH]"
+        },
+        "transfer_job": {
+          "key": "db.replication.oracle.transfer_job[DWH]"
+        },
+        "apply_job": {
+          "key": "db.replication.oracle.apply_job[DWH]"
+        }
+      }
+    }
+  ]
+}
