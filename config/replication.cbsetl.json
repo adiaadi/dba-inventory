@@ -35,7 +35,7 @@
       "environment": "production",
       "engine": "oracle",
       "primary": "cbs-prod-db01",
-      "schedule": "Every 3 min (01, 04, …, 58)"
+      "schedule": "Every 3 min (01, 04, ..., 58)"
     }
   ]
 }

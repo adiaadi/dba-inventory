@@ -35,7 +35,7 @@
       "environment": "production",
       "engine": "oracle",
       "primary": "cbs-prod-db01",
-      "schedule": "Every 3 min (01, 04, …, 58)"
+      "schedule": "Every 3 min (01, 04, ..., 58)"
     },
     {
       "id": "oracle-capetl",
@@ -47,7 +47,7 @@
       "environment": "production",
       "stale_after_seconds": 900,
       "metrics": {},
-      "schedule": "Every 3 min (00, 03, …, 57)"
+      "schedule": "Every 3 min (00, 03, ..., 57)"
     },
     {
       "id": "oracle-dwh",
@@ -59,7 +59,7 @@
       "environment": "production",
       "stale_after_seconds": 900,
       "metrics": {},
-      "schedule": "Every 3 min (02, 05, …, 59)"
+      "schedule": "Every 3 min (02, 05, ..., 59)"
     }
   ]
 }
