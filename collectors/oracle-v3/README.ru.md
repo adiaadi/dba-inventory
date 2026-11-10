@@ -124,7 +124,11 @@ Hostname/ServerActive, как и исходный шаблон. Actions/полу
 
 Пример keys: `db.replication.oracle.raw[CAPETL]`,
 `db.replication.oracle.applied_seq[CAPETL]`. UserParameters статические, без
-подстановки произвольных аргументов агента. `read` только читает JSON, без Oracle/SSH.
+подстановки произвольных аргументов агента. В UserParameter используются простые
+keys `db.replication.oracle.v3.raw.SID`; Alias связывает их с keys `raw[SID]`
+из шаблонов. Фиксированный параметр `[CBSETL]` нельзя объявлять прямо в UserParameter.
+Старый UserParameter `db.replication.oracle.raw` может оставаться при переходе.
+`read` только читает JSON, без Oracle/SSH.
 
 ## 5. Портал
 
