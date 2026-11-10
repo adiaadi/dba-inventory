@@ -98,7 +98,7 @@
       const status = ['critical','stale','unknown','warning'].find(s=>metrics.some(m=>m.status===s)) || 'healthy';
       return {...pair, metrics, status};
     });
-    $('replication-pairs').innerHTML = pairs.length ? pairs.map(card).join('') : `<div class="replication-empty">${!engine ? 'Select Oracle, PostgreSQL or SQL Server.' : candidates.length ? 'Select a database above to view replication status.' : 'No databases configured for this engine.'}</div>`;
+    $('replication-pairs').innerHTML = pairs.length ? pairs.map(card).join('') : `<div class="replication-empty">${!engine ? 'Select a database engine (Oracle, PostgreSQL or SQL Server), then select the database to view its replication status.' : candidates.length ? 'Now select the database above to view its replication status.' : 'No databases configured for this engine.'}</div>`;
     $('snapshot-time').textContent = `Last fetch: ${date(snapshot.fetched_at)}${failed ? ' · Cached display' : ''}`;
   }
   function schedule() {
