@@ -52,6 +52,32 @@ class MultiDatabaseTests(unittest.TestCase):
             monitor.load()
             self.assertEqual(read.call_args.args[0], monitor.STATE)
 
+    def test_sql_failure_reports_ssh_and_oracle_diagnostics(self):
+        monitor.configure('CAPETL')
+        for rc, stdout, stderr, expected in (
+            (255, '', 'Permission denied (publickey).', 'Permission denied'),
+            (1, 'ORA-01034: ORACLE not available', '', 'ORA-01034'),
+            (0, 'SP2-0640: Not connected', '', 'SP2-0640'),
+        ):
+            with self.subTest(expected=expected), patch.object(monitor.subprocess, 'run') as run:
+                run.return_value.returncode = rc
+                run.return_value.stdout = stdout
+                run.return_value.stderr = stderr
+                with self.assertRaises(ValueError) as error:
+                    monitor.sql_output('SELECT', True)
+                self.assertIn(expected, str(error.exception))
+                self.assertIn('cap-prod-db', str(error.exception))
+                self.assertIn('SID=CAPETL', str(error.exception))
+
+    def test_sql_diagnostics_are_bounded(self):
+        with patch.object(monitor.subprocess, 'run') as run:
+            run.return_value.returncode = 1
+            run.return_value.stdout = 'x' * 10000
+            run.return_value.stderr = ''
+            with self.assertRaises(ValueError) as error:
+                monitor.sql_output('SELECT')
+            self.assertLess(len(str(error.exception)), 2100)
+
     def test_templates_match_portal_and_have_unique_ids(self):
         base = Path(__file__).parent
         templates = json.loads((base / 'zabbix-template-8.0.json').read_text())['zabbix_export']['templates']

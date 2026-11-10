@@ -61,7 +61,12 @@ def sql_output(query, primary=False):
         cmd = ['sqlplus', '-L', '-s', '/', 'as', 'sysdba']
     p = subprocess.run(cmd, input=query, text=True, capture_output=True, timeout=45)
     if p.returncode or 'ORA-' in p.stdout or 'SP2-' in p.stdout:
-        raise ValueError('Primary SQL failed' if primary else 'Standby SQL failed')
+        target = ('Primary ' + PROFILE['primary']) if primary else 'Standby'
+        # Include the underlying SSH/SQL*Plus failure, not just a generic label.
+        # Bound output because errors are also stored in the state JSON.
+        details = '\n'.join(part.strip() for part in (p.stderr, p.stdout) if part.strip())
+        raise ValueError(f'{target} SQL failed (SID={SID}, rc={p.returncode}): '
+                         + (details[:2000] or 'No stdout/stderr'))
     return p.stdout.strip()
 
 
