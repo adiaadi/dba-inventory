@@ -89,7 +89,27 @@
     return `<aside class="replication-health replication-side-health"><h4>${heading}</h4>${badge(failed ? 'stale' : pair.status)}<div class="replication-health-row"><span>Cron schedule</span><span>${esc(pair.schedule || 'Not configured')}</span></div>${keys.map(key => `<div class="replication-health-row"><span>${esc(m[key]?.label || key)}</span><span>${formatted(m[key])}</span></div>`).join('')}<div class="replication-trend">${trend(pair, m[pair.trend_key])}</div></aside>`;
   }
   function card(pair) {
-    return `<div class="replication-status-layout">${architecture(pair)}${healthPanel(pair)}</div><section class="replication-measurements" aria-label="Measurement details"><h4>Measurement details · oldest: ${esc(date(pair.oldest_measurement))}</h4>${terminal(pair)}</section>`;
+    return `<button type="button" class="replication-overview-back" data-overview>← DR overview</button><div class="replication-status-layout">${architecture(pair)}${healthPanel(pair)}</div><section class="replication-measurements" aria-label="Measurement details"><h4>Measurement details · oldest: ${esc(date(pair.oldest_measurement))}</h4>${terminal(pair)}</section>`;
+  }
+  function overview(pairs) {
+    const shownStatus = p => failed ? 'stale' : p.status;
+    const counts = [
+      ['Databases on DR', pairs.length, ''],
+      ['Healthy', pairs.filter(p => shownStatus(p) === 'healthy').length, 'healthy'],
+      ['Need attention', pairs.filter(p => ['warning','critical'].includes(shownStatus(p))).length, 'critical'],
+      ['No data / stale', pairs.filter(p => ['unknown','stale'].includes(shownStatus(p))).length, 'unknown']
+    ];
+    const engines = {oracle:'Oracle', postgresql:'PostgreSQL', sqlserver:'SQL Server'};
+    const rows = [...pairs].sort((a,b) => a.name.localeCompare(b.name)).map(pair => {
+      const m = Object.fromEntries(pair.metrics.map(metric => [metric.key,metric]));
+      const fresh = metric => !failed && metric && !['unknown','stale'].includes(metric.status) && metric.value !== null;
+      const success = m.last_success_age;
+      const last = fresh(success) && success.clock && success.value >= 0 && success.value <= success.clock ? `${esc(date(success.clock-success.value))}<small>${formatted(success)} at measurement</small>` : '—';
+      const lagKeys = pair.engine === 'oracle' ? ['archive_gap','pending_apply'] : pair.engine === 'postgresql' ? ['replay_lag','wal_backlog'] : ['restore_age','pending_files'];
+      const lag = lagKeys.map(key => `<div>${esc(m[key]?.label || key)}: <strong>${fresh(m[key]) ? formatted(m[key]) : '—'}</strong></div>`).join('');
+      return `<tr data-open-pair="${esc(pair.id)}" data-open-engine="${esc(pair.engine)}"><td><button type="button" class="replication-database-link" aria-label="Open ${esc(upper(pair.name))} replication">${esc(upper(pair.name))}</button><small>${engines[pair.engine] || esc(pair.engine)}</small></td><td><strong>${esc(upper(pair.primary))}</strong><small>→ ${esc(upper(pair.standby))}</small></td><td>${badge(shownStatus(pair))}</td><td>${last}</td><td>${lag}</td></tr>`;
+    }).join('');
+    return `<section class="replication-overview"><h3>DR replication overview</h3><p class="replication-overview-hint">Select a database engine, then a database — or click a row below to open its replication diagram.</p><div class="replication-overview-summary">${counts.map(([label,count,status]) => `<div class="replication-stat ${status}"><span>${label}</span><strong>${count}</strong></div>`).join('')}</div>${pairs.length ? `<div class="replication-table-scroll"><table class="replication-overview-table"><thead><tr><th>Database</th><th>Primary → Standby</th><th>Status</th><th>Last successful cycle</th><th>Lag / backlog</th></tr></thead><tbody>${rows}</tbody></table></div>` : '<div class="replication-empty">No databases configured for this selection.</div>'}<p class="replication-overview-hint">Replication health does not confirm readiness for DR failover. “—” means the measurement is unavailable or stale.</p></section>`;
   }
   function render() {
     if (!snapshot) return;
@@ -97,12 +117,13 @@
     if (!candidates.some(p => p.id === selectedPair)) selectedPair = null;
     renderSelector();
     const now = snapshot.fetched_at + (performance.now() - receivedAt) / 1000;
-    const pairs = candidates.filter(p => p.id === selectedPair).map(pair => {
+    const allPairs = snapshot.pairs.map(pair => {
       const metrics = pair.metrics.map(m => m.clock && now - m.clock > pair.stale_after_seconds ? {...m, status:'stale', reason:'Source measurement is stale'} : m);
       const status = ['critical','stale','unknown','warning'].find(s=>metrics.some(m=>m.status===s)) || 'healthy';
       return {...pair, metrics, status};
     });
-    $('replication-pairs').innerHTML = pairs.length ? pairs.map(card).join('') : `<div class="replication-empty">${!engine ? 'Select a database engine (Oracle, PostgreSQL or SQL Server), then select the database to view its replication status.' : candidates.length ? 'Now select the database above to view its replication status.' : 'No databases configured for this engine.'}</div>`;
+    const pairs = allPairs.filter(p => p.id === selectedPair && p.engine === engine);
+    $('replication-pairs').innerHTML = pairs.length ? pairs.map(card).join('') : overview(allPairs.filter(p => !engine || p.engine === engine));
     $('snapshot-time').textContent = `Last fetch: ${date(snapshot.fetched_at)}${failed ? ' · Cached display' : ''}`;
   }
   function schedule() {
@@ -144,6 +165,15 @@
     if (!event.target.matches('.replication-history-period') || busy) return;
     historyHours = Number(event.target.value);
     refresh();
+    render();
+  });
+  $('replication-pairs').addEventListener('click', event => {
+    if (event.target.closest('[data-overview]')) {
+      engine = null; selectedPair = null; render(); return;
+    }
+    const row = event.target.closest('[data-open-pair]');
+    if (!row) return;
+    engine = row.dataset.openEngine; selectedPair = row.dataset.openPair;
     render();
   });
   $('refresh-poll').addEventListener('click',refresh);
