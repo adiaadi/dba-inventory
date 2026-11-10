@@ -67,7 +67,7 @@
     const cylinder = `<svg class="architecture-icon" viewBox="0 0 100 100" aria-hidden="true"><path d="M15 22v55c0 19 70 19 70 0V22" fill="#cfe6f7" stroke="#3679a4" stroke-width="2"/><ellipse cx="50" cy="22" rx="35" ry="13" fill="#eaf6ff" stroke="#3679a4" stroke-width="2"/><path d="M15 43c0 18 70 18 70 0M15 61c0 18 70 18 70 0" fill="none" stroke="#3679a4" stroke-width="2"/></svg>`;
     const logs = `<svg class="architecture-icon" viewBox="0 0 100 100" aria-hidden="true"><path d="M30 12h44l12 12v57H30z" fill="#fff2d9" stroke="#b5760c" stroke-width="2"/><path d="M17 25h44l12 12v56H17z" fill="#fff8eb" stroke="#b5760c" stroke-width="2"/><path d="M28 49h33M28 60h33M28 71h24" stroke="#b5760c" stroke-width="3"/></svg>`;
     const specs = {
-      oracle: ['Archive log replication', 'Production database', 'Archived logs', 'Cron · rsync over SSH', 'Verified archive copies', 'RMAN · catalog + recover', 'Physical standby', 'Mounted · redo applied'],
+      oracle: ['Archive log replication status', 'Production database', 'Archived logs', 'Cron · rsync over SSH', 'Verified archive copies', 'RMAN · catalog + recover', 'Physical standby', 'Mounted · redo applied'],
       postgresql: ['Streaming replication', 'Primary database', 'WAL records', 'Asynchronous WAL stream', 'Standby WAL', 'WAL replay', 'Standby database', 'Patroni manages cluster roles'],
       sqlserver: ['Log shipping', 'Primary database', 'Transaction log backup', 'Scheduled copy job', 'Copied log backups', 'Scheduled restore job', 'Secondary database', 'Log backups restored']
     };
@@ -89,7 +89,7 @@
     return `<aside class="replication-health replication-side-health"><h4>${heading}</h4>${badge(failed ? 'stale' : pair.status)}<div class="replication-health-row"><span>Cron schedule</span><span>${esc(pair.schedule || 'Not configured')}</span></div>${keys.map(key => `<div class="replication-health-row"><span>${esc(m[key]?.label || key)}</span><span>${formatted(m[key])}</span></div>`).join('')}<div class="replication-trend">${trend(pair, m[pair.trend_key])}</div></aside>`;
   }
   function card(pair) {
-    return `<button type="button" class="replication-overview-back" data-overview>← DR overview</button><div class="replication-status-layout">${architecture(pair)}${healthPanel(pair)}</div><section class="replication-measurements" aria-label="Measurement details"><h4>Measurement details · oldest: ${esc(date(pair.oldest_measurement))}</h4>${terminal(pair)}</section>`;
+    return `<div class="replication-status-layout">${architecture(pair)}${healthPanel(pair)}</div><section class="replication-measurements" aria-label="Measurement details"><h4>Measurement details · oldest: ${esc(date(pair.oldest_measurement))}</h4>${terminal(pair)}</section>`;
   }
   function overview(pairs) {
     const shownStatus = p => failed ? 'stale' : p.status;
@@ -116,6 +116,7 @@
     const candidates = snapshot.pairs.filter(p => p.engine === engine);
     if (!candidates.some(p => p.id === selectedPair)) selectedPair = null;
     renderSelector();
+    $('dr-overview').hidden = !engine;
     const now = snapshot.fetched_at + (performance.now() - receivedAt) / 1000;
     const allPairs = snapshot.pairs.map(pair => {
       const metrics = pair.metrics.map(m => m.clock && now - m.clock > pair.stale_after_seconds ? {...m, status:'stale', reason:'Source measurement is stale'} : m);
@@ -167,10 +168,10 @@
     refresh();
     render();
   });
+  $('dr-overview').addEventListener('click', () => {
+    engine = null; selectedPair = null; render();
+  });
   $('replication-pairs').addEventListener('click', event => {
-    if (event.target.closest('[data-overview]')) {
-      engine = null; selectedPair = null; render(); return;
-    }
     const row = event.target.closest('[data-open-pair]');
     if (!row) return;
     engine = row.dataset.openEngine; selectedPair = row.dataset.openPair;

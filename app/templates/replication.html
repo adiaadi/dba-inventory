@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Replication Monitoring | DBA Inventory{% endblock %}
 {% block content %}
-<link rel="stylesheet" href="/static/css/replication.css?v=20261110-overview15">
+<link rel="stylesheet" href="/static/css/replication.css?v=20261110-heading16">
 <div class="replication-page">
   <header class="replication-heading">
-    <div><a class="small text-muted" href="/">← Inventory</a><h1>DB Replication — DR Site</h1></div>
+    <div><div class="replication-top-links"><a class="small text-muted" href="/">← Inventory</a><button id="dr-overview" type="button" class="replication-overview-back" hidden>← DR overview</button></div><h1>DB Replication — DR Site</h1></div>
     <div class="replication-controls">
       <span id="poll-status" role="status" aria-live="polite">Connecting…</span>
       <label class="small">Refresh <select id="poll-interval" aria-label="Refresh interval"><option value="30">30 sec</option><option value="60">60 sec</option></select></label>
@@ -14,8 +14,8 @@
   </header>
   <nav id="replication-selector" class="replication-navigation" aria-label="Database engine and database"><div class="replication-filters"><button type="button" data-engine="oracle">Oracle</button><button type="button" data-engine="postgresql">PostgreSQL</button><button type="button" data-engine="sqlserver">SQL Server</button></div></nav>
   <div id="replication-error" class="alert alert-warning" role="alert" hidden></div>
-  <div class="replication-section-title"><h2>Replication status</h2><span id="snapshot-time">Waiting for measurements</span></div>
+  <div class="replication-section-title"><span id="snapshot-time">Waiting for measurements</span></div>
   <div id="replication-pairs"><div class="replication-empty">Loading replication metrics…</div></div>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/replication.js?v=20261110-overview15" defer></script>{% endblock %}
+{% block scripts %}<script src="/static/js/replication.js?v=20261110-heading16" defer></script>{% endblock %}
