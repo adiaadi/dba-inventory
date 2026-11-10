@@ -344,6 +344,23 @@ class ZabbixClient:
             "monitored": True,
         }) or []
 
+    def get_replication_items_by_keys(self, hostname: str, keys: list[str]) -> list[dict[str, Any]]:
+        if not keys:
+            return []
+        hosts = self._call("host.get", {
+            "output": ["hostid"], "filter": {"host": [hostname]},
+        }) or []
+        if not hosts:
+            return []
+        if len(hosts) != 1:
+            raise ZabbixApiError("Ambiguous replication host")
+        return self._call("item.get", {
+            "hostids": [str(hosts[0]["hostid"])],
+            "filter": {"key_": keys},
+            "output": ["itemid", "key_", "lastvalue", "lastclock", "status", "state", "value_type"],
+            "monitored": True,
+        }) or []
+
     def get_replication_history(self, itemids: list[str], value_type: str, time_from: int, time_till: int) -> list[dict[str, Any]]:
         return self._call("history.get", {
             "itemids": itemids, "history": int(value_type),

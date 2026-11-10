@@ -1,0 +1,40 @@
+{
+  "pairs": [
+    {
+      "zabbix_host": "cbs-dr-db",
+      "stale_after_seconds": 900,
+      "id": "oracle-cbsetl",
+      "standby": "cbs-dr-db",
+      "metrics": {
+        "archived_seq": {
+          "key": "db.replication.oracle.archived_seq"
+        },
+        "copied_seq": {
+          "key": "db.replication.oracle.copied_seq"
+        },
+        "applied_seq": {
+          "key": "db.replication.oracle.applied_seq"
+        },
+        "archive_gap": {
+          "key": "db.replication.oracle.archive_gap"
+        },
+        "pending_apply": {
+          "key": "db.replication.oracle.pending_apply"
+        },
+        "last_success_age": {
+          "key": "db.replication.oracle.last_success_age"
+        },
+        "transfer_job": {
+          "key": "db.replication.oracle.transfer_job"
+        },
+        "apply_job": {
+          "key": "db.replication.oracle.apply_job"
+        }
+      },
+      "name": "cbsetl",
+      "environment": "production",
+      "engine": "oracle",
+      "primary": "cbs-prod-db01"
+    }
+  ]
+}

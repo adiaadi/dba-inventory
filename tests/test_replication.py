@@ -125,6 +125,55 @@ class ReplicationTests(unittest.TestCase):
             client.get_replication_history(["1"], "3", 100, 200)
             self.assertEqual(call.call_args.args[1]["sortorder"], "DESC")
 
+    def test_key_mapping_validation(self):
+        for data in ({}, {"itemid": "1", "key": "metric"}):
+            with self.assertRaises(ValidationError):
+                r.ItemMapping(**data)
+        data = sample().model_dump()
+        data["metrics"]["archive_gap"] = {"key": "gap"}
+        with self.assertRaises(ValidationError):
+            r.ReplicationPair.model_validate(data)
+
+    def test_key_resolution_and_missing_item(self):
+        config = r.read_config("config/replication.cbsetl.json")
+        client = Mock()
+        client.get_replication_items_by_keys.return_value = [
+            {"itemid": "42", "key_": "db.replication.oracle.archive_gap", "lastvalue": "3",
+             "lastclock": "10000", "status": "0", "state": "0", "value_type": "3"}
+        ]
+        resolved, items = r.resolve_items(config, client)
+        self.assertIsNone(config.pairs[0].metrics["archive_gap"].itemid)
+        self.assertEqual(resolved.pairs[0].metrics["archive_gap"].itemid, "42")
+        result = r.build_pair(resolved.pairs[0], items, 10000)
+        self.assertEqual(result["status"], "unknown")
+        self.assertEqual(next(m for m in result["metrics"] if m["key"] == "archive_gap")["status"], "warning")
+        self.assertEqual(client.get_replication_items_by_keys.call_args.args[0], "cbs-dr-db")
+        client.get_replication_items.assert_not_called()
+
+    def test_key_api_scopes_exact_keys_to_host(self):
+        client = ZabbixClient("https://example.test", "secret")
+        with patch.object(client, "_call", side_effect=[[{"hostid": "17"}], []]) as call:
+            client.get_replication_items_by_keys("cbs-dr-db", ["exact.key"])
+            self.assertEqual(call.call_args_list[0].args[1]["filter"], {"host": ["cbs-dr-db"]})
+            self.assertEqual(call.call_args.args[1]["hostids"], ["17"])
+            self.assertEqual(call.call_args.args[1]["filter"], {"key_": ["exact.key"]})
+        with patch.object(client, "_call", return_value=[]) as call:
+            self.assertEqual(client.get_replication_items_by_keys("missing", ["key"]), [])
+            call.assert_called_once()
+
+    def test_key_snapshot_history_uses_resolved_id(self):
+        config = r.read_config("config/replication.cbsetl.json")
+        client = Mock()
+        client.get_replication_items_by_keys.return_value = [{
+            "itemid": "42", "key_": "db.replication.oracle.archive_gap", "lastvalue": "0",
+            "lastclock": "10000", "state": "0", "status": "0", "value_type": "3"}]
+        client.get_replication_history.return_value = [{"itemid": "42", "clock": "9999", "value": "2"}]
+        settings = Mock(replication_config_file="config", zabbix_url="https://example.test", zabbix_api_token="secret", zabbix_verify_ssl=True, zabbix_ca_file=None)
+        with patch.object(r, "get_settings", return_value=settings), patch.object(r, "read_config", return_value=config), patch.object(r, "ZabbixClient", return_value=client), patch.object(r.time, "time", return_value=10000):
+            result = r.get_snapshot()
+        client.get_replication_history.assert_called_once_with(["42"], "3", 6400, 10000)
+        self.assertEqual(result["pairs"][0]["trend"], [{"clock": 9999, "value": 2}])
+
 
 class RouteTests(unittest.TestCase):
     def test_session_protection_page_and_api(self):

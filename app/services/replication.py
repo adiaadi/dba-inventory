@@ -52,11 +52,18 @@ TITLES = {"oracle": "Oracle · Archive Log Replication", "postgresql": "PostgreS
 
 class ItemMapping(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    itemid: str = Field(pattern=r"^[1-9][0-9]*$")
+    itemid: str | None = Field(default=None, pattern=r"^[1-9][0-9]*$")
+    key: str | None = Field(default=None, min_length=1)
     factor: float = Field(default=1, gt=0, allow_inf_nan=False)
     values: dict[str, str] = Field(default_factory=dict)
     warning: float | None = Field(default=None, ge=0, allow_inf_nan=False)
     critical: float | None = Field(default=None, ge=0, allow_inf_nan=False)
+
+    @model_validator(mode="after")
+    def validate_source(self):
+        if (self.itemid is None) == (self.key is None):
+            raise ValueError("Specify exactly one of itemid or key")
+        return self
 
 
 class ReplicationPair(BaseModel):
@@ -66,6 +73,7 @@ class ReplicationPair(BaseModel):
     engine: Literal["oracle", "postgresql", "sqlserver"]
     primary: str = Field(min_length=1, max_length=160)
     standby: str = Field(min_length=1, max_length=160)
+    zabbix_host: str | None = Field(default=None, min_length=1)
     environment: str = "production"
     schedule: str = ""
     stale_after_seconds: int = Field(default=180, ge=30, le=86400)
@@ -75,6 +83,8 @@ class ReplicationPair(BaseModel):
     @model_validator(mode="after")
     def validate_metrics(self):
         for key, mapping in self.metrics.items():
+            if mapping.key is not None and not self.zabbix_host:
+                raise ValueError("zabbix_host is required for key mappings")
             if key not in METRICS[self.engine]:
                 raise ValueError(f"Unknown {self.engine} metric: {key}")
             _, _, warn, crit, healthy = METRICS[self.engine][key]
@@ -163,6 +173,31 @@ _cached = None
 _cached_at = 0.0
 
 
+def resolve_items(config, client):
+    """Resolve exact host/key pairs on a copy, retaining IDs for history queries."""
+    config = config.model_copy(deep=True)
+    ids = sorted({m.itemid for p in config.pairs for m in p.metrics.values() if m.itemid})
+    items = {str(i["itemid"]): i for i in client.get_replication_items(ids)} if ids else {}
+    hosts = {}
+    for pair in config.pairs:
+        for mapping in pair.metrics.values():
+            if mapping.key:
+                hosts.setdefault(pair.zabbix_host, set()).add(mapping.key)
+    resolved = {}
+    for host, keys in hosts.items():
+        for item in client.get_replication_items_by_keys(host, sorted(keys)):
+            lookup = (host, item["key_"])
+            if lookup in resolved:
+                raise ZabbixApiError("Ambiguous replication host/key mapping")
+            resolved[lookup] = str(item["itemid"])
+            items[str(item["itemid"])] = item
+    for pair in config.pairs:
+        for mapping in pair.metrics.values():
+            if mapping.key:
+                mapping.itemid = resolved.get((pair.zabbix_host, mapping.key))
+    return config, items
+
+
 def get_snapshot():
     """A bounded, per-worker cache shares polls across portal viewers."""
     global _cached, _cached_at
@@ -186,8 +221,7 @@ def get_snapshot():
             else:
                 try:
                     client = ZabbixClient(settings.zabbix_url, settings.zabbix_api_token, timeout=8, verify_ssl=settings.zabbix_verify_ssl, ca_file=settings.zabbix_ca_file)
-                    ids = sorted({m.itemid for p in config.pairs for m in p.metrics.values()})
-                    items = {str(i["itemid"]): i for i in client.get_replication_items(ids)}
+                    config, items = resolve_items(config, client)
                 except (ZabbixApiError, OSError, ValueError):
                     log.exception("Replication items fetch failed")
                     snapshot["error"] = "Cannot read replication metrics from Zabbix."
