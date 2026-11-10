@@ -28,7 +28,7 @@ bash -n run.sh
 bash -n sync_seed_arch.monitored.sh
 bash -n restore_arch_notify.monitored.sh
 sudo install -d -o root -g root -m 0755 /opt/db-inv-oracle-v3
-sudo install -m 0644 monitor.py archives.py /opt/db-inv-oracle-v3/
+sudo install -m 0644 monitor.py archives.py transfer_metrics.py /opt/db-inv-oracle-v3/
 sudo install -m 0755 run.sh sync_seed_arch.monitored.sh restore_arch_notify.monitored.sh /opt/db-inv-oracle-v3/
 # Только для первой установки: не затирать уже заполненные DBID повторным копированием.
 sudo test -e /opt/db-inv-oracle-v3/databases.json || sudo install -m 0644 databases.json /opt/db-inv-oracle-v3/
@@ -131,6 +131,41 @@ keys `db.replication.oracle.v3.raw.SID`; Alias связывает их с keys `
 `read` только читает JSON, без Oracle/SSH.
 
 ## 5. Портал
+
+### Скорость и длительность копирования
+
+Новый `transfer_metrics.py` запускает rsync с `--stats` и `LC_ALL=C`.
+Суммируются `Total bytes received` и monotonic-время вызовов rsync в одном цикле,
+включая повторные попытки. Средняя скорость в MiB/s включает служебный трафик;
+длительность включает запуск rsync и SSH, но не SQL, аудит SHA-256 и RMAN.
+Это итог последнего завершённого цикла, а не live-пропускная способность сети.
+При отсутствии кандидатов отображается No new files; при ошибке переноса или
+отсутствии статистики — not measured. Анимация показывает направление при HEALTHY,
+не служит измерением скорости и останавливается при Pause или потере актуальности.
+
+Для существующей установки обновите файлы между штатными циклами:
+
+```bash
+sudo install -m 0644 transfer_metrics.py monitor.py archives.py /opt/db-inv-oracle-v3/
+sudo install -m 0755 sync_seed_arch.monitored.sh /opt/db-inv-oracle-v3/
+```
+
+Не меняйте databases.json, cron или UserParameter. Новый файл состояния
+`/var/lib/db-inv-oracle/<SID>/transfer-v3.json` создаётся автоматически под тем же
+chain/sync lock. Дождитесь следующего штатного цикла; при новом цикле статистика
+сбрасывается, старый успешный результат не выдаётся за новый.
+
+Повторно импортируйте шаблон с Create new / Update existing, без Delete missing.
+Добавлен TEXT dependent item `db.replication.oracle.transfer_stats[SID]`.
+В `metrics` каждой пары рабочего JSON портала добавьте:
+
+```json
+"transfer_stats": {"key": "db.replication.oracle.transfer_stats[CAPETL]"}
+```
+
+Для CBSETL/DWH замените параметр SID. Образец `replication.json` уже содержит
+mapping для всех трёх баз. Обновите образ портала и пересоздайте app с прежними
+Compose overrides. До обновления коллектора/шаблона/mapping поле будет not measured.
 
 ### Имя и размер последнего подтверждённого архива
 

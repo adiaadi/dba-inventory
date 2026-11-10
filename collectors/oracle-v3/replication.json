@@ -32,6 +32,9 @@
         },
         "archive_file": {
           "key": "db.replication.oracle.archive_file[CBSETL]"
+        },
+        "transfer_stats": {
+          "key": "db.replication.oracle.transfer_stats[CBSETL]"
         }
       },
       "name": "CBSETL",
@@ -76,6 +79,9 @@
         },
         "archive_file": {
           "key": "db.replication.oracle.archive_file[CAPETL]"
+        },
+        "transfer_stats": {
+          "key": "db.replication.oracle.transfer_stats[CAPETL]"
         }
       },
       "schedule": "Every 3 min (00, 03, ..., 57)"
@@ -116,6 +122,9 @@
         },
         "archive_file": {
           "key": "db.replication.oracle.archive_file[DWH]"
+        },
+        "transfer_stats": {
+          "key": "db.replication.oracle.transfer_stats[DWH]"
         }
       },
       "schedule": "Every 3 min (02, 05, ..., 59)"

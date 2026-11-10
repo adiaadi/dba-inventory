@@ -322,6 +322,26 @@
                 ]
               }
             ]
+          },
+          {
+            "uuid": "a831ca733e2849d9b68bbde33110b1d5",
+            "name": "CBSETL replication: transfer statistics",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.transfer_stats[CBSETL]",
+            "value_type": "TEXT",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.oracle.raw[CBSETL]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); return JSON.stringify(d.transfer_stats || null);"
+                ]
+              }
+            ]
           }
         ],
         "description": "CBSETL stages 1+2. Existing template identity preserved for in-place update. See README before enabling v2 collector."
@@ -640,6 +660,26 @@
                 ]
               }
             ]
+          },
+          {
+            "uuid": "1a7f51cce2af48d5aa01445c61b9b61c",
+            "name": "CAPETL replication: transfer statistics",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.transfer_stats[CAPETL]",
+            "value_type": "TEXT",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.oracle.raw[CAPETL]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); return JSON.stringify(d.transfer_stats || null);"
+                ]
+              }
+            ]
           }
         ],
         "description": "CBSETL stages 1+2. Existing template identity preserved for in-place update. See README before enabling v2 collector."
@@ -955,6 +995,26 @@
                 "type": "JAVASCRIPT",
                 "parameters": [
                   "var d=JSON.parse(value); return JSON.stringify(d.archive_file || null);"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "17fbadb8c25241af86b6740bd2ac09f3",
+            "name": "DWH replication: transfer statistics",
+            "type": "DEPENDENT",
+            "key": "db.replication.oracle.transfer_stats[DWH]",
+            "value_type": "TEXT",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.oracle.raw[DWH]"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); return JSON.stringify(d.transfer_stats || null);"
                 ]
               }
             ]

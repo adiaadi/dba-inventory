@@ -137,11 +137,24 @@ def job(name, args):
     return subprocess.run(['/bin/bash', str(BASE / name), *args]).returncode
 
 
+def transfer_report(started_at):
+    try:
+        data = load(STATE.with_name('transfer-v3.json'))
+        if (not data.get('complete') or not data.get('valid') or
+                data.get('started_at', 0) < started_at or
+                data.get('completed_at', 0) < data['started_at']):
+            return None
+        return {key: data[key] for key in ('bytes_received', 'duration_seconds',
+                                          'bytes_per_second', 'attempts', 'completed_at')}
+    except (OSError, ValueError, TypeError, KeyError):
+        return None
+
+
 def cycle(previous, write=save, query=sql_snapshot, execute=job, clock=time.time,
           read_manifest=lambda: load(MANIFEST), write_manifest=lambda m: save(m, MANIFEST),
           get_rows=metadata, verify=archives.receipt_for, present=None):
     data = {key: None for key in KEYS}
-    data.update(sampled_at=int(clock()), cycle_ok=0, error='', archive_file=None,
+    data.update(sampled_at=int(clock()), cycle_ok=0, error='', archive_file=None, transfer_stats=None,
                 source_sampled_at=int(clock()),
                 last_success_at=previous.get('last_success_at'),
                 last_progress_at=previous.get('last_progress_at'),
@@ -172,8 +185,11 @@ def cycle(previous, write=save, query=sql_snapshot, execute=job, clock=time.time
             write(data)
             return rc
 
+        transfer_started = clock()
         transfer_rc = run_job('sync_seed_arch.monitored.sh',
                              [PROFILE['primary'], SID, str(primary['resetlogs_id'])], 'transfer_job')
+        if transfer_rc == 0:
+            data['transfer_stats'] = transfer_report(transfer_started)
         data['source_sampled_at'] = int(clock())
         primary = query(True)
         if archives.identity(primary) != identity:
@@ -233,7 +249,7 @@ def view(data, now=None):
     now = int(time.time()) if now is None else now
     if (not data or not 0 <= now - data.get('sampled_at', 0) <= 600 or
             not 0 <= now - data.get('source_sampled_at', data.get('sampled_at', 0)) <= 600):
-        return dict({key: None for key in KEYS}, cycle_ok=0, snapshot_age=None, archive_file=None,
+        return dict({key: None for key in KEYS}, cycle_ok=0, snapshot_age=None, archive_file=None, transfer_stats=None,
                     error='Snapshot missing, expired or timestamp is in the future')
     result = dict(data, snapshot_age=now-data['sampled_at'])
     for source, target in [('last_success_at', 'last_success_age'),

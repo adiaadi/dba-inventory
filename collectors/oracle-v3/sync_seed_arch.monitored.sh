@@ -91,6 +91,12 @@ fi
 exec 200>"$LOCK_FILE"
 flock -n 200 || { log "Already running for AUX_SID=${AUX_SID}, exit."; exit 2; }
 
+METRICS_HELPER="$(dirname "$(readlink -f "$0")")/transfer_metrics.py"
+/usr/bin/python3 "$METRICS_HELPER" reset "$AUX_SID"
+copy_archive() {
+  /usr/bin/python3 "$METRICS_HELPER" copy "$AUX_SID" "$@"
+}
+
 log "==== START sync ${AUX_SID}_seed archivelogs ===="
 log "Primary host: ${PRIMARY_HOST}"
 log "Primary: ${PRIMARY_USER}@${PRIMARY_HOST}:${PRIMARY_DIR}"
@@ -145,6 +151,7 @@ if [[ -n "$listing" ]]; then
 fi
 
 if [[ "${#rows[@]}" -eq 0 ]]; then
+  /usr/bin/python3 "$METRICS_HELPER" finish "$AUX_SID"
   log "No new files (seq > $max_applied)."
   log "==== FINISH ===="
   exit 0
@@ -162,7 +169,7 @@ for row in "${rows[@]}"; do
   log "COPY seq=$seq file=$base"
 
   # Copy from PRIMARY to STANDBY directory
-  rsync $RSYNC_OPTS -e "ssh $SSH_OPTS" \
+  copy_archive $RSYNC_OPTS -e "ssh $SSH_OPTS" \
     "${PRIMARY_USER}@${PRIMARY_HOST}:${rpath}" \
 	"${lpath}" >>"$LOG_FILE" 2>&1 || die "Copy failed: $base"
 
@@ -181,7 +188,7 @@ for row in "${rows[@]}"; do
     ((attempt++)) || true
     if [[ "$attempt" -le "$RETRY_ON_MISMATCH" ]]; then
       log "Re-copy attempt #$attempt: $base"
-      rsync $RSYNC_OPTS -e "ssh $SSH_OPTS" \
+      copy_archive $RSYNC_OPTS -e "ssh $SSH_OPTS" \
         "${PRIMARY_USER}@${PRIMARY_HOST}:${rpath}" \
         "${lpath}" >>"$LOG_FILE" 2>&1 || die "Re-copy failed: $base"
     else
@@ -190,5 +197,6 @@ for row in "${rows[@]}"; do
   done
 done
 
+/usr/bin/python3 "$METRICS_HELPER" finish "$AUX_SID"
 log "==== FINISH OK ===="
 exit 0

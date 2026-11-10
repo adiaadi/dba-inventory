@@ -26,6 +26,22 @@ def good_items(pair, now=10000):
 
 
 class ReplicationTests(unittest.TestCase):
+    def test_optional_transfer_statistics(self):
+        import json
+        pair = sample()
+        pair.metrics['transfer_stats'] = r.ItemMapping(itemid='99998')
+        items = good_items(sample())
+        stats = dict(bytes_received=1024, duration_seconds=2, attempts=1, completed_at=10000)
+        items['99998'] = dict(status='0', state='0', lastclock='10000', lastvalue=json.dumps(stats))
+        result = r.build_pair(pair, items, 10000)
+        self.assertEqual(result['transfer_stats']['bytes_per_second'], 512)
+        self.assertEqual(result['status'], 'healthy')
+        for change in ({'duration_seconds':0}, {'bytes_received':-1}, {'completed_at':1}):
+            items['99998']['lastvalue'] = json.dumps(dict(stats, **change))
+            self.assertIsNone(r.build_pair(pair, items, 10000)['transfer_stats'])
+        items['99998']['lastvalue'] = 'null'
+        self.assertIsNone(r.build_pair(pair, items, 10000)['transfer_stats'])
+
     def test_optional_archive_file_metadata(self):
         import json
         pair = sample()
