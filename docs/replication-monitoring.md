@@ -44,6 +44,14 @@ unsupported items, NULL/нечисловые/отрицательные знач
 
 ### Поиск по key: cbsetl
 
+Для трёх баз на CBS-DR-DB подготовлен `config/replication.cbs-dr.json`:
+CBSETL (CBS-PROD-DB01), CAPETL (CAP-PROD-DB), DWH (DWH-PROD-DB).
+У CAPETL и DWH `metrics` пока пусты: карточки показывают NO DATA до настройки
+отдельных Zabbix keys для каждой базы. Команды sync_seed_arch.sh и
+restore_arch_notify.sh не определяют эти keys. Не используйте для них keys CBSETL.
+Чтобы включить карточки, перенесите соответствующие пары в рабочий
+`config/replication.json`, сохранив существующие настройки CBSETL.
+
 Готовая конфигурация: `config/replication.cbsetl.json`, primary `cbs-prod-db01`,
 standby `cbs-dr-db`. Скопируйте её в `config/replication.json`, если конфигурации ещё нет;
 в существующую конфигурацию добавьте пару из массива `pairs`.
