@@ -12,14 +12,10 @@
       <button id="refresh-poll" class="btn btn-sm btn-outline-secondary" type="button">Refresh</button>
     </div>
   </header>
-  <div class="replication-filters" role="group" aria-label="Database engine">
-    <button class="active" data-engine="all" aria-pressed="true">All databases</button>
-    <button data-engine="oracle" aria-pressed="false">Oracle</button>
-    <button data-engine="postgresql" aria-pressed="false">PostgreSQL</button>
-    <button data-engine="sqlserver" aria-pressed="false">SQL Server</button>
-  </div>
+  <nav id="replication-selector" class="replication-selector" aria-label="Database engine and database"></nav>
   <div id="replication-error" class="alert alert-warning" role="alert" hidden></div>
   <div id="replication-summary" class="replication-summary"></div>
+  <div id="replication-architecture"></div>
   <div class="replication-section-title"><h2>Replication status</h2><span id="snapshot-time">Waiting for measurements</span></div>
   <div id="replication-pairs"><div class="replication-empty">Loading replication metrics…</div></div>
   <p class="replication-footnote">Read-only monitoring · Measurements and 60-minute history from Zabbix · Time shown in your browser’s timezone</p>
