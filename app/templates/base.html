@@ -24,9 +24,6 @@
         <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
           {% if request.session.get("portal_user") %}
             <li class="nav-item">
-              <a class="nav-link external-nav-link" href="/replication"><i class="bi bi-arrow-repeat"></i> Replication</a>
-            </li>
-            <li class="nav-item">
               <a class="nav-link external-nav-link" href="https://zabbix.bnkc.com/zabbix/zabbix.php?action=dashboard.view&dashboardid=1&from=now-1h&to=now" target="_blank" rel="noreferrer">
                 <i class="bi bi-activity"></i> {{ ui_text(request, "external.zabbix", "ZABBIX") }}
               </a>

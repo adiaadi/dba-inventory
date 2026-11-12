@@ -9,12 +9,14 @@
     </div>
 
     <div class="overview-nav">
-      <a class="overview-nav-item" href="/replication"><i class="bi bi-arrow-repeat"></i><span>Replication</span></a>
       {% for tab in section_tabs %}
         <a class="overview-nav-item {% if current_view == tab.key %}active{% endif %}" href="/?view={{ tab.key }}">
           <i class="bi {{ tab.icon }}"></i>
           <span>{{ tab.label }}</span>
         </a>
+        {% if tab.key == "overview" %}
+          <a class="overview-nav-item" href="/replication"><i class="bi bi-arrow-repeat"></i><span>REPLICATION</span></a>
+        {% endif %}
       {% endfor %}
     </div>
 
