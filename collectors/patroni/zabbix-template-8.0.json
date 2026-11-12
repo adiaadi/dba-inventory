@@ -9,7 +9,7 @@
     ],
     "templates": [
       {
-        "uuid": "6c1339b1b4ab544b994c59c1c119c1f0",
+        "uuid": "5ec2978340bc41d389cd21891734758c",
         "template": "DB Inventory Patroni cluster HTTP",
         "name": "DB Inventory Patroni cluster HTTP",
         "groups": [
@@ -49,7 +49,7 @@
         ],
         "items": [
           {
-            "uuid": "40b4b857142f530e82f1ad385d9170f0",
+            "uuid": "c21dac1d1bc740dbad62f4707376dc07",
             "name": "Patroni: cluster snapshot",
             "type": "HTTP_AGENT",
             "key": "db.replication.patroni.raw",
@@ -70,7 +70,7 @@
             ],
             "triggers": [
               {
-                "uuid": "6c41384b7598551daf8812792f964f98",
+                "uuid": "455bdf2e29ae454885f6dd585d2a8d98",
                 "name": "Patroni: no cluster data for 3 minutes",
                 "expression": "nodata(/DB Inventory Patroni cluster HTTP/db.replication.patroni.raw,3m)=1",
                 "priority": "HIGH"
@@ -78,7 +78,7 @@
             ]
           },
           {
-            "uuid": "7ff6339f38e55251aea1f9289df0fb42",
+            "uuid": "e538bbd60d6b4d1682d4d2bffbdec249",
             "name": "Patroni: cluster name",
             "type": "DEPENDENT",
             "key": "db.replication.patroni.scope",
@@ -98,7 +98,7 @@
             ]
           },
           {
-            "uuid": "a54f6ebe2b6c5b458af0250e9a3bce74",
+            "uuid": "3051213afe974a03b2e3dad12be54ad2",
             "name": "Patroni: current leader",
             "type": "DEPENDENT",
             "key": "db.replication.patroni.leader",
@@ -118,7 +118,7 @@
             ]
           },
           {
-            "uuid": "685b25d4cc21588b9067f99b44e4979e",
+            "uuid": "a66960b20dc64c1dbe22985d54ba4c03",
             "name": "Patroni: leader count",
             "type": "DEPENDENT",
             "key": "db.replication.patroni.leader_count",
@@ -138,7 +138,7 @@
             ],
             "triggers": [
               {
-                "uuid": "1cc62b1be47259449ac9f7e15b8ba550",
+                "uuid": "8310e9407bde4bd6ba1d6e8e1e009351",
                 "name": "Patroni: expected exactly one leader",
                 "expression": "last(/DB Inventory Patroni cluster HTTP/db.replication.patroni.leader_count)<>1",
                 "priority": "HIGH"
@@ -146,7 +146,7 @@
             ]
           },
           {
-            "uuid": "fbcf3886f3c25e8381df087326b0e5a1",
+            "uuid": "08268b7c92c545ecbc44b30e0b85d899",
             "name": "Patroni: reported member count",
             "type": "DEPENDENT",
             "key": "db.replication.patroni.members",
@@ -166,7 +166,7 @@
             ]
           },
           {
-            "uuid": "b157cfd0fe765653b6f651ec940c895e",
+            "uuid": "f271e3ed5f79401bbd0ffcdb38a0bc55",
             "name": "Patroni: nodes reported running or streaming",
             "type": "DEPENDENT",
             "key": "db.replication.patroni.healthy_nodes",
@@ -186,7 +186,7 @@
             ],
             "triggers": [
               {
-                "uuid": "c8425f22256b5eb4826c1f310b4c9570",
+                "uuid": "88357a7b333c4367bc52ebd0e21c4973",
                 "name": "Patroni: fewer running/streaming nodes than expected",
                 "expression": "last(/DB Inventory Patroni cluster HTTP/db.replication.patroni.healthy_nodes)<{$PATRONI.EXPECTED_NODES}",
                 "priority": "HIGH"
@@ -194,7 +194,7 @@
             ]
           },
           {
-            "uuid": "f6f28ab4e916576dbb2d1eae3bd0c124",
+            "uuid": "41d95d3b0ddd45288a575277a916bbb7",
             "name": "Patroni: dr role",
             "type": "DEPENDENT",
             "key": "db.replication.patroni.dr.role",
@@ -214,7 +214,7 @@
             ]
           },
           {
-            "uuid": "b8a75c6ecc2751f59ae1677ee343794c",
+            "uuid": "9bc4458bc93c404f95da427b61656c72",
             "name": "Patroni: dr state",
             "type": "DEPENDENT",
             "key": "db.replication.patroni.dr.state",
@@ -234,7 +234,7 @@
             ],
             "triggers": [
               {
-                "uuid": "6dfc01c54d5f5fc1be09ca4a5da7c7a5",
+                "uuid": "9dc70ec87ddc4c4bad91a28daae83d22",
                 "name": "Patroni: DR is not streaming",
                 "expression": "last(/DB Inventory Patroni cluster HTTP/db.replication.patroni.dr.state)<>\"streaming\"",
                 "priority": "HIGH"
@@ -242,7 +242,7 @@
             ]
           },
           {
-            "uuid": "06b1986657e658a9a165f6c1f62a8dea",
+            "uuid": "3a586ffd773d415b92178298e1b2e1b4",
             "name": "Patroni: dr timeline",
             "type": "DEPENDENT",
             "key": "db.replication.patroni.dr.timeline",
@@ -262,7 +262,7 @@
             ]
           },
           {
-            "uuid": "3d594203c332570a82158af7d3fba58f",
+            "uuid": "bffff3b86ba140a6abca85034a378c4b",
             "name": "Patroni: dr receive_lsn",
             "type": "DEPENDENT",
             "key": "db.replication.patroni.dr.receive_lsn",
@@ -282,7 +282,7 @@
             ]
           },
           {
-            "uuid": "a82e65600db250449a785d23db33c2bc",
+            "uuid": "1ac67ced0db94f0ebfac8d1bea98e072",
             "name": "Patroni: dr replay_lsn",
             "type": "DEPENDENT",
             "key": "db.replication.patroni.dr.replay_lsn",
@@ -302,7 +302,7 @@
             ]
           },
           {
-            "uuid": "cf7da03cff8551cd8517680201cca4c6",
+            "uuid": "21bb8ce98cb44637a849a8ed8167604b",
             "name": "Patroni: dr receive_lag",
             "type": "DEPENDENT",
             "key": "db.replication.patroni.dr.receive_lag",
@@ -323,7 +323,7 @@
             "units": "B"
           },
           {
-            "uuid": "d461fa5ae8f354c98e1ab54af342cf61",
+            "uuid": "22f95723585f46cab3bfb7a37ed67ea4",
             "name": "Patroni: dr replay_lag",
             "type": "DEPENDENT",
             "key": "db.replication.patroni.dr.replay_lag",
@@ -344,7 +344,7 @@
             "units": "B",
             "triggers": [
               {
-                "uuid": "3db791e3f66d5d5fbcfead7703e72c4b",
+                "uuid": "c724743a3e78440aba76c1df56be25b1",
                 "name": "Patroni: DR replay backlog above threshold for 3 minutes",
                 "expression": "min(/DB Inventory Patroni cluster HTTP/db.replication.patroni.dr.replay_lag,3m)>{$PATRONI.LAG_WARN_BYTES}",
                 "priority": "WARNING"
@@ -352,7 +352,7 @@
             ]
           },
           {
-            "uuid": "5a5aa25ee7f15c0589fc4aeaf67874d2",
+            "uuid": "f404cb70d2e84b33bbd0b28ad81552dc",
             "name": "Patroni: dr tags",
             "type": "DEPENDENT",
             "key": "db.replication.patroni.dr.tags",
@@ -372,7 +372,7 @@
             ]
           },
           {
-            "uuid": "e31fb98eddd75cf7b2957d6f695c48ba",
+            "uuid": "6213ed74b83f47edaaccbd1796ccae93",
             "name": "Patroni: local1 role",
             "type": "DEPENDENT",
             "key": "db.replication.patroni.local1.role",
@@ -392,7 +392,7 @@
             ]
           },
           {
-            "uuid": "68a2b6bfc36f556793ac5ed3553c48ed",
+            "uuid": "a320d764137c49a09c1d10a35ecd26c7",
             "name": "Patroni: local1 state",
             "type": "DEPENDENT",
             "key": "db.replication.patroni.local1.state",
@@ -412,7 +412,7 @@
             ]
           },
           {
-            "uuid": "d89bb0e01feb50db9f8e9ca575bc9aaa",
+            "uuid": "acde6d390f5e4c048d652b607ad59304",
             "name": "Patroni: local1 timeline",
             "type": "DEPENDENT",
             "key": "db.replication.patroni.local1.timeline",
@@ -432,7 +432,7 @@
             ]
           },
           {
-            "uuid": "6ab04d3acd15562da4f8539547d5fb91",
+            "uuid": "c958280fa35e4bdcaff35fa50e67f4a3",
             "name": "Patroni: local1 receive_lsn",
             "type": "DEPENDENT",
             "key": "db.replication.patroni.local1.receive_lsn",
@@ -452,7 +452,7 @@
             ]
           },
           {
-            "uuid": "5f86e40fa6cb512fae8a0dd8c446a6c1",
+            "uuid": "46d45cf5cfe245f38657f8a0440c754c",
             "name": "Patroni: local1 replay_lsn",
             "type": "DEPENDENT",
             "key": "db.replication.patroni.local1.replay_lsn",
@@ -472,7 +472,7 @@
             ]
           },
           {
-            "uuid": "f7600af55f4d5061876ff2b4784f1601",
+            "uuid": "65e30e5ec94b47349a258012fcb801d3",
             "name": "Patroni: local1 receive_lag",
             "type": "DEPENDENT",
             "key": "db.replication.patroni.local1.receive_lag",
@@ -493,7 +493,7 @@
             "units": "B"
           },
           {
-            "uuid": "938ad404d4355418acb191eb38f29c91",
+            "uuid": "69af06be786d45a6bc1e02f937cdeb26",
             "name": "Patroni: local1 replay_lag",
             "type": "DEPENDENT",
             "key": "db.replication.patroni.local1.replay_lag",
@@ -514,7 +514,7 @@
             "units": "B"
           },
           {
-            "uuid": "28121f237f1c59df9c762f24e01b821b",
+            "uuid": "d4a63a8af6d441b9a096a02d23b1797c",
             "name": "Patroni: local1 tags",
             "type": "DEPENDENT",
             "key": "db.replication.patroni.local1.tags",
@@ -534,7 +534,7 @@
             ]
           },
           {
-            "uuid": "2a4aadc4775b5fd5975b96cc74edbde4",
+            "uuid": "da7d106238a847aa9728baff754cdbb6",
             "name": "Patroni: local2 role",
             "type": "DEPENDENT",
             "key": "db.replication.patroni.local2.role",
@@ -554,7 +554,7 @@
             ]
           },
           {
-            "uuid": "57ab5785403f5da99fd1fe3b6a200cc5",
+            "uuid": "bf142d8f6926466fb47738096ea26a96",
             "name": "Patroni: local2 state",
             "type": "DEPENDENT",
             "key": "db.replication.patroni.local2.state",
@@ -574,7 +574,7 @@
             ]
           },
           {
-            "uuid": "0d2cd61c014c5281845b865b0b9f6bf8",
+            "uuid": "834ad262ccc44d3fa3c4ce1e92adccf7",
             "name": "Patroni: local2 timeline",
             "type": "DEPENDENT",
             "key": "db.replication.patroni.local2.timeline",
@@ -594,7 +594,7 @@
             ]
           },
           {
-            "uuid": "ef36927ceb0559b4b813f2ea5c6a1407",
+            "uuid": "c152bd650d554be0847288f878d42392",
             "name": "Patroni: local2 receive_lsn",
             "type": "DEPENDENT",
             "key": "db.replication.patroni.local2.receive_lsn",
@@ -614,7 +614,7 @@
             ]
           },
           {
-            "uuid": "d61c7bcebb4356679137c2681de87295",
+            "uuid": "59c537ee024f48208678e79ffbf4ab87",
             "name": "Patroni: local2 replay_lsn",
             "type": "DEPENDENT",
             "key": "db.replication.patroni.local2.replay_lsn",
@@ -634,7 +634,7 @@
             ]
           },
           {
-            "uuid": "83cd4628fa2055b2958d623ced1d879a",
+            "uuid": "be992b216e72459f9eff9a18b89b9bc4",
             "name": "Patroni: local2 receive_lag",
             "type": "DEPENDENT",
             "key": "db.replication.patroni.local2.receive_lag",
@@ -655,7 +655,7 @@
             "units": "B"
           },
           {
-            "uuid": "9aed55bed3f45e9889c3b7791edc3a71",
+            "uuid": "559167b73d9b4f0b85b0263110a0b48a",
             "name": "Patroni: local2 replay_lag",
             "type": "DEPENDENT",
             "key": "db.replication.patroni.local2.replay_lag",
@@ -676,7 +676,7 @@
             "units": "B"
           },
           {
-            "uuid": "3f76c590224a5433a8fedd2effa5e1c0",
+            "uuid": "60de449eb76540e7a4a4212d86e873a3",
             "name": "Patroni: local2 tags",
             "type": "DEPENDENT",
             "key": "db.replication.patroni.local2.tags",

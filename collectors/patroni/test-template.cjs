@@ -35,3 +35,20 @@ assert.equal(run('healthy_nodes', data), 2);
 const keys = template.items.map(i => i.key);
 assert.equal(new Set(keys).size, keys.length);
 console.log('Patroni preprocessing checks passed: topology, switchover, missing DR, unknown lag, scope and duplicate leaders.');
+
+// Validate every export object, including groups and nested triggers.
+const exported = JSON.parse(fs.readFileSync(path.join(__dirname, 'zabbix-template-8.0.json'), 'utf8'));
+const uuids = [];
+function checkUuids(value) {
+  if (!value || typeof value !== 'object') return;
+  for (const [key, child] of Object.entries(value)) {
+    if (key === 'uuid') {
+      assert.match(child, /^[0-9a-f]{12}4[0-9a-f]{3}[89ab][0-9a-f]{15}$/);
+      uuids.push(child);
+    } else checkUuids(child);
+  }
+}
+checkUuids(exported);
+assert.ok(uuids.length > 0);
+assert.equal(new Set(uuids).size, uuids.length);
+console.log(`Validated ${uuids.length} unique UUIDv4 identifiers.`);
