@@ -56,7 +56,7 @@
       paths.push(`${gap ? 'M' : 'L'}${((p.clock-start)/period*300).toFixed(2)},${(100-p.value/max*90).toFixed(2)}`);
     });
     const color = pair.status === 'critical' ? '#df405a' : pair.status === 'healthy' ? '#00a67a' : '#c68a1a';
-    return heading + `<svg viewBox="0 0 300 110" role="img" aria-label="${esc(m.label)} over the selected period"><path d="M0 10H300 M0 55H300 M0 100H300" stroke="#dce1e7" stroke-dasharray="3 4"/><path d="${paths.join(' ')}" fill="none" stroke="${color}" stroke-width="2.5"/></svg><div class="replication-trend-labels"><span>${esc(new Date(start*1000).toLocaleTimeString())}</span><span>Max ${number(max)} ${esc(m.unit)}</span><span>${esc(new Date(end*1000).toLocaleTimeString())}</span></div>`;
+    return heading + `<svg viewBox="0 0 300 110" preserveAspectRatio="none" role="img" aria-label="${esc(m.label)} over the selected period"><path d="M0 10H300 M0 55H300 M0 100H300" stroke="#dce1e7" stroke-dasharray="3 4"/><path d="${paths.join(' ')}" fill="none" stroke="${color}" stroke-width="2.5"/></svg><div class="replication-trend-labels"><span>${esc(new Date(start*1000).toLocaleTimeString())}</span><span>Max ${number(max)} ${esc(m.unit)}</span><span>${esc(new Date(end*1000).toLocaleTimeString())}</span></div>`;
   }
   function renderSelector() {
     const engines = [['oracle', 'Oracle'], ['postgresql', 'PostgreSQL'], ['sqlserver', 'SQL Server']];
@@ -91,7 +91,7 @@
     return `<aside class="replication-health replication-side-health"><h4>${heading}</h4>${badge(failed ? 'stale' : pair.status)}<div class="replication-health-row"><span>Cron schedule</span><span>${esc(pair.schedule || 'Not configured')}</span></div>${keys.map(key => `<div class="replication-health-row"><span>${esc(m[key]?.label || key)}</span><span>${formatted(m[key])}</span></div>`).join('')}<div class="replication-trend">${trend(pair, m[pair.trend_key])}</div></aside>`;
   }
   function card(pair) {
-    return `<div class="replication-status-layout">${architecture(pair)}${healthPanel(pair)}</div><section class="replication-measurements" aria-label="Measurement details"><h4>Measurement details · oldest: ${esc(date(pair.oldest_measurement))}</h4>${terminal(pair)}</section>`;
+    return `<div class="replication-status-layout">${architecture(pair)}${healthPanel(pair)}<section class="replication-measurements" aria-label="Measurement details"><h4>Measurement details · oldest: ${esc(date(pair.oldest_measurement))}</h4>${terminal(pair)}</section></div>`;
   }
   function overview(pairs) {
     const shownStatus = p => failed ? 'stale' : p.status;
