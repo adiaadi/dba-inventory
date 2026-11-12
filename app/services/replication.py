@@ -297,6 +297,16 @@ def get_snapshot(history_hours=1):
                     snapshot["error"] = "Cannot read replication metrics from Zabbix."
                     client = None
         snapshot["pairs"] = [build_pair(p, items, now) for p in config.pairs]
+        if client:
+            patroni_hosts = sorted({p.zabbix_host for p in config.pairs if p.patroni_scope and p.zabbix_host})
+            if patroni_hosts:
+                try:
+                    vips = client.get_patroni_vips(patroni_hosts)
+                    for pair, result in zip(config.pairs, snapshot['pairs']):
+                        if pair.patroni_scope:
+                            result['vip'] = vips.get(pair.zabbix_host)
+                except (ZabbixApiError, OSError, ValueError):
+                    log.warning('Cannot read Patroni VIP macros')
         # Batch numeric history by Zabbix value type, avoiding one request per pair.
         history = {}
         if client:

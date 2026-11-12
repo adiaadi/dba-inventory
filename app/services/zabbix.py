@@ -361,6 +361,30 @@ class ZabbixClient:
             "monitored": True,
         }) or []
 
+    def get_patroni_vips(self, hostnames: list[str]) -> dict[str, str]:
+        """Read only the public hostname from host-level PATRONI.URL macros."""
+        from urllib.parse import urlsplit
+        import re
+        if not hostnames:
+            return {}
+        rows = self._call("host.get", {
+            "output": ["host"], "filter": {"host": hostnames},
+            "selectMacros": ["macro", "value", "type"],
+        }) or []
+        result = {}
+        for host in rows:
+            for macro in host.get('macros', []):
+                if macro.get('macro') != '{$PATRONI.URL}' or str(macro.get('type', '0')) != '0':
+                    continue
+                try:
+                    url = urlsplit(macro.get('value', '').strip())
+                    address = url.hostname
+                    if url.scheme in ('http', 'https') and address and re.fullmatch(r'[a-zA-Z0-9.:%_-]+', address):
+                        result[host['host']] = address
+                except (ValueError, TypeError):
+                    continue
+        return result
+
     def get_replication_history(self, itemids: list[str], value_type: str, time_from: int, time_till: int) -> list[dict[str, Any]]:
         return self._call("history.get", {
             "itemids": itemids, "history": int(value_type),

@@ -96,3 +96,17 @@ class PatroniTests(unittest.TestCase):
             self.assertEqual(config.pairs[1].standby, 'css-prod-drdb')
             self.assertEqual(config.pairs[1].zabbix_host, 'css-prod-cluster')
             self.assertEqual(json.loads(target.read_text())['pairs'][0], original['pairs'][0])
+
+    def test_vip_from_host_macro_only(self):
+        from unittest.mock import Mock
+        from app.services.zabbix import ZabbixClient
+        client = ZabbixClient('https://zabbix.example', 'token')
+        client._call = Mock(return_value=[
+            {'host': 'css-prod-cluster', 'macros': [{'macro': '{$PATRONI.URL}', 'value': 'http://user:password@10.210.119.39:8008/path?token=secret', 'type': '0'}]},
+            {'host': 'ipv6', 'macros': [{'macro': '{$PATRONI.URL}', 'value': 'https://[2001:db8::1]:8008', 'type': '0'}]},
+            {'host': 'hidden', 'macros': [{'macro': '{$PATRONI.URL}', 'value': 'http://secret:8008', 'type': '1'}]},
+            {'host': 'invalid', 'macros': [{'macro': '{$PATRONI.URL}', 'value': '{$OTHER}'}]},
+        ])
+        self.assertEqual(client.get_patroni_vips(['css-prod-cluster', 'ipv6', 'hidden', 'invalid']),
+                         {'css-prod-cluster': '10.210.119.39', 'ipv6': '2001:db8::1'})
+        client._call.assert_called_once()
