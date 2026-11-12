@@ -109,3 +109,21 @@
 .replication-status-layout .architecture-node.site-main .replication-site-label{color:#215d91}
 .replication-status-layout .architecture-node.site-dr{background:#f6f1ff;border-color:#cbb5e8;border-top:3px solid #8256ad}
 .replication-status-layout .architecture-node.site-dr .replication-site-label{color:#69408f}
+
+/* Larger branding and a compact Patroni side column. */
+.architecture-brand-status .replication-engine-icon{width:84px;height:48px}
+.architecture-brand-status .replication-badge{min-width:84px}
+.patroni-heading-title{grid-column:1 / 3;min-width:0}
+.patroni-heading-title>span{display:block;margin-top:5px;color:#64748b;font-size:12px;font-weight:700;overflow-wrap:anywhere}
+.patroni-status-layout{grid-template-columns:minmax(0,1.8fr) minmax(420px,1fr);row-gap:8px}
+.patroni-status-layout>.replication-side-health{padding:10px 12px}
+.patroni-status-layout .replication-side-health>h4{margin-bottom:5px;font-size:13px}
+.patroni-status-layout .replication-side-health>.replication-badge{margin-bottom:3px;padding:3px 7px}
+.patroni-status-layout .replication-health-row{padding:3px 0;font-size:11px;line-height:1.4}
+.patroni-status-layout .patroni-replica-details{margin-top:8px}
+.patroni-status-layout .patroni-replica-details h5{font-size:11px;margin-bottom:2px}
+.patroni-status-layout .replication-measurements h4{margin-bottom:4px;font-size:11px}
+.patroni-status-layout .replication-terminal{font-size:11px;line-height:1.4;padding:10px 12px;margin-top:4px}
+@media(max-width:1100px){.patroni-status-layout{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){.patroni-heading-title{grid-column:1}}
+.patroni-status-layout>.replication-architecture{align-self:stretch}.patroni-status-layout>.replication-architecture>.architecture-counters{margin-top:auto;padding-top:12px}
