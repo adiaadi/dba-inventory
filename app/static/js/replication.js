@@ -91,7 +91,19 @@
     const heading = pair.engine === 'oracle' ? 'Cron job & apply health' : 'Replication health';
     return `<aside class="replication-health replication-side-health"><h4>${heading}</h4>${badge(failed ? 'stale' : pair.status)}<div class="replication-health-row"><span>Cron schedule</span><span>${esc(pair.schedule || 'Not configured')}</span></div>${keys.map(key => `<div class="replication-health-row"><span>${esc(m[key]?.label || key)}</span><span>${formatted(m[key])}</span></div>`).join('')}<div class="replication-trend">${trend(pair, m[pair.trend_key])}</div></aside>`;
   }
+  function patroniCard(pair) {
+    const stale = failed || ['stale','unknown'].includes(pair.status);
+    const nodes = pair.topology || [];
+    const leader = nodes.find(n => n.role === 'leader');
+    const node = n => `<div class="architecture-node patroni-node"><small>${n.is_dr ? 'DR SITE' : 'PRODUCTION'}</small><strong>${esc(upper(n.name))}</strong><b>${esc(upper(n.role).replaceAll('_',' '))}</b>${badge(stale ? 'stale' : n.status)}<span>${esc(n.host || '')} · Timeline ${esc(n.timeline ?? '—')}</span><span>${esc(n.state || 'Unknown')}</span>${n.role !== 'leader' ? `<span>Receive LSN: ${esc(n.receive_lsn || '—')}</span><span>Replay LSN: ${esc(n.replay_lsn || '—')}</span><span>Receive lag: ${n.receive_lag == null ? '—' : number(n.receive_lag)+' B'} · Replay lag: ${n.replay_lag == null ? '—' : number(n.replay_lag)+' B'}</span>` : ''}${n.is_dr ? `<em>nofailover: ${esc(n.tags?.nofailover ?? '—')} · nosync: ${esc(n.tags?.nosync ?? '—')}</em>` : ''}</div>`;
+    const replicas = nodes.filter(n => n.role !== 'leader');
+    const flow = `<section class="replication-architecture"><div class="architecture-heading"><h2>Patroni replication status</h2><span>${esc(upper(pair.scope))}</span>${badge(pair.status)}</div>${leader ? `<div class="patroni-leader">${node(leader)}</div>` : '<div class="replication-empty">No unique Leader available</div>'}<div class="patroni-branches">${replicas.map(n => `<div class="patroni-branch"><div class="architecture-link ${!paused && !stale && n.status === 'healthy' ? 'architecture-active' : ''}"><span>${n.role === 'sync_standby' ? 'Synchronous standby' : 'Replica'} · WAL receive → replay</span><div class="architecture-track" aria-hidden="true"><i></i><b>▶</b></div></div>${node(n)}</div>`).join('')}</div><div class="architecture-counters">Cluster view reported by Patroni · Arrows represent replication roles; upstream connections are not verified.</div></section>`;
+    const backlog = pair.metrics.find(m => m.key === 'wal_backlog');
+    const health = `<aside class="replication-health replication-side-health"><h4>Patroni & DR health</h4>${badge(pair.status)}<div class="replication-health-row"><span>Current Leader</span><strong>${esc(upper(pair.primary))}</strong></div><div class="replication-health-row"><span>Reported members</span><strong>${nodes.length}</strong></div><div class="replication-health-row"><span>DR replay backlog</span><strong>${formatted(backlog)}</strong></div><div class="replication-trend">${trend(pair, backlog)}</div></aside>`;
+    return `<div class="replication-status-layout">${flow}${health}<section class="replication-measurements"><h4>Measurement details · ${esc(date(pair.oldest_measurement))}</h4>${terminal(pair)}</section></div>`;
+  }
   function card(pair) {
+    if (pair.patroni) return patroniCard(pair);
     return `<div class="replication-status-layout">${architecture(pair)}${healthPanel(pair)}<section class="replication-measurements" aria-label="Measurement details"><h4>Measurement details · oldest: ${esc(date(pair.oldest_measurement))}</h4>${terminal(pair)}</section></div>`;
   }
   function overview(pairs) {
@@ -108,7 +120,7 @@
       const fresh = metric => !failed && metric && !['unknown','stale'].includes(metric.status) && metric.value !== null;
       const success = m.last_success_age;
       const last = fresh(success) && success.clock && success.value >= 0 && success.value <= success.clock ? `${esc(date(success.clock-success.value))}<small>${formatted(success)} at measurement</small>` : '—';
-      const lagKeys = pair.engine === 'oracle' ? ['archive_gap','pending_apply'] : pair.engine === 'postgresql' ? ['replay_lag','wal_backlog'] : ['restore_age','pending_files'];
+      const lagKeys = pair.engine === 'oracle' ? ['archive_gap','pending_apply'] : pair.engine === 'postgresql' ? (pair.patroni ? ['wal_backlog'] : ['replay_lag','wal_backlog']) : ['restore_age','pending_files'];
       const lag = lagKeys.map(key => `<div>${esc(m[key]?.label || key)}: <strong>${fresh(m[key]) ? formatted(m[key]) : '—'}</strong></div>`).join('');
       return `<tr data-open-pair="${esc(pair.id)}" data-open-engine="${esc(pair.engine)}"><td><button type="button" class="replication-database-link" aria-label="Open ${esc(upper(pair.name))} replication">${esc(upper(pair.name))}</button><small>${engines[pair.engine] || esc(pair.engine)}</small></td><td><strong>${esc(upper(pair.primary))}</strong><small>→ ${esc(upper(pair.standby))}</small></td><td>${badge(shownStatus(pair))}</td><td>${last}</td><td>${lag}</td></tr>`;
     }).join('');

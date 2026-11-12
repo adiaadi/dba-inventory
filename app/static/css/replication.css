@@ -31,3 +31,5 @@
  .replication-status-layout .replication-side-health .replication-trend svg{flex:none;height:150px;min-height:0}
 }
 @media(max-width:600px){.replication-status-layout .architecture-node{min-height:0}}
+
+.patroni-leader{max-width:480px;width:100%;margin:0 auto 12px}.patroni-branches{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.patroni-branch{min-width:0}.replication-status-layout .patroni-node{min-height:0;padding:12px;gap:6px}.patroni-branch .architecture-link{margin-bottom:8px}.patroni-branch .architecture-track{max-width:150px;margin:4px auto 8px}.patroni-node .replication-badge{font-size:10px}@media(max-width:650px){.patroni-branches{grid-template-columns:1fr}}

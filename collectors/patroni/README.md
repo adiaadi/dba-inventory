@@ -62,9 +62,28 @@ integration. The scope is a cluster name, not an individual database name.
 - Defaults alert on leader count != 1, fewer than 3 running/streaming nodes,
   DR not streaming, or DR replay backlog >100 MiB for 3 minutes. Tune the lag
   threshold to operational requirements; it is not an RPO commitment.
-- This package does not yet activate the portal's PostgreSQL page. That requires
-  a topology-aware adapter rather than the existing generic seconds-based
-  mappings. Record the Zabbix technical host name when connecting it.
+
+## Enable portal PostgreSQL section
+
+After the template is collecting on technical Zabbix host `aml-prod-cluster`,
+update the application image and run from the repository root on the portal host:
+
+```bash
+python3 collectors/patroni/enable_portal.py config/replication.json
+```
+
+The command backs up the existing file and adds the AML pair while preserving
+Oracle and other pairs. Repeating it leaves an existing AML pair unchanged.
+Deploy/recreate app with your existing compose files including
+`docker-compose.replication.yml`. PostgreSQL > AML-PROD-CLUSTER shows current
+roles from the raw snapshot and a DR replay backlog graph in bytes.
+The Zabbix API account used by the portal needs read permission on the new host.
+The name denotes the entire PostgreSQL cluster, not one SQL database.
+Topology arrows describe roles; /cluster does not independently verify each
+replica's upstream connection (cascading replication is not inferred).
+The diagram handles leader changes, missing DR, unknown lag, stale snapshots
+and timeline mismatch. It does not claim DR promotion readiness.
+
 
 ## Checks
 

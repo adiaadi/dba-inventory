@@ -78,16 +78,19 @@ class ReplicationPair(BaseModel):
     zabbix_host: str | None = Field(default=None, min_length=1)
     environment: str = "production"
     schedule: str = ""
+    patroni_scope: str | None = None
     stale_after_seconds: int = Field(default=180, ge=30, le=86400)
     expected_patroni_nodes: int = Field(default=2, ge=1)
     metrics: dict[str, ItemMapping]
 
     @model_validator(mode="after")
     def validate_metrics(self):
+        if self.patroni_scope and (self.engine != 'postgresql' or 'topology' not in self.metrics):
+            raise ValueError('patroni_scope requires PostgreSQL topology mapping')
         for key, mapping in self.metrics.items():
             if mapping.key is not None and not self.zabbix_host:
                 raise ValueError("zabbix_host is required for key mappings")
-            if self.engine == 'oracle' and key in ('archive_file', 'transfer_stats'):
+            if (self.engine == 'oracle' and key in ('archive_file', 'transfer_stats')) or (self.engine == 'postgresql' and key == 'topology'):
                 if mapping.factor != 1 or mapping.values or mapping.warning is not None or mapping.critical is not None:
                     raise ValueError('archive_file does not support thresholds or value mapping')
                 continue
@@ -215,7 +218,15 @@ def transfer_stats_info(pair, items, now):
         return None
 
 
+def trend_key(pair):
+    return 'wal_backlog' if pair.patroni_scope else TRENDS[pair.engine]
+
+
 def build_pair(pair, items, now):
+    if pair.engine == 'postgresql' and pair.patroni_scope:
+        from app.services.patroni import build_patroni
+        return build_patroni(pair, items, now)
+
     metrics = [metric_value(key, definition, pair.metrics.get(key), items.get(pair.metrics[key].itemid) if key in pair.metrics else None, now, pair.stale_after_seconds) for key, definition in METRICS[pair.engine].items()]
     for metric in metrics:
         if metric["key"] == "patroni_nodes" and metric["status"] == "healthy" and metric["value"] < pair.expected_patroni_nodes:
@@ -291,7 +302,7 @@ def get_snapshot(history_hours=1):
         if client:
             try:
                 for value_type in ("0", "3"):
-                    ids = sorted({p.metrics[TRENDS[p.engine]].itemid for p in config.pairs if TRENDS[p.engine] in p.metrics and str(items.get(p.metrics[TRENDS[p.engine]].itemid, {}).get("value_type")) == value_type})
+                    ids = sorted({p.metrics[trend_key(p)].itemid for p in config.pairs if trend_key(p) in p.metrics and str(items.get(p.metrics[trend_key(p)].itemid, {}).get("value_type")) == value_type})
                     if ids:
                         rows = client.get_replication_history(ids, value_type, now - history_seconds, now)
                         for row in rows:
@@ -301,7 +312,7 @@ def get_snapshot(history_hours=1):
                 for result in snapshot["pairs"]:
                     result["trend_error"] = "History unavailable"
         for pair, result in zip(config.pairs, snapshot["pairs"]):
-            mapping = pair.metrics.get(TRENDS[pair.engine])
+            mapping = pair.metrics.get(trend_key(pair))
             if mapping:
                 for row in history.get(mapping.itemid, []):
                     try:

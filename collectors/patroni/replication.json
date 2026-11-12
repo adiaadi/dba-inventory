@@ -1,0 +1,23 @@
+{
+  "pairs": [
+    {
+      "id": "patroni-aml-prod-cluster",
+      "name": "AML-PROD-CLUSTER",
+      "engine": "postgresql",
+      "primary": "Dynamic Patroni Leader",
+      "standby": "aml-prod-drdb",
+      "zabbix_host": "aml-prod-cluster",
+      "patroni_scope": "aml-prod-cluster",
+      "expected_patroni_nodes": 3,
+      "stale_after_seconds": 180,
+      "metrics": {
+        "topology": {
+          "key": "db.replication.patroni.raw"
+        },
+        "wal_backlog": {
+          "key": "db.replication.patroni.dr.replay_lag"
+        }
+      }
+    }
+  ]
+}
