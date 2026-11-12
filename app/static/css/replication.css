@@ -155,3 +155,19 @@
 .oracle-status-layout .replication-side-health .replication-trend svg{height:100px;min-height:0;flex:none;margin:4px 0}
 @media(max-width:1100px){.oracle-status-layout{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:600px){.oracle-heading-title{grid-column:1}}
+
+/* Balance the Oracle diagram and terminal against the full-height health panel. */
+.oracle-status-layout{grid-template-columns:minmax(0,1.7fr) minmax(340px,1fr)}
+.oracle-status-layout>.replication-architecture{min-height:360px}
+.oracle-status-layout .architecture-flow{flex:1;align-items:stretch}
+.oracle-status-layout .architecture-node{min-height:260px}
+.oracle-status-layout>.replication-side-health{align-self:stretch}
+.oracle-status-layout .replication-side-health .replication-trend{flex:1;min-height:180px}
+.oracle-status-layout .replication-side-health .replication-trend svg{flex:1;min-height:150px;height:150px}
+@media(max-width:1100px){
+ .oracle-status-layout{grid-template-columns:minmax(0,1fr)}
+ .oracle-status-layout>.replication-architecture{min-height:0}
+ .oracle-status-layout .replication-side-health .replication-trend{flex:none}
+ .oracle-status-layout .replication-side-health .replication-trend svg{flex:none}
+}
+@media(max-width:600px){.oracle-status-layout .architecture-node{min-height:0}}
