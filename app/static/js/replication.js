@@ -120,6 +120,7 @@
     return `<div class="replication-status-layout ${pair.engine === 'oracle' ? 'oracle-status-layout' : ''}">${architecture(pair)}${healthPanel(pair)}<section class="replication-measurements" aria-label="Measurement details"><h4>Measurement details · oldest: ${esc(date(pair.oldest_measurement))}</h4>${terminal(pair)}</section></div>`;
   }
   function overview(pairs) {
+    pairs = pairs.filter(pair => pair.engine !== 'postgresql');
     const shownStatus = p => failed ? 'stale' : p.status;
     const counts = [
       ['Databases on DR', pairs.length, ''],
@@ -152,7 +153,7 @@
       return {...pair, metrics, status};
     });
     const pairs = allPairs.filter(p => p.id === selectedPair && p.engine === engine);
-    $('replication-pairs').innerHTML = pairs.length ? pairs.map(card).join('') : overview(allPairs.filter(p => !engine || p.engine === engine));
+    $('replication-pairs').innerHTML = pairs.length ? pairs.map(card).join('') : engine === 'postgresql' ? `<div class="replication-empty">${candidates.length ? 'Select a PostgreSQL cluster above to view its replication diagram.' : 'No PostgreSQL clusters configured.'}</div>` : overview(allPairs.filter(p => !engine || p.engine === engine));
     $('snapshot-time').textContent = `Last fetch: ${date(snapshot.fetched_at)}${failed ? ' · Cached display' : ''}`;
   }
   function schedule() {
