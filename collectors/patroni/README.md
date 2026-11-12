@@ -93,3 +93,15 @@ responses, including switchover, missing member and unknown lag.
 A live Zabbix import and endpoint connectivity must be verified on deployment.
 
 Reference: https://patroni.readthedocs.io/en/latest/rest_api.html
+
+## Add another cluster (CSS example)
+
+```bash
+python3 collectors/patroni/enable_portal.py config/replication.json --scope css-prod-cluster --dr-member css-prod-drdb
+```
+
+The technical Zabbix host defaults to scope; pass `--zabbix-host NAME` if different.
+Use `--expected-nodes N` for the expected member count. Existing pairs are preserved,
+and an already present pair ID is left unchanged. Without flags the original AML
+command still works. API/VIP addresses and local member macros stay in Zabbix;
+the portal reads the cluster snapshot, not the Patroni endpoint directly.

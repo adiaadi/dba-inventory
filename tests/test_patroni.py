@@ -75,3 +75,24 @@ class PatroniTests(unittest.TestCase):
             self.assertEqual(len(merged['pairs']), len(original['pairs']) + 1)
             self.assertEqual(len(list(Path(folder).glob('*.bak-*'))), 1)
             read_config(str(target))
+
+    def test_add_css_preserves_aml(self):
+        import subprocess
+        import sys
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as folder:
+            target = Path(folder) / 'replication.json'
+            original = json.loads(Path('collectors/patroni/replication.json').read_text())
+            target.write_text(json.dumps(original))
+            command = [sys.executable, 'collectors/patroni/enable_portal.py', str(target),
+                       '--scope', 'css-prod-cluster', '--dr-member', 'css-prod-drdb']
+            subprocess.run(command, check=True, capture_output=True)
+            subprocess.run(command, check=True, capture_output=True)
+            config = read_config(str(target))
+            self.assertEqual(len(config.pairs), 2)
+            self.assertEqual(config.pairs[0].patroni_scope, 'aml-prod-cluster')
+            self.assertEqual(config.pairs[1].patroni_scope, 'css-prod-cluster')
+            self.assertEqual(config.pairs[1].standby, 'css-prod-drdb')
+            self.assertEqual(config.pairs[1].zabbix_host, 'css-prod-cluster')
+            self.assertEqual(json.loads(target.read_text())['pairs'][0], original['pairs'][0])
