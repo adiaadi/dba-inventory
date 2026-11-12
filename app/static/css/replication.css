@@ -73,3 +73,9 @@
 }
 
 .replication-status-layout .architecture-node .replication-site-label{font-size:12px;font-weight:800;line-height:1.4}
+
+.replication-status-layout .patroni-node .patroni-state{font-size:13px;font-weight:750;line-height:1.5;padding:2px 8px;border-radius:4px}
+.replication-status-layout .patroni-node .patroni-state-ok{color:#007653;background:#e3f5ee}
+.replication-status-layout .patroni-node .patroni-state-error{color:#b91c3b;background:#fde9ed}
+.replication-status-layout .patroni-node .patroni-state-warning{color:#925b00;background:#fff2d9}
+.replication-status-layout .patroni-node .patroni-state-stale{color:#526176;background:#edf0f4}
