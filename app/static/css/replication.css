@@ -71,3 +71,5 @@
  .oracle-status-layout{grid-template-columns:minmax(0,1fr)}
  .oracle-status-layout>.replication-measurements{grid-column:1;grid-row:3}
 }
+
+.replication-status-layout .architecture-node .replication-site-label{font-size:12px;font-weight:800;line-height:1.4}
