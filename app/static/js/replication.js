@@ -74,7 +74,7 @@
     const [title, source, sourceNote, transfer, copies, apply, target, targetNote] = specs[pair.engine];
     const m = Object.fromEntries(pair.metrics.map(metric => [metric.key, metric]));
     const value = key => `<div class="architecture-live metric-${esc(m[key]?.status)}">${formatted(m[key])}</div>`;
-    const file = !failed && m.copied_seq?.clock && snapshot && snapshot.fetched_at + (performance.now() - receivedAt) / 1000 - m.copied_seq.clock <= pair.stale_after_seconds && pair.archive_file ? `<div class="archive-file"><strong>${esc(pair.archive_file.name)}</strong><span>${number(pair.archive_file.size_bytes / 1048576)} MiB · ${esc(String(pair.archive_file.size_bytes))} bytes</span></div>` : '<div class="archive-file">File details unavailable</div>';
+    const file = !failed && m.copied_seq?.clock && snapshot && snapshot.fetched_at + (performance.now() - receivedAt) / 1000 - m.copied_seq.clock <= pair.stale_after_seconds && pair.archive_file ? `<div class="archive-file"><strong>Archivelog: ${esc(pair.archive_file.name)}</strong></div>` : '<div class="archive-file">File details unavailable</div>';
     const stats = pair.transfer_stats;
     const statsFresh = !failed && stats && snapshot && snapshot.fetched_at + (performance.now() - receivedAt) / 1000 - stats.completed_at <= pair.stale_after_seconds;
     const lastCopy = stats?.last_copy || (stats?.attempts > 0 && stats.bytes_received > 0 ? stats : null);
