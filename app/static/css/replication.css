@@ -79,3 +79,11 @@
 .replication-status-layout .patroni-node .patroni-state-error{color:#b91c3b;background:#fde9ed}
 .replication-status-layout .patroni-node .patroni-state-warning{color:#925b00;background:#fff2d9}
 .replication-status-layout .patroni-node .patroni-state-stale{color:#526176;background:#edf0f4}
+
+/* Show the expanded measurements before the diagram in every engine section. */
+.replication-status-layout>.replication-measurements{grid-column:1 / -1;grid-row:1;margin:0}
+.replication-status-layout>.replication-architecture{grid-column:1;grid-row:2}
+.replication-status-layout>.replication-side-health{grid-column:2;grid-row:2;align-self:start}
+@media(max-width:1100px){
+ .replication-status-layout>.replication-side-health{grid-column:1;grid-row:3}
+}
