@@ -116,7 +116,7 @@
   }
   function card(pair) {
     if (pair.patroni) return patroniCard(pair);
-    return `<div class="replication-status-layout">${architecture(pair)}${healthPanel(pair)}<section class="replication-measurements" aria-label="Measurement details"><h4>Measurement details · oldest: ${esc(date(pair.oldest_measurement))}</h4>${terminal(pair)}</section></div>`;
+    return `<div class="replication-status-layout ${pair.engine === 'oracle' ? 'oracle-status-layout' : ''}">${architecture(pair)}${healthPanel(pair)}<section class="replication-measurements" aria-label="Measurement details"><h4>Measurement details · oldest: ${esc(date(pair.oldest_measurement))}</h4>${terminal(pair)}</section></div>`;
   }
   function overview(pairs) {
     const shownStatus = p => failed ? 'stale' : p.status;
