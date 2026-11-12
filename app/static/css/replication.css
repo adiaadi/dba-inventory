@@ -104,3 +104,8 @@
  .architecture-heading>.architecture-brand-status{grid-column:2}
  .architecture-heading>span:not(.replication-badge){grid-column:1;grid-row:2}
 }
+
+.replication-status-layout .architecture-node.site-main{background:#eff7ff;border-color:#a8cbed;border-top:3px solid #387bb5}
+.replication-status-layout .architecture-node.site-main .replication-site-label{color:#215d91}
+.replication-status-layout .architecture-node.site-dr{background:#f6f1ff;border-color:#cbb5e8;border-top:3px solid #8256ad}
+.replication-status-layout .architecture-node.site-dr .replication-site-label{color:#69408f}
