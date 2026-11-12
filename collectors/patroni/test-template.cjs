@@ -2,7 +2,11 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const template = JSON.parse(fs.readFileSync(path.join(__dirname, 'zabbix-template-8.0.json'), 'utf8')).zabbix_export.templates[0];
-const macros = Object.fromEntries(template.macros.map(m => [m.macro, m.value]));
+const example = JSON.parse(fs.readFileSync(path.join(__dirname, 'aml-host-macros.example.json'), 'utf8'));
+const macros = Object.fromEntries(example.macros.map(m => [m.macro, m.value]));
+for (const m of template.macros) {
+  if (!['{$PATRONI.EXPECTED_NODES}', '{$PATRONI.LAG_WARN_BYTES}'].includes(m.macro)) assert.equal(m.value, '');
+}
 function run(key, data) {
   const item = template.items.find(i => i.key === 'db.replication.patroni.' + key);
   let code = item.preprocessing[0].parameters[0];
@@ -21,7 +25,8 @@ assert.equal(run('dr.replay_lag', data), 0);
 assert.equal(run('dr.replay_lsn', data), 'A75/A607FE88');
 assert.deepEqual(JSON.parse(run('raw', data)), data);
 assert.throws(() => run('raw', {...data, scope: 'wrong'}));
-assert.throws(() => run('local2.replay_lag', data)); // Leader has no replica lag: never report a fabricated zero.
+for (const field of ['receive_lag', 'replay_lag', 'receive_lsn', 'replay_lsn']) assert.equal(run('local2.' + field, data), null);
+assert.throws(() => run('local1.replay_lag', data)); // Missing replica data must remain an error.
 data.members[0].role = 'leader'; data.members[1].role = 'sync_standby';
 assert.equal(run('leader', data), 'aml-prod-db01');
 data.members[1].role = 'leader';
@@ -52,3 +57,12 @@ checkUuids(exported);
 assert.ok(uuids.length > 0);
 assert.equal(new Set(uuids).size, uuids.length);
 console.log(`Validated ${uuids.length} unique UUIDv4 identifiers.`);
+
+// The same template works with another cluster using only host macro overrides.
+macros['{$PATRONI.SCOPE}'] = 'other-cluster';
+macros['{$PATRONI.DR_MEMBER}'] = 'other-dr';
+const other = {scope: 'other-cluster', members: [{name: 'other-primary', role: 'leader', state: 'running'}, {name: 'other-dr', role: 'replica', state: 'streaming', replay_lag: 42}]};
+assert.equal(JSON.parse(run('raw', other)).scope, 'other-cluster');
+assert.equal(run('leader', other), 'other-primary');
+assert.equal(run('dr.replay_lag', other), 42);
+console.log('Host macro overrides and leader-only sample discarding passed.');

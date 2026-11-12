@@ -13,11 +13,32 @@ Only GET /cluster is called. Oracle configurations are unchanged.
    `aml-prod-cluster` (or use an existing host and record its exact technical
    name). Assign the reachable server/proxy. An agent interface is not required.
 4. Link template `DB Inventory Patroni cluster HTTP`.
-5. Check host macros, especially `{$PATRONI.URL}` and `{$PATRONI.SCOPE}`.
+5. Set the five required host macros listed below; the template defaults are empty.
 6. Wait 30-60 seconds; inspect Latest data > Patroni: cluster snapshot,
    current leader, DR state, DR replay_lag and DR replay_lsn.
 
-Default members: aml-prod-db01, aml-prod-db02, aml-prod-drdb.
+## Required host macros and upgrading AML
+
+Before importing this update, define these overrides on host `aml-prod-cluster`
+(not on the template), so clearing the template defaults does not interrupt AML:
+
+| Macro | AML host value |
+| --- | --- |
+| `{$PATRONI.URL}` | `http://10.210.120.71:8008` (or your verified VIP API URL) |
+| `{$PATRONI.SCOPE}` | `aml-prod-cluster` |
+| `{$PATRONI.LOCAL1}` | `aml-prod-db01` |
+| `{$PATRONI.LOCAL2}` | `aml-prod-db02` |
+| `{$PATRONI.DR_MEMBER}` | `aml-prod-drdb` |
+
+`aml-host-macros.example.json` is a reference, not a Zabbix import file.
+Keep any already configured VIP override. Import the updated template with
+Update existing enabled, Delete missing disabled. UUIDs are unchanged.
+Template defaults retain expected node count 3 and lag threshold 104857600 bytes;
+these can also be overridden per host. For another cluster, link this same
+template to a new logical host and define its own five macros.
+This template supports two local members plus one DR; arbitrary member counts
+require a future discovery-based template (LLD).
+
 The current leader is discovered by role, never pinned to db02.
 Macros LOCAL1 and LOCAL2 identify machines, not permanent roles.
 The raw snapshot retains complete topology and tags for subsequent portal
@@ -30,8 +51,9 @@ integration. The scope is a cluster name, not an individual database name.
 - Running/streaming node count is reported cluster state, not an independent
   SQL or network probe of every member. /cluster uses Patroni's cluster view;
   it does not prove direct WAL streaming source or DR failover readiness.
-- Local leader LSN/lag dependent items can be unsupported: Patroni omits replica
-  fields for a leader. Missing/unknown values are not replaced with zero.
+- Local leader LSN/lag samples are discarded because these fields apply to replicas.
+  Previous historical values may remain: always check current role and timestamp.
+  Missing/unknown fields on a replica still raise an error, never a fabricated zero.
 - No direct leader-lock confirmation is inferred from the role label.
 - DR flags nofailover/nosync/noloadbalance are retained as tags, not failures.
 - The single API source is independent of leader identity, but has no endpoint

@@ -20,23 +20,28 @@
         "macros": [
           {
             "macro": "{$PATRONI.URL}",
-            "value": "http://10.210.120.71:8008"
+            "value": "",
+            "description": "Required: override on each cluster host. See README.md."
           },
           {
             "macro": "{$PATRONI.SCOPE}",
-            "value": "aml-prod-cluster"
+            "value": "",
+            "description": "Required: override on each cluster host. See README.md."
           },
           {
             "macro": "{$PATRONI.DR_MEMBER}",
-            "value": "aml-prod-drdb"
+            "value": "",
+            "description": "Required: override on each cluster host. See README.md."
           },
           {
             "macro": "{$PATRONI.LOCAL1}",
-            "value": "aml-prod-db01"
+            "value": "",
+            "description": "Required: override on each cluster host. See README.md."
           },
           {
             "macro": "{$PATRONI.LOCAL2}",
-            "value": "aml-prod-db02"
+            "value": "",
+            "description": "Required: override on each cluster host. See README.md."
           },
           {
             "macro": "{$PATRONI.EXPECTED_NODES}",
@@ -276,10 +281,11 @@
               {
                 "type": "JAVASCRIPT",
                 "parameters": [
-                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.DR_MEMBER}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.receive_lsn; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; return v;"
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.DR_MEMBER}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; if(m.role===\"leader\") return null; var v=m.receive_lsn; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; return v;"
                 ]
               }
-            ]
+            ],
+            "description": "Replica-only metric. Samples are discarded while this member is leader. Historical values may remain; check role and timestamp. Missing replica fields remain errors."
           },
           {
             "uuid": "1ac67ced0db94f0ebfac8d1bea98e072",
@@ -296,10 +302,11 @@
               {
                 "type": "JAVASCRIPT",
                 "parameters": [
-                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.DR_MEMBER}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.replay_lsn; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; return v;"
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.DR_MEMBER}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; if(m.role===\"leader\") return null; var v=m.replay_lsn; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; return v;"
                 ]
               }
-            ]
+            ],
+            "description": "Replica-only metric. Samples are discarded while this member is leader. Historical values may remain; check role and timestamp. Missing replica fields remain errors."
           },
           {
             "uuid": "21bb8ce98cb44637a849a8ed8167604b",
@@ -316,11 +323,12 @@
               {
                 "type": "JAVASCRIPT",
                 "parameters": [
-                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.DR_MEMBER}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.receive_lag; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; if(typeof v!==\"number\" || !isFinite(v) || v<0 || Math.floor(v)!==v) throw \"Invalid numeric value\"; return v;"
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.DR_MEMBER}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; if(m.role===\"leader\") return null; var v=m.receive_lag; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; if(typeof v!==\"number\" || !isFinite(v) || v<0 || Math.floor(v)!==v) throw \"Invalid numeric value\"; return v;"
                 ]
               }
             ],
-            "units": "B"
+            "units": "B",
+            "description": "Replica-only metric. Samples are discarded while this member is leader. Historical values may remain; check role and timestamp. Missing replica fields remain errors."
           },
           {
             "uuid": "22f95723585f46cab3bfb7a37ed67ea4",
@@ -337,7 +345,7 @@
               {
                 "type": "JAVASCRIPT",
                 "parameters": [
-                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.DR_MEMBER}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.replay_lag; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; if(typeof v!==\"number\" || !isFinite(v) || v<0 || Math.floor(v)!==v) throw \"Invalid numeric value\"; return v;"
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.DR_MEMBER}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; if(m.role===\"leader\") return null; var v=m.replay_lag; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; if(typeof v!==\"number\" || !isFinite(v) || v<0 || Math.floor(v)!==v) throw \"Invalid numeric value\"; return v;"
                 ]
               }
             ],
@@ -349,7 +357,8 @@
                 "expression": "min(/DB Inventory Patroni cluster HTTP/db.replication.patroni.dr.replay_lag,3m)>{$PATRONI.LAG_WARN_BYTES}",
                 "priority": "WARNING"
               }
-            ]
+            ],
+            "description": "Replica-only metric. Samples are discarded while this member is leader. Historical values may remain; check role and timestamp. Missing replica fields remain errors."
           },
           {
             "uuid": "f404cb70d2e84b33bbd0b28ad81552dc",
@@ -446,10 +455,11 @@
               {
                 "type": "JAVASCRIPT",
                 "parameters": [
-                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL1}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.receive_lsn; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; return v;"
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL1}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; if(m.role===\"leader\") return null; var v=m.receive_lsn; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; return v;"
                 ]
               }
-            ]
+            ],
+            "description": "Replica-only metric. Samples are discarded while this member is leader. Historical values may remain; check role and timestamp. Missing replica fields remain errors."
           },
           {
             "uuid": "46d45cf5cfe245f38657f8a0440c754c",
@@ -466,10 +476,11 @@
               {
                 "type": "JAVASCRIPT",
                 "parameters": [
-                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL1}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.replay_lsn; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; return v;"
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL1}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; if(m.role===\"leader\") return null; var v=m.replay_lsn; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; return v;"
                 ]
               }
-            ]
+            ],
+            "description": "Replica-only metric. Samples are discarded while this member is leader. Historical values may remain; check role and timestamp. Missing replica fields remain errors."
           },
           {
             "uuid": "65e30e5ec94b47349a258012fcb801d3",
@@ -486,11 +497,12 @@
               {
                 "type": "JAVASCRIPT",
                 "parameters": [
-                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL1}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.receive_lag; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; if(typeof v!==\"number\" || !isFinite(v) || v<0 || Math.floor(v)!==v) throw \"Invalid numeric value\"; return v;"
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL1}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; if(m.role===\"leader\") return null; var v=m.receive_lag; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; if(typeof v!==\"number\" || !isFinite(v) || v<0 || Math.floor(v)!==v) throw \"Invalid numeric value\"; return v;"
                 ]
               }
             ],
-            "units": "B"
+            "units": "B",
+            "description": "Replica-only metric. Samples are discarded while this member is leader. Historical values may remain; check role and timestamp. Missing replica fields remain errors."
           },
           {
             "uuid": "69af06be786d45a6bc1e02f937cdeb26",
@@ -507,11 +519,12 @@
               {
                 "type": "JAVASCRIPT",
                 "parameters": [
-                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL1}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.replay_lag; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; if(typeof v!==\"number\" || !isFinite(v) || v<0 || Math.floor(v)!==v) throw \"Invalid numeric value\"; return v;"
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL1}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; if(m.role===\"leader\") return null; var v=m.replay_lag; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; if(typeof v!==\"number\" || !isFinite(v) || v<0 || Math.floor(v)!==v) throw \"Invalid numeric value\"; return v;"
                 ]
               }
             ],
-            "units": "B"
+            "units": "B",
+            "description": "Replica-only metric. Samples are discarded while this member is leader. Historical values may remain; check role and timestamp. Missing replica fields remain errors."
           },
           {
             "uuid": "d4a63a8af6d441b9a096a02d23b1797c",
@@ -608,10 +621,11 @@
               {
                 "type": "JAVASCRIPT",
                 "parameters": [
-                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL2}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.receive_lsn; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; return v;"
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL2}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; if(m.role===\"leader\") return null; var v=m.receive_lsn; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; return v;"
                 ]
               }
-            ]
+            ],
+            "description": "Replica-only metric. Samples are discarded while this member is leader. Historical values may remain; check role and timestamp. Missing replica fields remain errors."
           },
           {
             "uuid": "59c537ee024f48208678e79ffbf4ab87",
@@ -628,10 +642,11 @@
               {
                 "type": "JAVASCRIPT",
                 "parameters": [
-                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL2}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.replay_lsn; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; return v;"
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL2}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; if(m.role===\"leader\") return null; var v=m.replay_lsn; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; return v;"
                 ]
               }
-            ]
+            ],
+            "description": "Replica-only metric. Samples are discarded while this member is leader. Historical values may remain; check role and timestamp. Missing replica fields remain errors."
           },
           {
             "uuid": "be992b216e72459f9eff9a18b89b9bc4",
@@ -648,11 +663,12 @@
               {
                 "type": "JAVASCRIPT",
                 "parameters": [
-                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL2}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.receive_lag; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; if(typeof v!==\"number\" || !isFinite(v) || v<0 || Math.floor(v)!==v) throw \"Invalid numeric value\"; return v;"
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL2}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; if(m.role===\"leader\") return null; var v=m.receive_lag; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; if(typeof v!==\"number\" || !isFinite(v) || v<0 || Math.floor(v)!==v) throw \"Invalid numeric value\"; return v;"
                 ]
               }
             ],
-            "units": "B"
+            "units": "B",
+            "description": "Replica-only metric. Samples are discarded while this member is leader. Historical values may remain; check role and timestamp. Missing replica fields remain errors."
           },
           {
             "uuid": "559167b73d9b4f0b85b0263110a0b48a",
@@ -669,11 +685,12 @@
               {
                 "type": "JAVASCRIPT",
                 "parameters": [
-                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL2}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.replay_lag; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; if(typeof v!==\"number\" || !isFinite(v) || v<0 || Math.floor(v)!==v) throw \"Invalid numeric value\"; return v;"
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL2}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; if(m.role===\"leader\") return null; var v=m.replay_lag; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; if(typeof v!==\"number\" || !isFinite(v) || v<0 || Math.floor(v)!==v) throw \"Invalid numeric value\"; return v;"
                 ]
               }
             ],
-            "units": "B"
+            "units": "B",
+            "description": "Replica-only metric. Samples are discarded while this member is leader. Historical values may remain; check role and timestamp. Missing replica fields remain errors."
           },
           {
             "uuid": "60de449eb76540e7a4a4212d86e873a3",

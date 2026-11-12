@@ -1,0 +1,33 @@
+{
+  "host": "aml-prod-cluster",
+  "macros": [
+    {
+      "macro": "{$PATRONI.URL}",
+      "value": "http://10.210.120.71:8008"
+    },
+    {
+      "macro": "{$PATRONI.SCOPE}",
+      "value": "aml-prod-cluster"
+    },
+    {
+      "macro": "{$PATRONI.DR_MEMBER}",
+      "value": "aml-prod-drdb"
+    },
+    {
+      "macro": "{$PATRONI.LOCAL1}",
+      "value": "aml-prod-db01"
+    },
+    {
+      "macro": "{$PATRONI.LOCAL2}",
+      "value": "aml-prod-db02"
+    },
+    {
+      "macro": "{$PATRONI.EXPECTED_NODES}",
+      "value": "3"
+    },
+    {
+      "macro": "{$PATRONI.LAG_WARN_BYTES}",
+      "value": "104857600"
+    }
+  ]
+}
