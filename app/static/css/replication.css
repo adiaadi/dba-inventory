@@ -171,3 +171,10 @@
  .oracle-status-layout .replication-side-health .replication-trend svg{flex:none}
 }
 @media(max-width:600px){.oracle-status-layout .architecture-node{min-height:0}}
+
+/* Reduce the Oracle health column from 37% to about 26%. */
+.oracle-status-layout{grid-template-columns:minmax(0,2.86fr) minmax(280px,1fr)}
+.oracle-status-layout>.replication-side-health{padding:8px 10px}
+.oracle-status-layout .replication-health-heading{gap:6px}
+.oracle-status-layout .replication-health-row{padding:4px 0}
+@media(max-width:1100px){.oracle-status-layout{grid-template-columns:minmax(0,1fr)}}
