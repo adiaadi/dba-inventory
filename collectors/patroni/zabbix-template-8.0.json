@@ -1,0 +1,702 @@
+{
+  "zabbix_export": {
+    "version": "8.0",
+    "template_groups": [
+      {
+        "uuid": "748ad4d098d447d492bb935c907f652f",
+        "name": "Templates/Databases"
+      }
+    ],
+    "templates": [
+      {
+        "uuid": "6c1339b1b4ab544b994c59c1c119c1f0",
+        "template": "DB Inventory Patroni cluster HTTP",
+        "name": "DB Inventory Patroni cluster HTTP",
+        "groups": [
+          {
+            "name": "Templates/Databases"
+          }
+        ],
+        "macros": [
+          {
+            "macro": "{$PATRONI.URL}",
+            "value": "http://10.210.120.71:8008"
+          },
+          {
+            "macro": "{$PATRONI.SCOPE}",
+            "value": "aml-prod-cluster"
+          },
+          {
+            "macro": "{$PATRONI.DR_MEMBER}",
+            "value": "aml-prod-drdb"
+          },
+          {
+            "macro": "{$PATRONI.LOCAL1}",
+            "value": "aml-prod-db01"
+          },
+          {
+            "macro": "{$PATRONI.LOCAL2}",
+            "value": "aml-prod-db02"
+          },
+          {
+            "macro": "{$PATRONI.EXPECTED_NODES}",
+            "value": "3"
+          },
+          {
+            "macro": "{$PATRONI.LAG_WARN_BYTES}",
+            "value": "104857600"
+          }
+        ],
+        "items": [
+          {
+            "uuid": "40b4b857142f530e82f1ad385d9170f0",
+            "name": "Patroni: cluster snapshot",
+            "type": "HTTP_AGENT",
+            "key": "db.replication.patroni.raw",
+            "url": "{$PATRONI.URL}/cluster",
+            "delay": "30s",
+            "timeout": "10s",
+            "value_type": "TEXT",
+            "history": "1d",
+            "trends": "0",
+            "description": "Cluster topology from Patroni REST API. The endpoint is a monitoring source, not a fixed leader.",
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); if(d.scope!==\"{$PATRONI.SCOPE}\" || !Array.isArray(d.members)) throw \"Unexpected Patroni cluster\"; return JSON.stringify(d);"
+                ]
+              }
+            ],
+            "triggers": [
+              {
+                "uuid": "6c41384b7598551daf8812792f964f98",
+                "name": "Patroni: no cluster data for 3 minutes",
+                "expression": "nodata(/DB Inventory Patroni cluster HTTP/db.replication.patroni.raw,3m)=1",
+                "priority": "HIGH"
+              }
+            ]
+          },
+          {
+            "uuid": "7ff6339f38e55251aea1f9289df0fb42",
+            "name": "Patroni: cluster name",
+            "type": "DEPENDENT",
+            "key": "db.replication.patroni.scope",
+            "value_type": "TEXT",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.patroni.raw"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); return d.scope;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "a54f6ebe2b6c5b458af0250e9a3bce74",
+            "name": "Patroni: current leader",
+            "type": "DEPENDENT",
+            "key": "db.replication.patroni.leader",
+            "value_type": "TEXT",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.patroni.raw"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.role===\"leader\";}); if(a.length!==1) throw \"Expected exactly one leader\"; return a[0].name;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "685b25d4cc21588b9067f99b44e4979e",
+            "name": "Patroni: leader count",
+            "type": "DEPENDENT",
+            "key": "db.replication.patroni.leader_count",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.patroni.raw"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); return d.members.filter(function(m){return m.role===\"leader\";}).length;"
+                ]
+              }
+            ],
+            "triggers": [
+              {
+                "uuid": "1cc62b1be47259449ac9f7e15b8ba550",
+                "name": "Patroni: expected exactly one leader",
+                "expression": "last(/DB Inventory Patroni cluster HTTP/db.replication.patroni.leader_count)<>1",
+                "priority": "HIGH"
+              }
+            ]
+          },
+          {
+            "uuid": "fbcf3886f3c25e8381df087326b0e5a1",
+            "name": "Patroni: reported member count",
+            "type": "DEPENDENT",
+            "key": "db.replication.patroni.members",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.patroni.raw"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); return d.members.length;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "b157cfd0fe765653b6f651ec940c895e",
+            "name": "Patroni: nodes reported running or streaming",
+            "type": "DEPENDENT",
+            "key": "db.replication.patroni.healthy_nodes",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.patroni.raw"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); return d.members.filter(function(m){return m.state===\"running\" || m.state===\"streaming\";}).length;"
+                ]
+              }
+            ],
+            "triggers": [
+              {
+                "uuid": "c8425f22256b5eb4826c1f310b4c9570",
+                "name": "Patroni: fewer running/streaming nodes than expected",
+                "expression": "last(/DB Inventory Patroni cluster HTTP/db.replication.patroni.healthy_nodes)<{$PATRONI.EXPECTED_NODES}",
+                "priority": "HIGH"
+              }
+            ]
+          },
+          {
+            "uuid": "f6f28ab4e916576dbb2d1eae3bd0c124",
+            "name": "Patroni: dr role",
+            "type": "DEPENDENT",
+            "key": "db.replication.patroni.dr.role",
+            "value_type": "TEXT",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.patroni.raw"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.DR_MEMBER}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.role; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "b8a75c6ecc2751f59ae1677ee343794c",
+            "name": "Patroni: dr state",
+            "type": "DEPENDENT",
+            "key": "db.replication.patroni.dr.state",
+            "value_type": "TEXT",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.patroni.raw"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.DR_MEMBER}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.state; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; return v;"
+                ]
+              }
+            ],
+            "triggers": [
+              {
+                "uuid": "6dfc01c54d5f5fc1be09ca4a5da7c7a5",
+                "name": "Patroni: DR is not streaming",
+                "expression": "last(/DB Inventory Patroni cluster HTTP/db.replication.patroni.dr.state)<>\"streaming\"",
+                "priority": "HIGH"
+              }
+            ]
+          },
+          {
+            "uuid": "06b1986657e658a9a165f6c1f62a8dea",
+            "name": "Patroni: dr timeline",
+            "type": "DEPENDENT",
+            "key": "db.replication.patroni.dr.timeline",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.patroni.raw"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.DR_MEMBER}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.timeline; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; if(typeof v!==\"number\" || !isFinite(v) || v<0 || Math.floor(v)!==v) throw \"Invalid numeric value\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "3d594203c332570a82158af7d3fba58f",
+            "name": "Patroni: dr receive_lsn",
+            "type": "DEPENDENT",
+            "key": "db.replication.patroni.dr.receive_lsn",
+            "value_type": "TEXT",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.patroni.raw"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.DR_MEMBER}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.receive_lsn; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "a82e65600db250449a785d23db33c2bc",
+            "name": "Patroni: dr replay_lsn",
+            "type": "DEPENDENT",
+            "key": "db.replication.patroni.dr.replay_lsn",
+            "value_type": "TEXT",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.patroni.raw"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.DR_MEMBER}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.replay_lsn; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "cf7da03cff8551cd8517680201cca4c6",
+            "name": "Patroni: dr receive_lag",
+            "type": "DEPENDENT",
+            "key": "db.replication.patroni.dr.receive_lag",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.patroni.raw"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.DR_MEMBER}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.receive_lag; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; if(typeof v!==\"number\" || !isFinite(v) || v<0 || Math.floor(v)!==v) throw \"Invalid numeric value\"; return v;"
+                ]
+              }
+            ],
+            "units": "B"
+          },
+          {
+            "uuid": "d461fa5ae8f354c98e1ab54af342cf61",
+            "name": "Patroni: dr replay_lag",
+            "type": "DEPENDENT",
+            "key": "db.replication.patroni.dr.replay_lag",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.patroni.raw"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.DR_MEMBER}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.replay_lag; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; if(typeof v!==\"number\" || !isFinite(v) || v<0 || Math.floor(v)!==v) throw \"Invalid numeric value\"; return v;"
+                ]
+              }
+            ],
+            "units": "B",
+            "triggers": [
+              {
+                "uuid": "3db791e3f66d5d5fbcfead7703e72c4b",
+                "name": "Patroni: DR replay backlog above threshold for 3 minutes",
+                "expression": "min(/DB Inventory Patroni cluster HTTP/db.replication.patroni.dr.replay_lag,3m)>{$PATRONI.LAG_WARN_BYTES}",
+                "priority": "WARNING"
+              }
+            ]
+          },
+          {
+            "uuid": "5a5aa25ee7f15c0589fc4aeaf67874d2",
+            "name": "Patroni: dr tags",
+            "type": "DEPENDENT",
+            "key": "db.replication.patroni.dr.tags",
+            "value_type": "TEXT",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.patroni.raw"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.DR_MEMBER}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; return JSON.stringify(m.tags || {});"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "e31fb98eddd75cf7b2957d6f695c48ba",
+            "name": "Patroni: local1 role",
+            "type": "DEPENDENT",
+            "key": "db.replication.patroni.local1.role",
+            "value_type": "TEXT",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.patroni.raw"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL1}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.role; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "68a2b6bfc36f556793ac5ed3553c48ed",
+            "name": "Patroni: local1 state",
+            "type": "DEPENDENT",
+            "key": "db.replication.patroni.local1.state",
+            "value_type": "TEXT",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.patroni.raw"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL1}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.state; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "d89bb0e01feb50db9f8e9ca575bc9aaa",
+            "name": "Patroni: local1 timeline",
+            "type": "DEPENDENT",
+            "key": "db.replication.patroni.local1.timeline",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.patroni.raw"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL1}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.timeline; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; if(typeof v!==\"number\" || !isFinite(v) || v<0 || Math.floor(v)!==v) throw \"Invalid numeric value\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "6ab04d3acd15562da4f8539547d5fb91",
+            "name": "Patroni: local1 receive_lsn",
+            "type": "DEPENDENT",
+            "key": "db.replication.patroni.local1.receive_lsn",
+            "value_type": "TEXT",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.patroni.raw"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL1}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.receive_lsn; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "5f86e40fa6cb512fae8a0dd8c446a6c1",
+            "name": "Patroni: local1 replay_lsn",
+            "type": "DEPENDENT",
+            "key": "db.replication.patroni.local1.replay_lsn",
+            "value_type": "TEXT",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.patroni.raw"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL1}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.replay_lsn; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "f7600af55f4d5061876ff2b4784f1601",
+            "name": "Patroni: local1 receive_lag",
+            "type": "DEPENDENT",
+            "key": "db.replication.patroni.local1.receive_lag",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.patroni.raw"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL1}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.receive_lag; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; if(typeof v!==\"number\" || !isFinite(v) || v<0 || Math.floor(v)!==v) throw \"Invalid numeric value\"; return v;"
+                ]
+              }
+            ],
+            "units": "B"
+          },
+          {
+            "uuid": "938ad404d4355418acb191eb38f29c91",
+            "name": "Patroni: local1 replay_lag",
+            "type": "DEPENDENT",
+            "key": "db.replication.patroni.local1.replay_lag",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.patroni.raw"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL1}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.replay_lag; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; if(typeof v!==\"number\" || !isFinite(v) || v<0 || Math.floor(v)!==v) throw \"Invalid numeric value\"; return v;"
+                ]
+              }
+            ],
+            "units": "B"
+          },
+          {
+            "uuid": "28121f237f1c59df9c762f24e01b821b",
+            "name": "Patroni: local1 tags",
+            "type": "DEPENDENT",
+            "key": "db.replication.patroni.local1.tags",
+            "value_type": "TEXT",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.patroni.raw"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL1}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; return JSON.stringify(m.tags || {});"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "2a4aadc4775b5fd5975b96cc74edbde4",
+            "name": "Patroni: local2 role",
+            "type": "DEPENDENT",
+            "key": "db.replication.patroni.local2.role",
+            "value_type": "TEXT",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.patroni.raw"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL2}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.role; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "57ab5785403f5da99fd1fe3b6a200cc5",
+            "name": "Patroni: local2 state",
+            "type": "DEPENDENT",
+            "key": "db.replication.patroni.local2.state",
+            "value_type": "TEXT",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.patroni.raw"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL2}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.state; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "0d2cd61c014c5281845b865b0b9f6bf8",
+            "name": "Patroni: local2 timeline",
+            "type": "DEPENDENT",
+            "key": "db.replication.patroni.local2.timeline",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.patroni.raw"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL2}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.timeline; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; if(typeof v!==\"number\" || !isFinite(v) || v<0 || Math.floor(v)!==v) throw \"Invalid numeric value\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "ef36927ceb0559b4b813f2ea5c6a1407",
+            "name": "Patroni: local2 receive_lsn",
+            "type": "DEPENDENT",
+            "key": "db.replication.patroni.local2.receive_lsn",
+            "value_type": "TEXT",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.patroni.raw"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL2}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.receive_lsn; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "d61c7bcebb4356679137c2681de87295",
+            "name": "Patroni: local2 replay_lsn",
+            "type": "DEPENDENT",
+            "key": "db.replication.patroni.local2.replay_lsn",
+            "value_type": "TEXT",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.patroni.raw"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL2}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.replay_lsn; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; return v;"
+                ]
+              }
+            ]
+          },
+          {
+            "uuid": "83cd4628fa2055b2958d623ced1d879a",
+            "name": "Patroni: local2 receive_lag",
+            "type": "DEPENDENT",
+            "key": "db.replication.patroni.local2.receive_lag",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.patroni.raw"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL2}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.receive_lag; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; if(typeof v!==\"number\" || !isFinite(v) || v<0 || Math.floor(v)!==v) throw \"Invalid numeric value\"; return v;"
+                ]
+              }
+            ],
+            "units": "B"
+          },
+          {
+            "uuid": "9aed55bed3f45e9889c3b7791edc3a71",
+            "name": "Patroni: local2 replay_lag",
+            "type": "DEPENDENT",
+            "key": "db.replication.patroni.local2.replay_lag",
+            "value_type": "UNSIGNED",
+            "history": "7d",
+            "trends": "30d",
+            "master_item": {
+              "key": "db.replication.patroni.raw"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL2}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; var v=m.replay_lag; if(v===null || typeof v===\"undefined\") throw \"Metric unavailable for current role\"; if(typeof v!==\"number\" || !isFinite(v) || v<0 || Math.floor(v)!==v) throw \"Invalid numeric value\"; return v;"
+                ]
+              }
+            ],
+            "units": "B"
+          },
+          {
+            "uuid": "3f76c590224a5433a8fedd2effa5e1c0",
+            "name": "Patroni: local2 tags",
+            "type": "DEPENDENT",
+            "key": "db.replication.patroni.local2.tags",
+            "value_type": "TEXT",
+            "history": "7d",
+            "trends": "0",
+            "master_item": {
+              "key": "db.replication.patroni.raw"
+            },
+            "preprocessing": [
+              {
+                "type": "JAVASCRIPT",
+                "parameters": [
+                  "var d=JSON.parse(value); var a=d.members.filter(function(m){return m.name===\"{$PATRONI.LOCAL2}\";}); if(a.length!==1) throw \"Member missing or duplicated\"; var m=a[0]; return JSON.stringify(m.tags || {});"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
