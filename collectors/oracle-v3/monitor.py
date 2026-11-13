@@ -86,9 +86,18 @@ def sql_snapshot(primary=False):
 
 
 def confirmed_applied(data):
-    # Enforce the selected database layout; inspect may run before pins are set.
-    if (PROFILE['header_count'] is not None and data['header_count'] != PROFILE['header_count']) or data['header_count'] <= 0 or data['bad_headers'] != 0:
-        raise ValueError('Datafile headers require review')
+    # A pinned count is a minimum baseline, not a fixed schema: adding datafiles
+    # is normal. Never accept fewer files or unreadable/inconsistent headers.
+    count = data.get('header_count')
+    baseline = PROFILE['header_count']
+    if type(count) is not int or count <= 0:
+        raise ValueError(f'Invalid standby datafile header count: {count!r}')
+    if baseline is not None and count < baseline:
+        raise ValueError(f'Standby datafile count below verified baseline: actual={count}, minimum={baseline}')
+    if data.get('bad_headers') != 0:
+        raise ValueError(f"Standby datafile headers require review: bad_headers={data.get('bad_headers')}, "
+                         f"header_count={count}, baseline={baseline}. Check header ERROR, CHECKPOINT_CHANGE# and FUZZY; "
+                         "a new datafile may require standby recovery or creation.")
     seq = data['applied_seq']
     if seq is None or data['applied_end_scn'] is None or data['checkpoint_scn'] is None:
         raise ValueError('Applied boundary unavailable')

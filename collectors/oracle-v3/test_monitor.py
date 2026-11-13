@@ -203,6 +203,26 @@ class CycleTests(unittest.TestCase):
             self.assertIsNone(r[key])
         self.assertEqual(r['cycle_ok'],0)
 
+    def test_added_datafiles_after_apply(self):
+        s = snapshot(12)
+        s['header_count'] = 18
+        r, _ = self.cycle(post=s)
+        self.assertEqual(r['cycle_ok'], 1)
+        self.assertEqual(r['applied_seq'], 12)
+
+    def test_header_count_growth_and_safety(self):
+        with patch.dict(monitor.PROFILE, header_count=16):
+            s = snapshot(12)
+            s['header_count'] = 18
+            self.assertEqual(monitor.confirmed_applied(s), 12)
+            s['bad_headers'] = 1
+            with self.assertRaisesRegex(ValueError, 'bad_headers=1'):
+                monitor.confirmed_applied(s)
+            s['bad_headers'] = 0
+            s['header_count'] = 15
+            with self.assertRaisesRegex(ValueError, 'below verified baseline'):
+                monitor.confirmed_applied(s)
+
     def test_bad_post_headers(self):
         s=snapshot(12);s['bad_headers']=1
         r,_=self.cycle(post=s)
