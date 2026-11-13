@@ -106,7 +106,7 @@
     return `<aside class="replication-health replication-side-health"><div class="replication-health-heading"><h4>${heading}</h4>${badge(failed ? 'stale' : pair.status)}</div><div class="replication-health-row"><span>Cron schedule</span><span>${esc(pair.schedule || 'Not configured')}</span></div>${keys.map(key => `<div class="replication-health-row ${m[key]?.status === 'critical' ? 'health-row-error' : ''}"><span>${esc(m[key]?.label || key)}</span><span>${m[key]?.value == null ? badge('unknown') : formatted(m[key])}</span></div>`).join('')}<div class="replication-trend">${trend(pair, m[pair.trend_key])}</div></aside>`;
   }
   function patroniCard(pair) {
-    const stale = failed || ['stale','unknown'].includes(pair.status);
+    const stale = failed || !snapshot || !pair.oldest_measurement || snapshot.fetched_at + (performance.now() - receivedAt) / 1000 - pair.oldest_measurement > pair.stale_after_seconds;
     const nodes = pair.topology || [];
     const leader = nodes.find(n => n.role === 'leader');
     const node = n => `<div class="architecture-node patroni-node ${n.is_dr ? 'site-dr' : 'site-main'} ${!stale && n.status === 'critical' ? 'patroni-node-error' : ''}"><small class="replication-site-label">${n.is_dr ? 'DR SITE' : 'MAIN SITE'}</small><strong>${esc(upper(n.name))}</strong><b>${esc(upper(n.role).replaceAll('_',' '))}</b>${badge(stale ? 'stale' : n.status)}<span>${esc(n.host || '')} · Timeline ${esc(n.timeline ?? '—')}</span><span class="patroni-state ${stale ? 'patroni-state-stale' : ['running','streaming'].includes(n.state) ? 'patroni-state-ok' : ['unavailable','stopped','failed','crashed','start failed','restart failed'].includes(n.state) ? 'patroni-state-error' : 'patroni-state-warning'}">${esc(upper(n.state || 'Unknown'))}</span></div>`;
@@ -117,7 +117,7 @@
       const route = `M500 0 V24 H${x} V92`;
       const fresh = !failed && snapshot && pair.oldest_measurement && snapshot.fetched_at + (performance.now() - receivedAt) / 1000 - pair.oldest_measurement <= pair.stale_after_seconds;
       const broken = fresh && (leader.status === 'critical' || n.status === 'critical');
-      const active = fresh && !paused && !stale && leader.status === 'healthy' && n.status === 'healthy';
+      const active = fresh && !paused && leader.status === 'healthy' && n.status === 'healthy';
       return `<g class="${broken ? 'patroni-flow-error' : active ? 'patroni-flow-active' : ''}"><path class="patroni-flow-line" d="${route}"/><path class="patroni-flow-packet" d="${route}" pathLength="100"/><path class="patroni-flow-head" d="M${x-6} 88 L${x} 100 L${x+6} 88 Z"/></g>`;
     }).join('')}</svg>` : '';
     const flow = `<section class="replication-architecture"><div class="architecture-heading"><div class="patroni-heading-title"><h2>Patroni replication status</h2><span>${esc(upper(pair.scope))}${pair.vip ? ` · VIP: ${esc(pair.vip)}` : ''}</span></div><div class="architecture-brand-status">${engineIcon(pair.engine)}${badge(pair.status)}</div></div>${leader ? `<div class="patroni-leader">${node(leader)}</div>` : '<div class="replication-empty">No unique Leader available</div>'}<div class="patroni-distribution">${connectors}<div class="patroni-branches" style="--replicas:${Math.max(1,replicas.length)}">${replicas.map(n => `<div class="patroni-branch"><div class="patroni-mode">${esc(mode(n))}</div>${node(n)}</div>`).join('')}</div></div></section>`;
