@@ -203,3 +203,6 @@
 .replication-badge.stale{animation:replication-stale-pulse 2.4s ease-in-out infinite}
 @keyframes replication-stale-pulse{0%,100%{background-color:#fff2d9}50%{background-color:#f5cd75;box-shadow:0 0 0 2px #f9e4b6}}
 @media(prefers-reduced-motion:reduce){.replication-badge.stale{animation:none}}
+
+.replication-badge.critical{font-size:13px;font-weight:800;line-height:1.5}
+.replication-status-layout .replication-badge.critical{font-size:13px;font-weight:800;line-height:1.5}
