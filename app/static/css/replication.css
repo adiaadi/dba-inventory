@@ -178,3 +178,14 @@
 .oracle-status-layout .replication-health-heading{gap:6px}
 .oracle-status-layout .replication-health-row{padding:4px 0}
 @media(max-width:1100px){.oracle-status-layout{grid-template-columns:minmax(0,1fr)}}
+
+/* Failed stages stop moving and retain a clearly visible red direction arrow. */
+.architecture-error .architecture-track:before{background:#cc2545}
+.architecture-error .architecture-track b{color:#cc2545}
+.architecture-error .architecture-track i{display:none;animation:none}
+.patroni-flow-error .patroni-flow-line{stroke:#cc2545}
+.patroni-flow-error .patroni-flow-head{fill:#cc2545}
+.patroni-flow-error .patroni-flow-packet{display:none;animation:none}
+.replication-badge.critical,.architecture-live .replication-error-text,.patroni-state-error{animation:replication-problem-pulse 2.4s ease-in-out infinite}
+@keyframes replication-problem-pulse{0%,100%{opacity:1}50%{opacity:.55}}
+@media(prefers-reduced-motion:reduce){.replication-badge.critical,.architecture-live .replication-error-text,.patroni-state-error{animation:none}}
