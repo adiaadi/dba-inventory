@@ -189,3 +189,5 @@
 .replication-badge.critical,.architecture-live .replication-error-text,.patroni-state-error{animation:replication-problem-pulse 2.4s ease-in-out infinite}
 @keyframes replication-problem-pulse{0%,100%{opacity:1}50%{opacity:.55}}
 @media(prefers-reduced-motion:reduce){.replication-badge.critical,.architecture-live .replication-error-text,.patroni-state-error{animation:none}}
+
+.replication-status-layout .architecture-node.patroni-node-error{background:#fff0f2;border-color:#cc2545;border-top-color:#cc2545;box-shadow:0 0 0 1px #cc2545}.replication-status-layout .patroni-node-error .replication-site-label{color:#b91c3b}

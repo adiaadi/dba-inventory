@@ -110,3 +110,29 @@ class PatroniTests(unittest.TestCase):
         self.assertEqual(client.get_patroni_vips(['css-prod-cluster', 'ipv6', 'hidden', 'invalid']),
                          {'css-prod-cluster': '10.210.119.39', 'ipv6': '2001:db8::1'})
         client._call.assert_called_once()
+
+    def test_missing_nodes_retained_and_recover(self):
+        from app.services.patroni import retain_expected_members
+        expected = [m['name'] for m in self.data['members']]
+        dr = self.data['members'].pop()
+        result = self.build()
+        retain_expected_members(result, expected, 10000)
+        self.assertEqual(result['reported_members'], 2)
+        self.assertEqual(len(result['topology']), 3)
+        missing = result['topology'][-1]
+        self.assertEqual(missing['state'], 'unavailable')
+        self.assertEqual(missing['status'], 'critical')
+        self.assertIsNone(missing['replay_lag'])
+        stale = self.build(now=10200)
+        retain_expected_members(stale, expected, 10200)
+        self.assertEqual(stale['topology'][-1]['status'], 'stale')
+        self.data['members'].append(dr)
+        recovered = self.build()
+        retain_expected_members(recovered, expected, 10000)
+        self.assertEqual(recovered['status'], 'healthy')
+        self.assertFalse(any(n.get('missing') for n in recovered['topology']))
+        self.data['members'].pop(0)
+        local_missing = self.build()
+        retain_expected_members(local_missing, expected, 10000)
+        self.assertEqual(local_missing['topology'][-1]['name'], 'aml-prod-db01')
+        self.assertFalse(local_missing['topology'][-1]['is_dr'])

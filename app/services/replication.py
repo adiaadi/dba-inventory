@@ -307,6 +307,16 @@ def get_snapshot(history_hours=1):
                             result['vip'] = vips.get(pair.zabbix_host)
                 except (ZabbixApiError, OSError, ValueError):
                     log.warning('Cannot read Patroni VIP macros')
+        expected_members = {}
+        if client:
+            try:
+                expected_members = client.get_patroni_members(sorted({p.zabbix_host for p in config.pairs if p.patroni_scope and p.zabbix_host}))
+            except (ZabbixApiError, OSError, ValueError):
+                log.warning('Cannot read Patroni member macros')
+        from app.services.patroni import retain_expected_members
+        for pair, result in zip(config.pairs, snapshot['pairs']):
+            if pair.patroni_scope:
+                retain_expected_members(result, expected_members.get(pair.zabbix_host, []), now)
         # Batch numeric history by Zabbix value type, avoiding one request per pair.
         history = {}
         if client:

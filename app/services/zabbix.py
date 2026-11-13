@@ -361,6 +361,20 @@ class ZabbixClient:
             "monitored": True,
         }) or []
 
+    def get_patroni_members(self, hostnames: list[str]) -> dict[str, list[str]]:
+        if not hostnames:
+            return {}
+        rows = self._call('host.get', {
+            'output': ['host'], 'filter': {'host': hostnames},
+            'selectMacros': ['macro', 'value', 'type'],
+        }) or []
+        allowed = {'{$PATRONI.LOCAL1}', '{$PATRONI.LOCAL2}', '{$PATRONI.DR_MEMBER}'}
+        return {host['host']: list(dict.fromkeys(
+            m['value'].strip() for m in host.get('macros', [])
+            if m.get('macro') in allowed and str(m.get('type', '0')) == '0'
+            and isinstance(m.get('value'), str) and m['value'].strip()
+        )) for host in rows}
+
     def get_patroni_vips(self, hostnames: list[str]) -> dict[str, str]:
         """Read only the public hostname from host-level PATRONI.URL macros."""
         from urllib.parse import urlsplit

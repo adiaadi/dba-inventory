@@ -65,3 +65,26 @@ def build_patroni(pair, items, now):
                 status=pair_status(metrics), metrics=metrics, oldest_measurement=clock,
                 trend=[], trend_key='wal_backlog', trend_error=None, patroni=True,
                 topology=nodes, topology_error=reason, scope=pair.patroni_scope)
+
+
+def retain_expected_members(result, expected, now):
+    """Keep configured nodes visible without inventing live roles or WAL values."""
+    from app.services.replication import pair_status
+    nodes = result['topology']
+    result['reported_members'] = len(nodes)
+    seen = {n['name'] for n in nodes}
+    clock = result.get('oldest_measurement')
+    valid = not result.get('topology_error') and clock is not None
+    status = ('critical' if now - clock <= result['stale_after_seconds'] else 'stale') if valid else 'unknown'
+    for name in dict.fromkeys([*expected, result['standby']]):
+        if name in seen:
+            continue
+        nodes.append(dict(name=name, role='unknown', state='unavailable' if status == 'critical' else 'unknown',
+                          is_dr=name == result['standby'], status=status, missing=True,
+                          host=None, timeline=None, receive_lsn=None, replay_lsn=None,
+                          receive_lag=None, replay_lag=None))
+        result['metrics'].append(dict(key=name + '.presence', label=name.upper() + ' presence',
+                                     value='unavailable' if status == 'critical' else None, unit='',
+                                     status=status, clock=clock,
+                                     reason='Member absent from Patroni snapshot' if valid else 'Topology unavailable'))
+    result['status'] = pair_status(result['metrics'])
