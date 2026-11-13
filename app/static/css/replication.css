@@ -187,7 +187,9 @@
 .patroni-flow-error .patroni-flow-head{fill:#cc2545}
 .patroni-flow-error .patroni-flow-packet{display:none;animation:none}
 .replication-badge.critical,.architecture-live .replication-error-text,.patroni-state-error{animation:replication-problem-pulse 2.4s ease-in-out infinite}
-@keyframes replication-problem-pulse{0%,100%{opacity:1}50%{opacity:.55}}
+@keyframes replication-problem-pulse{0%,100%{background-color:#fff0f2;box-shadow:0 0 0 0 transparent}50%{background-color:#ff9eae;box-shadow:0 0 0 3px #fbc1cb}}
 @media(prefers-reduced-motion:reduce){.replication-badge.critical,.architecture-live .replication-error-text,.patroni-state-error{animation:none}}
 
 .replication-status-layout .architecture-node.patroni-node-error{background:#fff0f2;border-color:#cc2545;border-top-color:#cc2545;box-shadow:0 0 0 1px #cc2545}.replication-status-layout .patroni-node-error .replication-site-label{color:#b91c3b}
+
+.architecture-live .replication-error-text{display:inline-block;padding:2px 7px;border-radius:4px}
