@@ -206,3 +206,9 @@
 
 .replication-badge.critical{font-size:13px;font-weight:800;line-height:1.5}
 .replication-status-layout .replication-badge.critical{font-size:13px;font-weight:800;line-height:1.5}
+
+.replication-error-notice{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;padding:10px 12px;border:1px solid #cc2545;border-radius:6px;color:#971b32;font-size:12px;background:#fff0f2;animation:replication-problem-pulse 2.4s ease-in-out infinite}
+.replication-status-layout .architecture-node.node-data-error{animation:replication-problem-pulse 2.4s ease-in-out infinite}
+.replication-health-row.health-row-error{padding-left:6px;padding-right:6px;border-radius:4px;color:#971b32;animation:replication-problem-pulse 2.4s ease-in-out infinite}
+.architecture-live .replication-badge.unknown{color:#805100;background:#fff2d9}
+@media(prefers-reduced-motion:reduce){.replication-error-notice,.replication-status-layout .architecture-node.node-data-error,.replication-health-row.health-row-error{animation:none}}
