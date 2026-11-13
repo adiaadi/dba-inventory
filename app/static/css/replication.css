@@ -193,3 +193,13 @@
 .replication-status-layout .architecture-node.patroni-node-error{background:#fff0f2;border-color:#cc2545;border-top-color:#cc2545;box-shadow:0 0 0 1px #cc2545}.replication-status-layout .patroni-node-error .replication-site-label{color:#b91c3b}
 
 .architecture-live .replication-error-text{display:inline-block;padding:2px 7px;border-radius:4px}
+
+.replication-stale-notice{display:flex;flex-direction:column;gap:4px;margin:0 0 14px;padding:10px 12px;border:1px solid #dba63a;border-radius:6px;background:#fff2d9;color:#805100;font-size:12px}
+.replication-status-layout .architecture-node.node-data-stale{background:#fff7e7;border-color:#cf931e;border-top-color:#cf931e}
+.replication-status-layout .architecture-node.node-data-error{background:#fff0f2;border-color:#cc2545;border-top-color:#cc2545}
+.architecture-stale .architecture-track:before{background:#cf931e}
+.architecture-stale .architecture-track b{color:#a46c00}
+.architecture-stale .architecture-track i{display:none;animation:none}
+.replication-badge.stale{animation:replication-stale-pulse 2.4s ease-in-out infinite}
+@keyframes replication-stale-pulse{0%,100%{background-color:#fff2d9}50%{background-color:#f5cd75;box-shadow:0 0 0 2px #f9e4b6}}
+@media(prefers-reduced-motion:reduce){.replication-badge.stale{animation:none}}
