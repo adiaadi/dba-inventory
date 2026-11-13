@@ -7,7 +7,7 @@ router = APIRouter(prefix='/schemas', tags=['schemas'])
 
 
 @router.get('', response_class=HTMLResponse)
-def schemas(request: Request):
+def schemas(request: Request, engine: str = '', database: str = ''):
     # Aggregated from the user-supplied ss snapshot on AML-PROD-DB02.
     # Counts are historical observations, not live health indicators.
     clients = [
@@ -18,4 +18,6 @@ def schemas(request: Request):
     ]
     return templates.TemplateResponse(request, 'schemas.html', {
         'request': request, 'clients': clients,
+        'engine': engine if engine in ('oracle', 'postgresql', 'sqlserver') else '',
+        'selected': engine == 'postgresql' and database == 'aml',
     })

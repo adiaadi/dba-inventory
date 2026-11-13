@@ -1,50 +1,74 @@
 {% extends "base.html" %}
 {% block title %}SCHEMAS · Схемы взаимодействия информационных систем{% endblock %}
 {% block content %}
-<link rel="stylesheet" href="/static/css/schemas.css?v=20261113-1">
-<div class="overview-shell">
-  <aside class="overview-sidebar">
-    <div class="overview-logo"><span><i class="bi bi-diagram-3"></i></span></div>
-    <nav class="overview-nav" aria-label="Разделы портала">
-      <a class="overview-nav-item" href="/"><i class="bi bi-grid-1x2"></i><span>OVERVIEW</span></a>
-      <a class="overview-nav-item" href="/replication"><i class="bi bi-arrow-repeat"></i><span>REPLICATION</span></a>
-      <a class="overview-nav-item active" href="/schemas" aria-current="page"><i class="bi bi-diagram-3"></i><span>SCHEMAS</span></a>
-    </nav>
-  </aside>
-  <main class="schemas-main">
-    <h1>Схемы взаимодействия информационных систем</h1>
-    <p class="schemas-intro">Сервисы, серверы, точки подключения и сетевые порты.</p>
-    <div class="schemas-system"><strong>AML</strong><span>Снимок соединений · не live-мониторинг</span></div>
-    <section class="schemas-panel" aria-labelledby="aml-heading">
-      <h2 id="aml-heading">AML · Клиенты → HAProxy → PostgreSQL</h2>
-      <p class="schemas-note">Источник: ss на AML-PROD-DB02. Время сбора не указано. Адрес VIP находился на DB02 в момент снимка.</p>
-      <div class="schemas-flow">
-        <div class="schemas-clients">
-          {% for client in clients %}
-          <div class="schemas-node"><i class="bi bi-hdd-network"></i><strong>{{ client.ip }}</strong><small>Имя сервиса уточняется</small><span>{{ client.connections }} соединений</span></div>
-          {% endfor %}
-        </div>
-        <div class="schemas-arrow"><strong>TCP / 5000</strong><span aria-hidden="true">→</span></div>
-        <div class="schemas-node schemas-proxy"><i class="bi bi-shuffle"></i><strong>HAProxy · VIP</strong><b>10.210.120.70:5000</b><span>AML-PROD-DB02</span><small>Принимает клиентские соединения</small></div>
-        <div class="schemas-arrow"><strong>TCP / 5432</strong><span aria-hidden="true">→</span></div>
-        <div class="schemas-node schemas-db"><img src="/static/img/postgresql.png" alt="PostgreSQL"><strong>PostgreSQL</strong><b>10.210.120.72:5432</b><span>AML-PROD-DB02</span><small>Имя базы и TLS уточняются</small></div>
-      </div>
-      <p class="schemas-note">Показаны наблюдаемые подключения к HAProxy и от HAProxy к PostgreSQL. Соответствие отдельных входящих и исходящих сессий не установлено.</p>
-    </section>
-    <section class="schemas-panel">
-      <h2>Подтверждённые соединения</h2>
-      <div class="schemas-table-wrap"><table class="table table-sm"><thead><tr><th>Источник</th><th>Назначение</th><th>Транспорт / порт</th><th>Процесс на DB02</th><th>В снимке</th></tr></thead><tbody>
-        {% for client in clients %}<tr><td>{{ client.ip }}</td><td>VIP 10.210.120.70</td><td>TCP / 5000</td><td>haproxy</td><td>{{ client.connections }}</td></tr>{% endfor %}
-        <tr><td>HAProxy · 10.210.120.72</td><td>PostgreSQL · 10.210.120.72</td><td>TCP / 5432</td><td>haproxy → postgres</td><td>Есть</td></tr>
-        <tr><td>10.210.120.71</td><td>PostgreSQL · 10.210.120.72</td><td>TCP / 5432</td><td>postgres</td><td>1</td></tr>
-      </tbody></table></div>
-      <p class="schemas-note">Назначение подключения с 10.210.120.71 нужно подтвердить: по ss нельзя отличить репликацию от обычной SQL-сессии.</p>
-    </section>
-    <details class="schemas-panel"><summary>Дополнительные слушающие порты</summary>
-      <p class="schemas-note">Наличие слушающего порта не подтверждает активное соединение.</p>
-      <ul><li>HAProxy: VIP 10.210.120.70:5001, DB02 10.210.120.72:7000 — назначение уточняется.</li><li>Patroni: TCP 8008.</li><li>Zabbix agent 2: TCP 10050.</li></ul>
-    </details>
-    <p class="schemas-note">Для завершения схемы нужны имена сервисов на 10.210.120.13–16, настройки backend HAProxy и имена баз из строк подключения без паролей.</p>
-  </main>
-</div>
+<link rel="stylesheet" href="/static/css/schemas.css?v=20261113-2">
+<main class="schemas-page">
+  <a href="/" class="small text-muted">← Inventory</a>
+  <h1>Схемы взаимодействия информационных систем</h1>
+  <nav class="schemas-tabs" aria-label="СУБД">
+    {% for key, label in [('oracle','Oracle'), ('postgresql','PostgreSQL'), ('sqlserver','SQL Server')] %}
+    <a href="/schemas?engine={{ key }}" class="{% if engine == key %}active{% endif %}" {% if engine == key %}aria-current="page"{% endif %}>{{ label }}</a>
+    {% endfor %}
+  </nav>
+  {% if engine == 'postgresql' %}
+  <nav class="schemas-tabs schemas-databases" aria-label="Базы и кластеры">
+    <a href="/schemas?engine=postgresql&amp;database=aml" class="{% if selected %}selected{% endif %}">AML · AML-PROD-CLUSTER</a>
+  </nav>
+  {% endif %}
+  {% if selected %}
+  <section class="schemas-panel">
+    <header><div><h2>AML · Схема подключений</h2><p>PostgreSQL · AML-PROD-CLUSTER</p></div><span class="schemas-snapshot">Снимок соединений · не live-мониторинг</span></header>
+    <div class="schemas-canvas" tabindex="0" role="region" aria-label="Схема подключений AML; на узком экране доступна горизонтальная прокрутка">
+    <svg class="schemas-network" viewBox="0 0 1000 620" role="img" aria-labelledby="network-title network-desc">
+      <title id="network-title">Серверы подключаются к VIP AML через TCP/5000, HAProxy подключается к PostgreSQL через TCP/5432</title>
+      <desc id="network-desc">Четыре клиента: 10.210.120.13, 10.210.120.14, 10.210.120.15, 10.210.120.16. Центральный VIP 10.210.120.70:5000. Сервер базы AML-PROD-DB02: 10.210.120.72:5432.</desc>
+      <defs><marker id="schema-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#387bb5"/></marker></defs>
+      <g class="schema-links" marker-end="url(#schema-arrow)">
+        <path d="M240 130H300V230H360"/><path d="M240 350H300V310H360"/>
+        <path d="M760 130H700V230H640"/><path d="M760 350H700V310H640"/>
+        <path d="M500 380V495"/>
+      </g>
+      {% for client in clients %}
+      {% set x = 30 if loop.index0 < 2 else 760 %}{% set y = 75 if loop.index0 % 2 == 0 else 295 %}
+      <g class="schema-client" transform="translate({{ x }},{{ y }})">
+        <rect width="210" height="110" rx="10"/>
+        <text x="105" y="27" class="schema-kicker">СЕРВЕР / СИСТЕМА</text>
+        <text x="105" y="52" class="schema-name">{{ client.ip }}</text>
+        <text x="105" y="75">Имя сервиса уточняется</text>
+        <text x="105" y="94">{{ client.connections }} соединений в снимке</text>
+      </g>
+      {% endfor %}
+      <g class="schema-edge-labels">
+        <g transform="translate(250,148)"><rect width="100" height="26" rx="5"/><text x="50" y="18">TCP / 5000</text></g>
+        <g transform="translate(250,357)"><rect width="100" height="26" rx="5"/><text x="50" y="18">TCP / 5000</text></g>
+        <g transform="translate(650,148)"><rect width="100" height="26" rx="5"/><text x="50" y="18">TCP / 5000</text></g>
+        <g transform="translate(650,357)"><rect width="100" height="26" rx="5"/><text x="50" y="18">TCP / 5000</text></g>
+        <g transform="translate(450,426)"><rect width="100" height="26" rx="5"/><text x="50" y="18">TCP / 5432</text></g>
+      </g>
+      <g class="schema-center" transform="translate(360,160)">
+        <rect width="280" height="220" rx="14"/>
+        <image href="/static/img/postgresql.png" x="75" y="18" width="48" height="48"/>
+        <rect class="schema-app-logo" x="145" y="20" width="64" height="43" rx="8"/>
+        <text x="177" y="47" class="schema-app-text">AML</text>
+        <text x="140" y="91" class="schema-name">AML · PostgreSQL</text>
+        <text x="140" y="116">AML-PROD-CLUSTER</text>
+        <text x="140" y="145" class="schema-name">VIP: 10.210.120.70</text>
+        <text x="140" y="168">HAProxy · TCP / 5000</text>
+        <text x="140" y="193">Имя SQL-базы уточняется</text>
+      </g>
+      <g class="schema-client" transform="translate(350,500)">
+        <rect width="300" height="95" rx="10"/>
+        <text x="150" y="27" class="schema-name">AML-PROD-DB02</text>
+        <text x="150" y="52">PostgreSQL · 10.210.120.72:5432</text>
+        <text x="150" y="75">Backend HAProxy в момент снимка</text>
+      </g>
+    </svg>
+    </div>
+    <p class="schemas-note">Источник: ss на AML-PROD-DB02; время сбора не указано. Показаны наблюдаемые соединения, а не подтверждённое соответствие входящих и исходящих сессий. TLS, ODBC/JDBC и имена SQL-баз пока не установлены.</p>
+  </section>
+  <details class="schemas-panel"><summary>Дополнительные наблюдения</summary><ul><li>10.210.120.71 → 10.210.120.72:5432 — одно соединение; его назначение требует подтверждения.</li><li>Слушающие порты HAProxy: VIP:5001, DB02:7000. Patroni:8008, Zabbix agent:10050.</li><li>Значок AML — текстовое обозначение приложения; официальный логотип пока не предоставлен.</li></ul></details>
+  {% else %}
+  <div class="schemas-empty">{% if not engine %}Выберите СУБД, затем базу или кластер для просмотра схемы.{% elif engine == 'postgresql' %}Выберите AML-PROD-CLUSTER выше.{% else %}Для выбранной СУБД схемы ещё не добавлены.{% endif %}</div>
+  {% endif %}
+</main>
 {% endblock %}

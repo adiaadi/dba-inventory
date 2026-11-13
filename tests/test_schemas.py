@@ -14,7 +14,12 @@ class SchemasTests(unittest.TestCase):
             self.assertEqual(client.get('/schemas', follow_redirects=False).status_code, 303)
             cookie = TimestampSigner(settings.session_secret).sign(base64.b64encode(json.dumps({'portal_user': settings.portal_username}).encode())).decode()
             client.cookies.set('session', cookie)
-            response = client.get('/schemas')
+            landing = client.get('/schemas')
+            self.assertNotIn('schemas-network', landing.text)
+            self.assertIn('PostgreSQL', landing.text)
+            empty = client.get('/schemas?engine=oracle')
+            self.assertNotIn('schemas-network', empty.text)
+            response = client.get('/schemas?engine=postgresql&database=aml')
             self.assertEqual(response.status_code, 200)
             for text in ('SCHEMAS', '10.210.120.70:5000', '10.210.120.72:5432', '10.210.120.13', '10.210.120.16'):
                 self.assertIn(text, response.text)
