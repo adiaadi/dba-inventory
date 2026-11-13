@@ -4,7 +4,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from app.core.config import get_settings
 from app.middleware.portal_auth import PortalAuthMiddleware
-from app.routers import admin, auth, clusters, dashboard, databases, exports, hosts, replication
+from app.routers import admin, auth, clusters, dashboard, databases, exports, hosts, replication, schemas
 from app.web import load_request_ui_texts
 
 settings = get_settings()
@@ -35,3 +35,5 @@ app.include_router(databases.router)
 app.include_router(clusters.router)
 app.include_router(exports.router)
 app.include_router(replication.router)
+
+app.include_router(schemas.router)
